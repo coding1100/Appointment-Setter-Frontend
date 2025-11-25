@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { tenantAPI, appointmentAPI } from '../../services/api';
 import { Calendar, Building, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import Loader from '../Loader';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -108,11 +109,7 @@ const Dashboard = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loader message="Loading dashboard..." fullScreen />;
   }
 
   return (

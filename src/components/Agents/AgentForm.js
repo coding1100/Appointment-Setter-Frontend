@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { agentAPI } from '../../services/api';
 import { X, Volume2, Loader } from 'lucide-react';
 
-const AgentForm = ({ tenantId, agent, onClose, onSuccess }) => {
+const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     voice_id: '',
@@ -15,6 +15,7 @@ const AgentForm = ({ tenantId, agent, onClose, onSuccess }) => {
   const [voicesLoading, setVoicesLoading] = useState(true);
   const [error, setError] = useState('');
   const [playingVoice, setPlayingVoice] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const serviceTypes = [
     'Home Services',
@@ -67,6 +68,50 @@ const AgentForm = ({ tenantId, agent, onClose, onSuccess }) => {
       ...prev,
       [name]: value,
     }));
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+
+  const validateGreetingMessage = (message) => {
+    if (!message || message.trim().length === 0) {
+      return 'Greeting message is required';
+    }
+    if (message.trim().length < 10) {
+      return 'Greeting message must be at least 10 characters long';
+    }
+    return '';
+  };
+
+  const checkForDuplicate = (formData) => {
+    // Check if an agent with the same name exists (case-insensitive)
+    const duplicate = existingAgents.find((existingAgent) => {
+      // Skip the current agent if we're editing
+      if (agent && existingAgent.id === agent.id) {
+        return false;
+      }
+      
+      // Check if name matches (case-insensitive, trimmed)
+      return existingAgent.name.trim().toLowerCase() === formData.name.trim().toLowerCase();
+    });
+
+    return duplicate;
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    if (name === 'greeting_message') {
+      const error = validateGreetingMessage(value);
+      setFieldErrors((prev) => ({
+        ...prev,
+        [name]: error,
+      }));
+    }
   };
 
   const handleVoicePreview = async (voiceId) => {
@@ -109,6 +154,25 @@ const AgentForm = ({ tenantId, agent, onClose, onSuccess }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setFieldErrors({});
+
+    // Validate greeting message
+    const greetingError = validateGreetingMessage(formData.greeting_message);
+    if (greetingError) {
+      setFieldErrors({ greeting_message: greetingError });
+      setLoading(false);
+      return;
+    }
+
+    // Check for duplicate agent name (only when creating, not when editing)
+    if (!agent) {
+      const duplicate = checkForDuplicate(formData);
+      if (duplicate) {
+        setError('An agent with this name already exists. Please choose a different name.');
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       if (agent) {
@@ -296,14 +360,25 @@ const AgentForm = ({ tenantId, agent, onClose, onSuccess }) => {
               name="greeting_message"
               value={formData.greeting_message}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Hello! Thank you for calling. How can I help you today?"
               required
               rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 resize-none ${
+                fieldErrors.greeting_message
+                  ? 'border-red-300 focus:ring-red-500'
+                  : 'border-gray-300 focus:ring-blue-500'
+              }`}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              This message will be spoken when a call is received
-            </p>
+            {fieldErrors.greeting_message ? (
+              <p className="text-xs text-red-600 mt-1">
+                {fieldErrors.greeting_message}
+              </p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">
+                This message will be spoken when a call is received (minimum 10 characters)
+              </p>
+            )}
           </div>
 
           {/* Actions */}

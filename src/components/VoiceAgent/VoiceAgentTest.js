@@ -60,11 +60,15 @@ const VoiceAgentTest = () => {
     try {
       const response = await agentAPI.listAgents(selectedTenant);
       const agentsList = response.data || [];
-      setAgents(agentsList);
+      // Filter to only show active agents
+      const activeAgents = agentsList.filter(agent => agent.status === 'active');
+      setAgents(activeAgents);
       
       // Auto-select first agent if none selected
-      if (agentsList.length > 0) {
-        setSelectedAgent(agentsList[0].id);
+      if (activeAgents.length > 0) {
+        setSelectedAgent(activeAgents[0].id);
+      } else {
+        setSelectedAgent('');
       }
     } catch (error) {
       console.error('Error fetching agents:', error);

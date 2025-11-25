@@ -7,11 +7,13 @@ import RegisterForm from './components/Auth/RegisterForm';
 import Dashboard from './components/Dashboard/Dashboard';
 import TenantList from './components/Tenants/TenantList';
 import TenantCreateForm from './components/Tenants/TenantCreateForm';
-import AppointmentList from './components/Appointments/AppointmentList';
+import TenantEditForm from './components/Tenants/TenantEditForm';
+import TenantDetail from './components/Tenants/TenantDetail';
 import VoiceAgentTest from './components/VoiceAgent/VoiceAgentTest';
 import TwilioIntegration from './components/TwilioIntegration/TwilioIntegration';
 import AgentManagement from './components/Agents/AgentManagement';
 import ErrorBoundary from './components/ErrorBoundary';
+import Loader from './components/Loader';
 import './App.css';
 
 // Protected Route Component
@@ -19,11 +21,7 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loader fullScreen />;
   }
   
   return isAuthenticated ? children : <Navigate to="/login" />;
@@ -34,11 +32,7 @@ const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loader fullScreen />;
   }
   
   return !isAuthenticated ? children : <Navigate to="/dashboard" />;
@@ -121,10 +115,18 @@ function App() {
               } 
             />
             <Route 
-              path="/appointments" 
+              path="/tenants/:id/edit" 
               element={
                 <ProtectedRoute>
-                  <AppointmentList />
+                  <TenantEditForm />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/tenants/:id" 
+              element={
+                <ProtectedRoute>
+                  <TenantDetail />
                 </ProtectedRoute>
               } 
             />

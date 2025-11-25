@@ -35,14 +35,6 @@ const Navbar = () => {
                 </Link>
                 
                 <Link
-                  to="/appointments"
-                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  <Calendar className="h-4 w-4" />
-                  <span>Appointments</span>
-                </Link>
-                
-                <Link
                   to="/agents"
                   className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
                 >
