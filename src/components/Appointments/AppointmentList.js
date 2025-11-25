@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { appointmentAPI, tenantAPI } from '../../services/api';
 import { Calendar, Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, MapPin, Phone, Mail } from 'lucide-react';
+import Loader from '../Loader';
 
 const AppointmentList = () => {
   const [appointments, setAppointments] = useState([]);
@@ -128,11 +129,7 @@ const AppointmentList = () => {
   const selectedTenantData = tenants.find(t => t.id === selectedTenant);
 
   if (loading && !selectedTenant) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loader message="Loading appointments..." fullScreen />;
   }
 
   return (
@@ -233,8 +230,8 @@ const AppointmentList = () => {
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="py-12">
+                <Loader message="Loading appointments..." />
               </div>
             ) : (
               <div className="space-y-4">

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { tenantAPI } from '../../services/api';
 import { Plus, Building, Settings, Eye, Play, Pause } from 'lucide-react';
+import Loader from '../Loader';
 
 const TenantList = () => {
   const [tenants, setTenants] = useState([]);
@@ -76,11 +77,7 @@ const TenantList = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loader message="Loading tenants..." fullScreen />;
   }
 
   return (
@@ -137,13 +134,29 @@ const TenantList = () => {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Created:</span>
                     <span className="text-gray-900">
-                      {new Date(tenant.created_at).toLocaleDateString()}
+                      {new Date(tenant.created_at).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                      })}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Updated:</span>
                     <span className="text-gray-900">
-                      {new Date(tenant.updated_at).toLocaleDateString()}
+                      {new Date(tenant.updated_at).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                      })}
                     </span>
                   </div>
                 </div>

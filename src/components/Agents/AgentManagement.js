@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { tenantAPI } from '../../services/api';
 import AgentList from './AgentList';
 import { Building } from 'lucide-react';
+import Loader from '../Loader';
 
 const AgentManagement = () => {
   const [tenants, setTenants] = useState([]);
@@ -45,11 +46,7 @@ useEffect(() => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loader message="Loading agents..." fullScreen />;
   }
 
   if (error) {

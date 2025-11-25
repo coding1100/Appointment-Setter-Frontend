@@ -367,7 +367,10 @@ const TwilioIntegration = () => {
     
     try {
       const response = await agentAPI.listAgents(selectedTenant);
-      setAgents(response.data || []);
+      const agentsList = response.data || [];
+      // Filter to only show active agents
+      const activeAgents = agentsList.filter(agent => agent.status === 'active');
+      setAgents(activeAgents);
     } catch (error) {
       console.error('Error fetching agents:', error);
     }

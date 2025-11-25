@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { agentAPI } from '../../services/api';
 import { Plus, Edit, Trash2, Power, PowerOff, User, Volume2 } from 'lucide-react';
 import AgentForm from './AgentForm';
+import Loader from '../Loader';
 
 const AgentList = ({ tenantId }) => {
   const [agents, setAgents] = useState([]);
@@ -91,11 +92,7 @@ const AgentList = ({ tenantId }) => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loader message="Loading agents..." />;
   }
 
   return (
@@ -225,6 +222,7 @@ const AgentList = ({ tenantId }) => {
         <AgentForm
           tenantId={tenantId}
           agent={editingAgent}
+          existingAgents={agents}
           onClose={handleFormClose}
           onSuccess={handleFormSuccess}
         />
