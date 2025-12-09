@@ -37,7 +37,7 @@ jobs:
           aws-region: eu-north-1
 
       - name: Deploy to S3
-        run: aws s3 sync ./out s3://${{ secrets.AWS_S3_BUCKET }}/dev --delete
+        run: aws s3 sync ./build s3://${{ secrets.AWS_S3_BUCKET }}/dev --delete
 
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.DEV_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
@@ -72,7 +72,7 @@ jobs:
           aws-region: eu-north-1
 
       - name: Deploy to S3
-        run: aws s3 sync ./out s3://${{ secrets.AWS_S3_BUCKET }}/prod --delete
+        run: aws s3 sync ./build s3://${{ secrets.AWS_S3_BUCKET }}/prod --delete
 
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
