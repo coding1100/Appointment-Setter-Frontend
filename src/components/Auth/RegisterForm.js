@@ -11,9 +11,10 @@ const RegisterForm = () => {
     confirmPassword: '',
     first_name: '',
     last_name: '',
-    role: 'user',
-    tenant_id: ''
+    role: 'admin',
+    tenant_id: null
   });
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -28,37 +29,123 @@ const RegisterForm = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateUsername = (username) => {
+    if (!username || username.trim().length === 0) {
+      return 'Username is required';
+    }
+    if (username.length < 3) {
+      return 'Username must be at least 3 characters long';
+    }
+    if (username.length > 72) {
+      return 'Username must be no more than 72 characters long';
+    }
+    return '';
+  };
+
+  const validatePassword = (password) => {
+    if (!password || password.length === 0) {
+      return 'Password is required';
+    }
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+    if (password.length > 72) {
+      return 'Password must be no more than 72 characters long';
+    }
+    // Strong password validation: at least one uppercase, one lowercase, one number, one special character
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+    if (!strongPasswordRegex.test(password)) {
+      return 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)';
+    }
+    return '';
   };
 
   const validateForm = () => {
+    setFieldErrors({});
+    let isValid = true;
+
+    // Validate username
+    const usernameError = validateUsername(formData.username);
+    if (usernameError) {
+      setFieldErrors(prev => ({ ...prev, username: usernameError }));
+      isValid = false;
+    }
+
+    // Validate password
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      setFieldErrors(prev => ({ ...prev, password: passwordError }));
+      isValid = false;
+    }
+
+    // Validate password confirmation
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return false;
+      setFieldErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));
+      isValid = false;
     }
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
-      return false;
+
+    return isValid;
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    
+    if (name === 'username') {
+      const error = validateUsername(value);
+      setFieldErrors(prev => ({ ...prev, username: error }));
+    } else if (name === 'password') {
+      const error = validatePassword(value);
+      setFieldErrors(prev => ({ ...prev, password: error }));
+    } else if (name === 'confirmPassword') {
+      if (formData.password !== value) {
+        setFieldErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));
+      } else {
+        setFieldErrors(prev => ({ ...prev, confirmPassword: '' }));
+      }
     }
-    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setFieldErrors({});
 
     if (!validateForm()) {
       setLoading(false);
       return;
     }
 
+    // Prepare submit data according to API spec
     const { confirmPassword, ...submitData } = formData;
+    // Set tenant_id to null if not provided or empty
+    if (!submitData.tenant_id || submitData.tenant_id === '') {
+      submitData.tenant_id = null;
+    }
+
     const result = await register(submitData);
     
     if (result.success) {
       navigate('/login');
     } else {
-      setError(result.error);
+      // Handle specific error codes
+      if (result.statusCode === 400) {
+        setError('This email is already registered. Please use a different email or sign in.');
+      } else if (result.statusCode === 429) {
+        setError('Too many registration attempts. Please wait a moment and try again.');
+      } else {
+        setError(result.error || 'Registration failed. Please try again.');
+      }
     }
     
     setLoading(false);
@@ -154,7 +241,7 @@ const RegisterForm = () => {
 
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
+                Username *
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -165,17 +252,30 @@ const RegisterForm = () => {
                   name="username"
                   type="text"
                   required
-                  className="appearance-none rounded-md relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Choose a username"
+                  minLength={3}
+                  maxLength={72}
+                  onBlur={handleBlur}
+                  className={`appearance-none rounded-md relative block w-full pl-10 pr-3 py-2 border placeholder-gray-500 text-gray-900 focus:outline-none focus:z-10 sm:text-sm ${
+                    fieldErrors.username
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
+                  placeholder="Choose a username (3-72 characters)"
                   value={formData.username}
                   onChange={handleChange}
                 />
               </div>
+              {fieldErrors.username && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.username}</p>
+              )}
+              {!fieldErrors.username && (
+                <p className="mt-1 text-xs text-gray-500">3-72 characters</p>
+              )}
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
+                Password *
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -186,8 +286,15 @@ const RegisterForm = () => {
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
-                  className="appearance-none rounded-md relative block w-full pl-10 pr-10 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Create a password"
+                  minLength={8}
+                  maxLength={72}
+                  onBlur={handleBlur}
+                  className={`appearance-none rounded-md relative block w-full pl-10 pr-10 py-2 border placeholder-gray-500 text-gray-900 focus:outline-none focus:z-10 sm:text-sm ${
+                    fieldErrors.password
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
+                  placeholder="Create a strong password"
                   value={formData.password}
                   onChange={handleChange}
                 />
@@ -201,11 +308,17 @@ const RegisterForm = () => {
                   </button>
                 </div>
               </div>
+              {fieldErrors.password && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
+              )}
+              {!fieldErrors.password && (
+                <p className="mt-1 text-xs text-gray-500">8-72 characters, must include uppercase, lowercase, number, and special character (@$!%*?&)</p>
+              )}
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
+                Confirm Password *
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -216,7 +329,12 @@ const RegisterForm = () => {
                   name="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   required
-                  className="appearance-none rounded-md relative block w-full pl-10 pr-10 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  onBlur={handleBlur}
+                  className={`appearance-none rounded-md relative block w-full pl-10 pr-10 py-2 border placeholder-gray-500 text-gray-900 focus:outline-none focus:z-10 sm:text-sm ${
+                    fieldErrors.confirmPassword
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
                   placeholder="Confirm your password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
@@ -231,24 +349,11 @@ const RegisterForm = () => {
                   </button>
                 </div>
               </div>
+              {fieldErrors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.confirmPassword}</p>
+              )}
             </div>
 
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <option value="user">User</option>
-                <option value="tenant_admin">Tenant Admin</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
           </div>
 
           <div>
