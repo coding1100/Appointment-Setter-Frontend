@@ -6,8 +6,6 @@ import {
   Clock, 
   ArrowLeft, 
   Edit, 
-  Play, 
-  Pause, 
   Users, 
   Phone, 
   Settings,
@@ -28,7 +26,6 @@ const TenantDetail = () => {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -87,35 +84,6 @@ const TenantDetail = () => {
     }
   };
 
-  const handleActivateTenant = async () => {
-    if (!tenant) return;
-    
-    try {
-      setUpdating(true);
-      await tenantAPI.activateTenant(tenant.id);
-      await fetchTenantDetails();
-    } catch (err) {
-      const errorDetail = err.response?.data?.detail;
-      setError(typeof errorDetail === 'string' ? errorDetail : 'Failed to activate tenant');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  const handleDeactivateTenant = async () => {
-    if (!tenant) return;
-    
-    try {
-      setUpdating(true);
-      await tenantAPI.deactivateTenant(tenant.id);
-      await fetchTenantDetails();
-    } catch (err) {
-      const errorDetail = err.response?.data?.detail;
-      setError(typeof errorDetail === 'string' ? errorDetail : 'Failed to deactivate tenant');
-    } finally {
-      setUpdating(false);
-    }
-  };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -194,25 +162,6 @@ const TenantDetail = () => {
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </Link>
-              {tenant.status === 'active' ? (
-                <button
-                  onClick={handleDeactivateTenant}
-                  disabled={updating}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 disabled:opacity-50"
-                >
-                  <Pause className="h-4 w-4 mr-2" />
-                  Deactivate
-                </button>
-              ) : (
-                <button
-                  onClick={handleActivateTenant}
-                  disabled={updating}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 disabled:opacity-50"
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Activate
-                </button>
-              )}
             </div>
           </div>
         </div>
