@@ -10,6 +10,10 @@ const TenantCreateForm = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({
+    name: '',
+    timezone: ''
+  });
 
   const navigate = useNavigate();
 
@@ -33,18 +37,58 @@ const TenantCreateForm = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear errors when user starts typing
+    if (error) {
+      setError('');
+    }
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setFieldErrors({ name: '', timezone: '' });
 
     try {
       const response = await tenantAPI.createTenant(formData);
       navigate(`/tenants/${response.data.id}/configure`);
     } catch (error) {
-      setError(error.response?.data?.detail || 'Failed to create tenant');
+      const errorDetail = error.response?.data?.detail;
+      const statusCode = error.response?.status;
+      
+      // Handle duplicate tenant error (typically 400 or 409 status)
+      if (statusCode === 400 || statusCode === 409 || (errorDetail && typeof errorDetail === 'string')) {
+        const errorMessage = typeof errorDetail === 'string' ? errorDetail : error.response?.data?.message || 'Failed to create tenant';
+        const lowerMessage = errorMessage.toLowerCase();
+        
+        // Check if it's a duplicate error
+        if (lowerMessage.includes('duplicate') || 
+            lowerMessage.includes('already exists') || 
+            lowerMessage.includes('unique constraint') ||
+            lowerMessage.includes('name and timezone')) {
+          setError('A tenant with this name and timezone combination already exists. Please choose a different name or timezone.');
+          // Highlight both fields since the combination is the issue
+          setFieldErrors({
+            name: 'This name and timezone combination is already in use.',
+            timezone: 'This name and timezone combination is already in use.'
+          });
+        } else {
+          setError(errorMessage);
+        }
+      } else if (Array.isArray(errorDetail)) {
+        // Handle validation errors array
+        const errorMessages = errorDetail.map(e => `${e.loc?.join('.')} - ${e.msg}`).join(', ');
+        setError(errorMessages);
+      } else {
+        setError(errorDetail || 'Failed to create tenant. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -96,15 +140,26 @@ const TenantCreateForm = () => {
                       name="name"
                       id="name"
                       required
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                        fieldErrors.name 
+                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300'
+                      }`}
                       placeholder="Enter tenant name"
                       value={formData.name}
                       onChange={handleChange}
                     />
                   </div>
-                  <p className="mt-1 text-sm text-gray-500">
-                    This will be the display name for your tenant.
-                  </p>
+                  {fieldErrors.name && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {fieldErrors.name}
+                    </p>
+                  )}
+                  {!fieldErrors.name && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      This will be the display name for your tenant.
+                    </p>
+                  )}
                 </div>
 
                 {/* Timezone */}
@@ -119,7 +174,11 @@ const TenantCreateForm = () => {
                     <select
                       name="timezone"
                       id="timezone"
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                        fieldErrors.timezone 
+                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300'
+                      }`}
                       value={formData.timezone}
                       onChange={handleChange}
                     >
@@ -130,9 +189,16 @@ const TenantCreateForm = () => {
                       ))}
                     </select>
                   </div>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Select the timezone for this tenant's business operations.
-                  </p>
+                  {fieldErrors.timezone && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {fieldErrors.timezone}
+                    </p>
+                  )}
+                  {!fieldErrors.timezone && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      Select the timezone for this tenant's business operations.
+                    </p>
+                  )}
                 </div>
               </div>
 
