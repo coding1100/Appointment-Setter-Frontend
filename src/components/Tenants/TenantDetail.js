@@ -84,23 +84,6 @@ const TenantDetail = () => {
     }
   };
 
-
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      active: { bg: 'bg-green-100', text: 'text-green-800', label: 'Active' },
-      inactive: { bg: 'bg-red-100', text: 'text-red-800', label: 'Inactive' },
-      draft: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Draft' }
-    };
-
-    const config = statusConfig[status] || statusConfig.draft;
-    
-    return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text}`}>
-        {config.label}
-      </span>
-    );
-  };
-
   if (loading) {
     return <Loader message="Loading tenant details..." fullScreen />;
   }
@@ -154,7 +137,6 @@ const TenantDetail = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              {getStatusBadge(tenant.status)}
               <Link
                 to={`/tenants/${tenant.id}/edit`}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
@@ -314,21 +296,6 @@ const TenantDetail = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Status Card */}
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Status</h3>
-                <div className="space-y-3">
-                  {getStatusBadge(tenant.status)}
-                  <p className="text-xs text-gray-500">
-                    {tenant.status === 'active' 
-                      ? 'This tenant is active and can receive calls.'
-                      : 'This tenant is inactive and cannot receive calls.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* Twilio Integration */}
             <div className="bg-white shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">

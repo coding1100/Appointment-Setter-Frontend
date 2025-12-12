@@ -42,23 +42,6 @@ const TenantList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount
 
-
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      active: { bg: 'bg-green-100', text: 'text-green-800', label: 'Active' },
-      inactive: { bg: 'bg-red-100', text: 'text-red-800', label: 'Inactive' },
-      draft: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Draft' }
-    };
-
-    const config = statusConfig[status] || statusConfig.draft;
-    
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-        {config.label}
-      </span>
-    );
-  };
-
   if (loading) {
     return <Loader message="Loading tenants..." fullScreen />;
   }
@@ -110,7 +93,6 @@ const TenantList = () => {
                       </p>
                     </div>
                   </div>
-                  {getStatusBadge(tenant.status)}
                 </div>
 
                 <div className="mt-4 space-y-2">
