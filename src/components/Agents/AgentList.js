@@ -40,7 +40,6 @@ const AgentList = ({ tenantId }) => {
     if (tenantId) {
       fetchAgents();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId]); // Intentionally excluding fetchAgents to prevent circular deps
 
   const handleCreateAgent = () => {

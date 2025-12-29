@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { agentAPI } from '../../services/api';
-import { X, Volume2, Loader } from 'lucide-react';
+import { X, Loader } from 'lucide-react';
 
 const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -14,7 +14,6 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
   const [loading, setLoading] = useState(false);
   const [voicesLoading, setVoicesLoading] = useState(true);
   const [error, setError] = useState('');
-  const [playingVoice, setPlayingVoice] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
 
   const serviceTypes = [
@@ -114,41 +113,6 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
     }
   };
 
-  const handleVoicePreview = async (voiceId) => {
-    try {
-      setPlayingVoice(voiceId);
-      
-      // Get the audio file URL from backend
-      const response = await agentAPI.getVoicePreviewUrl(voiceId);
-      const audioUrl = response.data.audio_url;
-      
-      // Create full URL (backend base URL + audio path)
-      const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-      const fullAudioUrl = `${baseURL}${audioUrl}`;
-      
-      // Create and play audio
-      const audio = new Audio(fullAudioUrl);
-      
-      audio.onended = () => {
-        setPlayingVoice(null);
-      };
-      
-      audio.onerror = (e) => {
-        console.error('Failed to play audio:', e);
-        setError('Audio file not found. Please run voice sample generator script.');
-        setPlayingVoice(null);
-      };
-      
-      await audio.play();
-      
-    } catch (err) {
-      console.error('Failed to preview voice:', err);
-      if (err.response?.status === 404) {
-        setError('Voice samples not generated yet. Please ask admin to run: python generate_voice_samples.py');
-      }
-      setPlayingVoice(null);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -270,28 +234,6 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
                     </option>
                   ))}
                 </select>
-                
-                {/* Voice Preview Button */}
-                {formData.voice_id && (
-                  <button
-                    type="button"
-                    onClick={() => handleVoicePreview(formData.voice_id)}
-                    disabled={playingVoice !== null}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition disabled:opacity-50"
-                  >
-                    {playingVoice === formData.voice_id ? (
-                      <>
-                        <Loader className="h-4 w-4 animate-spin" />
-                        Playing...
-                      </>
-                    ) : (
-                      <>
-                        <Volume2 className="h-4 w-4" />
-                        Preview Voice
-                      </>
-                    )}
-                  </button>
-                )}
                 
                 {/* Selected Voice Info */}
                 {formData.voice_id && getVoiceById(formData.voice_id) && (

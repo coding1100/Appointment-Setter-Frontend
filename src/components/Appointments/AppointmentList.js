@@ -63,7 +63,6 @@ const AppointmentList = () => {
   // Fetch tenants ONCE on mount only
   useEffect(() => {
     fetchTenants();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - run only once on mount
 
   // Fetch appointments when tenant or filter changes - ONLY after tenants are loaded
@@ -81,7 +80,6 @@ const AppointmentList = () => {
     } else {
       console.log('Skipping fetchAppointments - invalid tenant:', selectedTenant);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTenant, statusFilter, tenantsLoaded]); // Added tenantsLoaded to prevent fetching before tenants are ready
 
   const getStatusIcon = (status) => {

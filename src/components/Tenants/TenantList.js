@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { tenantAPI } from '../../services/api';
-import { Plus, Building, Settings, Eye, Play, Pause } from 'lucide-react';
+import { Plus, Building, Settings, Eye } from 'lucide-react';
 import Loader from '../Loader';
 
 const TenantList = () => {
@@ -39,42 +39,7 @@ const TenantList = () => {
 
   useEffect(() => {
     fetchTenants();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount
-
-  const handleActivateTenant = async (tenantId) => {
-    try {
-      await tenantAPI.activateTenant(tenantId);
-      fetchTenants(); // Refresh the list
-    } catch (error) {
-      console.error('Error activating tenant:', error);
-    }
-  };
-
-  const handleDeactivateTenant = async (tenantId) => {
-    try {
-      await tenantAPI.deactivateTenant(tenantId);
-      fetchTenants(); // Refresh the list
-    } catch (error) {
-      console.error('Error deactivating tenant:', error);
-    }
-  };
-
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      active: { bg: 'bg-green-100', text: 'text-green-800', label: 'Active' },
-      inactive: { bg: 'bg-red-100', text: 'text-red-800', label: 'Inactive' },
-      draft: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Draft' }
-    };
-
-    const config = statusConfig[status] || statusConfig.draft;
-    
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-        {config.label}
-      </span>
-    );
-  };
 
   if (loading) {
     return <Loader message="Loading tenants..." fullScreen />;
@@ -123,11 +88,10 @@ const TenantList = () => {
                         {tenant.name}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {tenant.timezone}
+                        Owner: {tenant.owner_email}
                       </p>
                     </div>
                   </div>
-                  {getStatusBadge(tenant.status)}
                 </div>
 
                 <div className="mt-4 space-y-2">
@@ -177,24 +141,6 @@ const TenantList = () => {
                       <Settings className="h-3 w-3 mr-1" />
                       Configure
                     </Link>
-                  </div>
-                  
-                  <div className="flex space-x-1">
-                    {tenant.status === 'active' ? (
-                      <button
-                        onClick={() => handleDeactivateTenant(tenant.id)}
-                        className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      >
-                        <Pause className="h-3 w-3" />
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleActivateTenant(tenant.id)}
-                        className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                      >
-                        <Play className="h-3 w-3" />
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { tenantAPI } from '../../services/api';
-import { Building, Clock, Save, ArrowLeft } from 'lucide-react';
+import { Building, Mail, Save, ArrowLeft } from 'lucide-react';
 import Loader from '../Loader';
 
 const TenantEditForm = () => {
@@ -10,25 +10,15 @@ const TenantEditForm = () => {
   
   const [formData, setFormData] = useState({
     name: '',
-    timezone: 'UTC'
+    owner_email: ''
   });
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState('');
-
-  const timezones = [
-    'UTC',
-    'America/New_York',
-    'America/Chicago',
-    'America/Denver',
-    'America/Los_Angeles',
-    'Europe/London',
-    'Europe/Paris',
-    'Europe/Berlin',
-    'Asia/Tokyo',
-    'Asia/Shanghai',
-    'Australia/Sydney'
-  ];
+  const [fieldErrors, setFieldErrors] = useState({
+    name: '',
+    owner_email: ''
+  });
 
   useEffect(() => {
     const fetchTenant = async () => {
@@ -46,7 +36,7 @@ const TenantEditForm = () => {
         
         setFormData({
           name: tenant.name || '',
-          timezone: tenant.timezone || 'UTC'
+          owner_email: tenant.owner_email || ''
         });
       } catch (err) {
         const errorDetail = err.response?.data?.detail;
@@ -65,23 +55,63 @@ const TenantEditForm = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear errors when user starts typing
+    if (error) {
+      setError('');
+    }
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setFieldErrors({ name: '', owner_email: '' });
 
     try {
       await tenantAPI.updateTenant(id, formData);
       navigate('/tenants');
     } catch (err) {
       const errorDetail = err.response?.data?.detail;
-      if (Array.isArray(errorDetail)) {
+      const statusCode = err.response?.status;
+      
+      // Handle duplicate tenant error (typically 400 or 409 status)
+      if (statusCode === 400 || statusCode === 409 || (errorDetail && typeof errorDetail === 'string')) {
+        const errorMessage = typeof errorDetail === 'string' ? errorDetail : err.response?.data?.message || 'Failed to update tenant';
+        const lowerMessage = errorMessage.toLowerCase();
+        
+        // Check if it's a duplicate error
+        if (lowerMessage.includes('duplicate') || 
+            lowerMessage.includes('already exists') || 
+            lowerMessage.includes('unique constraint')) {
+          if (lowerMessage.includes('owner_email') || lowerMessage.includes('email')) {
+            setError('A tenant with this owner email already exists. Please choose a different email.');
+            setFieldErrors({
+              name: '',
+              owner_email: 'This owner email is already in use.'
+            });
+          } else {
+            setError('A tenant with this name already exists. Please choose a different name.');
+            setFieldErrors({
+              name: 'This tenant name is already in use.',
+              owner_email: ''
+            });
+          }
+        } else {
+          setError(errorMessage);
+        }
+      } else if (Array.isArray(errorDetail)) {
+        // Handle validation errors array
         const errorMessages = errorDetail.map(e => `${e.loc?.join('.')} - ${e.msg}`).join(', ');
         setError(errorMessages);
       } else {
-        setError(typeof errorDetail === 'string' ? errorDetail : 'Failed to update tenant');
+        setError(typeof errorDetail === 'string' ? errorDetail : 'Failed to update tenant. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -138,43 +168,62 @@ const TenantEditForm = () => {
                       name="name"
                       id="name"
                       required
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                        fieldErrors.name 
+                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300'
+                      }`}
                       placeholder="Enter tenant name"
                       value={formData.name}
                       onChange={handleChange}
                     />
                   </div>
-                  <p className="mt-1 text-sm text-gray-500">
-                    This will be the display name for your tenant.
-                  </p>
+                  {fieldErrors.name && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {fieldErrors.name}
+                    </p>
+                  )}
+                  {!fieldErrors.name && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      This will be the display name for your tenant.
+                    </p>
+                  )}
                 </div>
 
-                {/* Timezone */}
+                {/* Owner Email */}
                 <div>
-                  <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 mb-2">
-                    Timezone
+                  <label htmlFor="owner_email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Owner Email
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Clock className="h-5 w-5 text-gray-400" />
+                      <Mail className="h-5 w-5 text-gray-400" />
                     </div>
-                    <select
-                      name="timezone"
-                      id="timezone"
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={formData.timezone}
+                    <input
+                      type="email"
+                      name="owner_email"
+                      id="owner_email"
+                      required
+                      className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                        fieldErrors.owner_email 
+                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300'
+                      }`}
+                      placeholder="Enter owner email"
+                      value={formData.owner_email}
                       onChange={handleChange}
-                    >
-                      {timezones.map((tz) => (
-                        <option key={tz} value={tz}>
-                          {tz}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Select the timezone for this tenant's business operations.
-                  </p>
+                  {fieldErrors.owner_email && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {fieldErrors.owner_email}
+                    </p>
+                  )}
+                  {!fieldErrors.owner_email && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      This email will receive ownership-related notifications.
+                    </p>
+                  )}
                 </div>
               </div>
 
