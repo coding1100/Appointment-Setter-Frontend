@@ -12,7 +12,6 @@ const AgentManagement = () => {
 
 useEffect(() => {
   fetchTenants();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
   const formatError = (err, defaultMsg) => {

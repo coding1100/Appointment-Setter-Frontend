@@ -88,7 +88,6 @@ const Dashboard = () => {
   // Fetch data only once on mount
   useEffect(() => {
     fetchDashboardData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount, no dependencies needed
 
   const getStatusIcon = (status) => {

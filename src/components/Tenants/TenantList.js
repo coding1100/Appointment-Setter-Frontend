@@ -39,7 +39,6 @@ const TenantList = () => {
 
   useEffect(() => {
     fetchTenants();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount
 
   if (loading) {
@@ -89,7 +88,7 @@ const TenantList = () => {
                         {tenant.name}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {tenant.timezone}
+                        Owner: {tenant.owner_email}
                       </p>
                     </div>
                   </div>
