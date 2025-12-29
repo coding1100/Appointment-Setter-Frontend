@@ -3,14 +3,13 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { tenantAPI, agentAPI } from '../../services/api';
 import { 
   Building, 
-  Clock, 
   ArrowLeft, 
   Edit, 
   Users, 
   Phone, 
   Settings,
   Calendar,
-  Globe,
+  Mail,
   Info
 } from 'lucide-react';
 import Loader from '../Loader';
@@ -171,10 +170,10 @@ const TenantDetail = () => {
                   </div>
                   <div>
                     <dt className="text-sm font-medium text-gray-500 flex items-center">
-                      <Globe className="h-4 w-4 mr-1" />
-                      Timezone
+                      <Mail className="h-4 w-4 mr-1" />
+                      Owner Email
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900">{tenant.timezone}</dd>
+                    <dd className="mt-1 text-sm text-gray-900">{tenant.owner_email}</dd>
                   </div>
                   <div>
                     <dt className="text-sm font-medium text-gray-500 flex items-center">

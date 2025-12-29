@@ -37,7 +37,6 @@ const TwilioIntegration = () => {
 
   useEffect(() => {
     fetchTenants();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -46,7 +45,6 @@ const TwilioIntegration = () => {
       fetchAgents();
       fetchPhoneAssignments();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTenant]);
 
   const fetchTenants = async () => {

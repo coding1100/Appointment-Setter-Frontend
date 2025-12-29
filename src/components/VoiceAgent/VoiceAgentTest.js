@@ -116,7 +116,6 @@ const VoiceAgentTest = () => {
   // Initial load - fetch tenants once
   useEffect(() => {
     fetchTenants();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount
 
   // When tenant changes - fetch agents and Twilio integration
@@ -125,7 +124,6 @@ const VoiceAgentTest = () => {
       fetchTwilioIntegration();
       fetchAgents();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTenant]); // Only depend on selectedTenant, not the functions
 
   // When agent changes - update service type and fetch phone
@@ -137,7 +135,6 @@ const VoiceAgentTest = () => {
         fetchAgentPhone(agent.id);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAgent, agents]); // Intentionally excluding fetchAgentPhone
 
       const startCall = async () => {
@@ -293,7 +290,6 @@ const VoiceAgentTest = () => {
     if (selectedTenant) {
       fetchCallHistory();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTenant]); // Intentionally excluding fetchCallHistory to prevent circular deps
 
   const selectedTenantData = tenants.find(t => t.id === selectedTenant);

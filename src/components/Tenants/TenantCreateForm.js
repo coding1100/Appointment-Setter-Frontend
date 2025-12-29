@@ -1,35 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tenantAPI } from '../../services/api';
-import { Building, Clock, Save, ArrowLeft } from 'lucide-react';
+import { Building, Mail, Save, ArrowLeft } from 'lucide-react';
 
 const TenantCreateForm = () => {
   const [formData, setFormData] = useState({
     name: '',
-    timezone: 'UTC'
+    owner_email: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({
     name: '',
-    timezone: ''
+    owner_email: ''
   });
 
   const navigate = useNavigate();
-
-  const timezones = [
-    'UTC',
-    'America/New_York',
-    'America/Chicago',
-    'America/Denver',
-    'America/Los_Angeles',
-    'Europe/London',
-    'Europe/Paris',
-    'Europe/Berlin',
-    'Asia/Tokyo',
-    'Asia/Shanghai',
-    'Australia/Sydney'
-  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,7 +40,7 @@ const TenantCreateForm = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setFieldErrors({ name: '', timezone: '' });
+    setFieldErrors({ name: '', owner_email: '' });
 
     try {
       const response = await tenantAPI.createTenant(formData);
@@ -71,14 +57,20 @@ const TenantCreateForm = () => {
         // Check if it's a duplicate error
         if (lowerMessage.includes('duplicate') || 
             lowerMessage.includes('already exists') || 
-            lowerMessage.includes('unique constraint') ||
-            lowerMessage.includes('name and timezone')) {
-          setError('A tenant with this name and timezone combination already exists. Please choose a different name or timezone.');
-          // Highlight both fields since the combination is the issue
-          setFieldErrors({
-            name: 'This name and timezone combination is already in use.',
-            timezone: 'This name and timezone combination is already in use.'
-          });
+            lowerMessage.includes('unique constraint')) {
+          if (lowerMessage.includes('owner_email') || lowerMessage.includes('email')) {
+            setError('A tenant with this owner email already exists. Please choose a different email.');
+            setFieldErrors({
+              name: '',
+              owner_email: 'This owner email is already in use.'
+            });
+          } else {
+            setError('A tenant with this name already exists. Please choose a different name.');
+            setFieldErrors({
+              name: 'This tenant name is already in use.',
+              owner_email: ''
+            });
+          }
         } else {
           setError(errorMessage);
         }
@@ -162,41 +154,38 @@ const TenantCreateForm = () => {
                   )}
                 </div>
 
-                {/* Timezone */}
+                {/* Owner Email */}
                 <div>
-                  <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 mb-2">
-                    Timezone
+                  <label htmlFor="owner_email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Owner Email
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Clock className="h-5 w-5 text-gray-400" />
+                      <Mail className="h-5 w-5 text-gray-400" />
                     </div>
-                    <select
-                      name="timezone"
-                      id="timezone"
+                    <input
+                      type="email"
+                      name="owner_email"
+                      id="owner_email"
+                      required
                       className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                        fieldErrors.timezone 
+                        fieldErrors.owner_email 
                           ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
                           : 'border-gray-300'
                       }`}
-                      value={formData.timezone}
+                      placeholder="Enter owner email"
+                      value={formData.owner_email}
                       onChange={handleChange}
-                    >
-                      {timezones.map((tz) => (
-                        <option key={tz} value={tz}>
-                          {tz}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
-                  {fieldErrors.timezone && (
+                  {fieldErrors.owner_email && (
                     <p className="mt-1 text-sm text-red-600">
-                      {fieldErrors.timezone}
+                      {fieldErrors.owner_email}
                     </p>
                   )}
-                  {!fieldErrors.timezone && (
+                  {!fieldErrors.owner_email && (
                     <p className="mt-1 text-sm text-gray-500">
-                      Select the timezone for this tenant's business operations.
+                      This email will receive ownership-related notifications.
                     </p>
                   )}
                 </div>
