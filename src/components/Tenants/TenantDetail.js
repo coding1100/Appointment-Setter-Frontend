@@ -3,16 +3,13 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { tenantAPI, agentAPI } from '../../services/api';
 import { 
   Building, 
-  Clock, 
   ArrowLeft, 
   Edit, 
-  Play, 
-  Pause, 
   Users, 
   Phone, 
   Settings,
   Calendar,
-  Globe,
+  Mail,
   Info
 } from 'lucide-react';
 import Loader from '../Loader';
@@ -28,7 +25,6 @@ const TenantDetail = () => {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -87,52 +83,6 @@ const TenantDetail = () => {
     }
   };
 
-  const handleActivateTenant = async () => {
-    if (!tenant) return;
-    
-    try {
-      setUpdating(true);
-      await tenantAPI.activateTenant(tenant.id);
-      await fetchTenantDetails();
-    } catch (err) {
-      const errorDetail = err.response?.data?.detail;
-      setError(typeof errorDetail === 'string' ? errorDetail : 'Failed to activate tenant');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  const handleDeactivateTenant = async () => {
-    if (!tenant) return;
-    
-    try {
-      setUpdating(true);
-      await tenantAPI.deactivateTenant(tenant.id);
-      await fetchTenantDetails();
-    } catch (err) {
-      const errorDetail = err.response?.data?.detail;
-      setError(typeof errorDetail === 'string' ? errorDetail : 'Failed to deactivate tenant');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      active: { bg: 'bg-green-100', text: 'text-green-800', label: 'Active' },
-      inactive: { bg: 'bg-red-100', text: 'text-red-800', label: 'Inactive' },
-      draft: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Draft' }
-    };
-
-    const config = statusConfig[status] || statusConfig.draft;
-    
-    return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text}`}>
-        {config.label}
-      </span>
-    );
-  };
-
   if (loading) {
     return <Loader message="Loading tenant details..." fullScreen />;
   }
@@ -186,7 +136,6 @@ const TenantDetail = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              {getStatusBadge(tenant.status)}
               <Link
                 to={`/tenants/${tenant.id}/edit`}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
@@ -194,25 +143,6 @@ const TenantDetail = () => {
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </Link>
-              {tenant.status === 'active' ? (
-                <button
-                  onClick={handleDeactivateTenant}
-                  disabled={updating}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 disabled:opacity-50"
-                >
-                  <Pause className="h-4 w-4 mr-2" />
-                  Deactivate
-                </button>
-              ) : (
-                <button
-                  onClick={handleActivateTenant}
-                  disabled={updating}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 disabled:opacity-50"
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Activate
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -240,10 +170,10 @@ const TenantDetail = () => {
                   </div>
                   <div>
                     <dt className="text-sm font-medium text-gray-500 flex items-center">
-                      <Globe className="h-4 w-4 mr-1" />
-                      Timezone
+                      <Mail className="h-4 w-4 mr-1" />
+                      Owner Email
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900">{tenant.timezone}</dd>
+                    <dd className="mt-1 text-sm text-gray-900">{tenant.owner_email}</dd>
                   </div>
                   <div>
                     <dt className="text-sm font-medium text-gray-500 flex items-center">
@@ -365,21 +295,6 @@ const TenantDetail = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Status Card */}
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Status</h3>
-                <div className="space-y-3">
-                  {getStatusBadge(tenant.status)}
-                  <p className="text-xs text-gray-500">
-                    {tenant.status === 'active' 
-                      ? 'This tenant is active and can receive calls.'
-                      : 'This tenant is inactive and cannot receive calls.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* Twilio Integration */}
             <div className="bg-white shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">

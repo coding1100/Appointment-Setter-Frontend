@@ -37,7 +37,6 @@ const TwilioIntegration = () => {
 
   useEffect(() => {
     fetchTenants();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -46,7 +45,6 @@ const TwilioIntegration = () => {
       fetchAgents();
       fetchPhoneAssignments();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTenant]);
 
   const fetchTenants = async () => {
@@ -403,7 +401,17 @@ const TwilioIntegration = () => {
       fetchPhoneAssignments();
       fetchUnassignedNumbers();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to assign phone number');
+      const backendMessage = err.response?.data?.message || err.response?.data?.detail;
+      if (typeof backendMessage === 'string') {
+        const lower = backendMessage.toLowerCase();
+        if (lower.includes('already assigned') && lower.includes('tenant')) {
+          setError('This phone number is already assigned to another tenant. Please choose a different number or unassign it from that tenant first.');
+        } else {
+          setError(backendMessage);
+        }
+      } else {
+        setError('Failed to assign phone number');
+      }
     } finally {
       setAssignmentLoading(false);
     }
