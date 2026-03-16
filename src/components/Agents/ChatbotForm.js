@@ -21,6 +21,78 @@ const DEFAULT_THEME = {
   text_color: '#111111',
 };
 
+const LANGUAGE_OPTIONS = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'fr', label: 'French' },
+  { value: 'de', label: 'German' },
+  { value: 'ar', label: 'Arabic' },
+  { value: 'hi', label: 'Hindi' },
+  { value: 'ur', label: 'Urdu' },
+];
+
+const TONE_OPTIONS = [
+  { value: 'friendly', label: 'Friendly' },
+  { value: 'professional', label: 'Professional' },
+  { value: 'empathetic', label: 'Empathetic' },
+  { value: 'sales', label: 'Sales-focused' },
+  { value: 'technical', label: 'Technical' },
+];
+
+const RESPONSE_STYLE_OPTIONS = [
+  { value: 'concise', label: 'Short answers' },
+  { value: 'balanced', label: 'Balanced answers' },
+  { value: 'detailed', label: 'Detailed answers' },
+];
+
+const BEHAVIOR_PRESETS = [
+  {
+    id: 'support',
+    label: 'Customer Support',
+    description: 'Great for helping with common questions and issues.',
+    values: {
+      persona: 'Friendly support assistant',
+      goal: 'Resolve customer questions quickly and clearly',
+      tone: 'friendly',
+      response_style: 'balanced',
+      escalation_instructions: 'Escalate billing disputes, refunds, and account issues to a human support manager.',
+      custom_instructions: 'Always ask for order number or account email before giving account-specific help.',
+      allowed_topics_text: 'Orders\nReturns\nShipping\nAccount help',
+      blocked_topics_text: 'Medical advice\nLegal advice',
+    },
+  },
+  {
+    id: 'sales',
+    label: 'Sales Assistant',
+    description: 'Best for lead capture, qualification, and product guidance.',
+    values: {
+      persona: 'Helpful sales guide',
+      goal: 'Understand visitor needs and guide them to the best product or service',
+      tone: 'sales',
+      response_style: 'balanced',
+      escalation_instructions: 'Escalate pricing exceptions, enterprise deals, and contract requests to a human sales rep.',
+      custom_instructions: 'Ask one qualifying question at a time and finish with a clear next step.',
+      allowed_topics_text: 'Products\nPricing\nPackages\nDemos',
+      blocked_topics_text: 'Medical advice\nLegal advice',
+    },
+  },
+  {
+    id: 'booking',
+    label: 'Booking Assistant',
+    description: 'Useful for appointments, availability, and scheduling support.',
+    values: {
+      persona: 'Scheduling assistant',
+      goal: 'Help users book appointments with minimum friction',
+      tone: 'professional',
+      response_style: 'concise',
+      escalation_instructions: 'Escalate urgent same-day requests and calendar conflicts to front desk staff.',
+      custom_instructions: 'Always confirm date, time, and contact details before final confirmation.',
+      allowed_topics_text: 'Availability\nAppointments\nRescheduling\nCancellations',
+      blocked_topics_text: 'Medical advice\nFinancial advice',
+    },
+  },
+];
+
 const getDefaultForm = () => ({
   name: '',
   status: 'active',
@@ -58,6 +130,11 @@ const parseList = (value) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
+const mergeLineItems = (existing, additions) => {
+  const merged = new Set([...parseList(existing), ...parseList(additions)]);
+  return Array.from(merged).join('\n');
+};
+
 const parseFaq = (value) =>
   value
     .split('\n')
@@ -88,11 +165,15 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
   const [formData, setFormData] = useState(getDefaultForm());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showAdvancedBehavior, setShowAdvancedBehavior] = useState(false);
+  const [activeBehaviorPreset, setActiveBehaviorPreset] = useState('');
 
   useEffect(() => {
     if (!chatbot) {
       setStep(0);
       setFormData(getDefaultForm());
+      setShowAdvancedBehavior(false);
+      setActiveBehaviorPreset('');
       return;
     }
     const defaults = getDefaultForm();
@@ -135,6 +216,12 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
         accent_color: chatbot.launcher_config?.accent_color || chatbot.theme?.primary_color || '#0EA5E9',
       },
     });
+    const hasAdvancedBehaviorFields =
+      Boolean(chatbot.behavior_config?.custom_instructions) ||
+      (chatbot.behavior_config?.allowed_topics || []).length > 0 ||
+      (chatbot.behavior_config?.blocked_topics || []).length > 0;
+    setShowAdvancedBehavior(hasAdvancedBehaviorFields);
+    setActiveBehaviorPreset('');
     setStep(0);
   }, [chatbot]);
 
@@ -180,6 +267,20 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
     setFormData((prev) => ({ ...prev, knowledge: { ...prev.knowledge, [name]: value } }));
   const handleLauncherChange = (name, value) =>
     setFormData((prev) => ({ ...prev, launcher: { ...prev.launcher, [name]: value } }));
+
+  const applyBehaviorPreset = (presetId) => {
+    const preset = BEHAVIOR_PRESETS.find((entry) => entry.id === presetId);
+    if (!preset) return;
+    setActiveBehaviorPreset(presetId);
+    setShowAdvancedBehavior(true);
+    setFormData((prev) => ({
+      ...prev,
+      behavior: {
+        ...prev.behavior,
+        ...preset.values,
+      },
+    }));
+  };
 
   const buildPayload = () => ({
     name: formData.name.trim(),
@@ -381,139 +482,259 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
 
           {step === 2 && (
             <div className="space-y-4">
+              <div className="bg-sky-50 border border-sky-200 rounded-lg px-4 py-3">
+                <p className="text-sm font-semibold text-sky-900">Set your chatbot personality in plain language</p>
+                <p className="text-sm text-sky-700 mt-1">
+                  Start with a preset, then adjust tone and response style. Advanced controls are optional.
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">Quick Setup Presets</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {BEHAVIOR_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => applyBehaviorPreset(preset.id)}
+                      className={`text-left border rounded-lg p-3 transition ${
+                        activeBehaviorPreset === preset.id
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
+                      }`}
+                    >
+                      <p className="text-sm font-semibold text-gray-900">{preset.label}</p>
+                      <p className="text-xs text-gray-600 mt-1">{preset.description}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  value={formData.behavior.persona}
-                  onChange={(e) => handleBehaviorChange('persona', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  placeholder="Persona"
-                />
-                <input
-                  type="text"
-                  value={formData.behavior.goal}
-                  onChange={(e) => handleBehaviorChange('goal', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  placeholder="Goal"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Who is this bot? *</label>
+                  <input
+                    type="text"
+                    value={formData.behavior.persona}
+                    onChange={(e) => handleBehaviorChange('persona', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Example: Friendly support assistant"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Main job of the bot *</label>
+                  <input
+                    type="text"
+                    value={formData.behavior.goal}
+                    onChange={(e) => handleBehaviorChange('goal', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Example: Help customers with orders and returns"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <select
-                  value={formData.behavior.tone}
-                  onChange={(e) => handleBehaviorChange('tone', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="professional">professional</option>
-                  <option value="friendly">friendly</option>
-                  <option value="sales">sales</option>
-                  <option value="empathetic">empathetic</option>
-                  <option value="technical">technical</option>
-                </select>
-                <select
-                  value={formData.behavior.response_style}
-                  onChange={(e) => handleBehaviorChange('response_style', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="concise">concise</option>
-                  <option value="balanced">balanced</option>
-                  <option value="detailed">detailed</option>
-                </select>
-                <input
-                  type="text"
-                  value={formData.behavior.language}
-                  onChange={(e) => handleBehaviorChange('language', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  placeholder="Language code (e.g., en)"
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tone *</label>
+                  <select
+                    value={formData.behavior.tone}
+                    onChange={(e) => handleBehaviorChange('tone', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  >
+                    {TONE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Answer style *</label>
+                  <select
+                    value={formData.behavior.response_style}
+                    onChange={(e) => handleBehaviorChange('response_style', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  >
+                    {RESPONSE_STYLE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Language *</label>
+                  <select
+                    value={formData.behavior.language}
+                    onChange={(e) => handleBehaviorChange('language', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  >
+                    {LANGUAGE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label} ({option.value})
+                      </option>
+                    ))}
+                    {!LANGUAGE_OPTIONS.some((option) => option.value === formData.behavior.language) && (
+                      <option value={formData.behavior.language}>{formData.behavior.language}</option>
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">When should it hand over to a human? *</label>
+                <textarea
+                  value={formData.behavior.escalation_instructions}
+                  onChange={(e) => handleBehaviorChange('escalation_instructions', e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                  placeholder="Example: Escalate billing disputes and account closure requests to support manager."
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <textarea
-                  value={formData.behavior.allowed_topics_text}
-                  onChange={(e) => handleBehaviorChange('allowed_topics_text', e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
-                  placeholder="Allowed topics (one per line)"
-                />
-                <textarea
-                  value={formData.behavior.blocked_topics_text}
-                  onChange={(e) => handleBehaviorChange('blocked_topics_text', e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
-                  placeholder="Blocked topics (one per line)"
-                />
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedBehavior((value) => !value)}
+                  className="text-sm font-medium text-blue-700 hover:text-blue-800"
+                >
+                  {showAdvancedBehavior ? 'Hide advanced behavior settings' : 'Show advanced behavior settings'}
+                </button>
+                <p className="text-xs text-gray-500 mt-1">
+                  Advanced settings are optional. Use them only if you need strict topic boundaries.
+                </p>
               </div>
 
-              <textarea
-                value={formData.behavior.escalation_instructions}
-                onChange={(e) => handleBehaviorChange('escalation_instructions', e.target.value)}
-                rows={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
-                placeholder="Escalation instructions"
-              />
-              <textarea
-                value={formData.behavior.custom_instructions}
-                onChange={(e) => handleBehaviorChange('custom_instructions', e.target.value)}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
-                placeholder="Custom instructions (optional)"
-              />
+              {showAdvancedBehavior && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Allowed topics (optional)</label>
+                      <textarea
+                        value={formData.behavior.allowed_topics_text}
+                        onChange={(e) => handleBehaviorChange('allowed_topics_text', e.target.value)}
+                        rows={5}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                        placeholder="One per line. Example: Orders, Pricing, Scheduling"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Blocked topics (optional)</label>
+                      <textarea
+                        value={formData.behavior.blocked_topics_text}
+                        onChange={(e) => handleBehaviorChange('blocked_topics_text', e.target.value)}
+                        rows={5}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                        placeholder="One per line. Example: Medical advice, Legal advice"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleBehaviorChange(
+                            'blocked_topics_text',
+                            mergeLineItems(formData.behavior.blocked_topics_text, 'Medical advice\nLegal advice\nFinancial advice')
+                          )
+                        }
+                        className="mt-2 text-xs text-blue-700 hover:text-blue-800"
+                      >
+                        + Add common sensitive topics
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Extra instructions for your team voice (optional)</label>
+                    <textarea
+                      value={formData.behavior.custom_instructions}
+                      onChange={(e) => handleBehaviorChange('custom_instructions', e.target.value)}
+                      rows={4}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                      placeholder="Example: Greet with first name when available. Never promise refunds without approval."
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {step === 3 && (
             <div className="space-y-4">
-              <textarea
-                value={formData.knowledge.business_facts}
-                onChange={(e) => handleKnowledgeChange('business_facts', e.target.value)}
-                rows={5}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
-                placeholder="Business facts (hours, policies, contacts, core offerings)"
-              />
-              <textarea
-                value={formData.knowledge.faq_text}
-                onChange={(e) => handleKnowledgeChange('faq_text', e.target.value)}
-                rows={6}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
-                placeholder={'FAQ format: Question | Answer\nExample: What are your hours? | Mon-Fri 9 AM to 6 PM'}
-              />
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3">
+                <p className="text-sm font-semibold text-emerald-900">Give your bot trusted business information</p>
+                <p className="text-sm text-emerald-700 mt-1">The bot will use this information as source-of-truth while answering users.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Business facts *</label>
+                <textarea
+                  value={formData.knowledge.business_facts}
+                  onChange={(e) => handleKnowledgeChange('business_facts', e.target.value)}
+                  rows={6}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                  placeholder="Include hours, location, return policy, contact details, service areas, and important rules."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">FAQ pairs (optional)</label>
+                <textarea
+                  value={formData.knowledge.faq_text}
+                  onChange={(e) => handleKnowledgeChange('faq_text', e.target.value)}
+                  rows={7}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                  placeholder={'Format: Question | Answer\nExample: What are your hours? | Mon-Fri 9 AM to 6 PM'}
+                />
+              </div>
             </div>
           )}
 
           {step === 4 && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <select
-                  value={formData.launcher.position}
-                  onChange={(e) => handleLauncherChange('position', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="bottom-right">bottom-right</option>
-                  <option value="bottom-left">bottom-left</option>
-                </select>
-                <input
-                  type="text"
-                  value={formData.launcher.button_label}
-                  onChange={(e) => handleLauncherChange('button_label', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  placeholder="Button label"
-                />
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+                <p className="text-sm font-semibold text-amber-900">Choose how the launcher looks on your website</p>
+                <p className="text-sm text-amber-700 mt-1">These settings control the floating button visitors click to open chat.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  value={formData.launcher.button_icon}
-                  onChange={(e) => handleLauncherChange('button_icon', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  placeholder="Button icon id"
-                />
-                <input
-                  type="color"
-                  value={formData.launcher.accent_color}
-                  onChange={(e) => handleLauncherChange('accent_color', e.target.value)}
-                  className="w-full h-10 border border-gray-300 rounded"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Button position</label>
+                  <select
+                    value={formData.launcher.position}
+                    onChange={(e) => handleLauncherChange('position', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="bottom-right">Bottom right</option>
+                    <option value="bottom-left">Bottom left</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Button label *</label>
+                  <input
+                    type="text"
+                    value={formData.launcher.button_label}
+                    onChange={(e) => handleLauncherChange('button_label', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Example: Chat with us"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Icon name</label>
+                  <input
+                    type="text"
+                    value={formData.launcher.button_icon}
+                    onChange={(e) => handleLauncherChange('button_icon', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Example: message-circle"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Accent color</label>
+                  <input
+                    type="color"
+                    value={formData.launcher.accent_color}
+                    onChange={(e) => handleLauncherChange('accent_color', e.target.value)}
+                    className="w-full h-10 border border-gray-300 rounded"
+                  />
+                </div>
               </div>
             </div>
           )}
