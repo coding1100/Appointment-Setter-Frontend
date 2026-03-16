@@ -284,6 +284,45 @@ export const agentAPI = {
   getVoicePreviewUrl: (voiceId) => api.get(`/api/v1/agents/voices/preview/${voiceId}`),
 };
 
+// Chatbot Agent Management API
+export const chatbotAgentAPI = {
+  // Create chatbot agent (non-tenant)
+  createChatbotAgent: (chatbotData) => api.post('/api/v1/chatbot-agents', chatbotData),
+
+  // List chatbot agents visible to current user
+  listChatbotAgents: (limit = 100, offset = 0) => api.get(`/api/v1/chatbot-agents?limit=${limit}&offset=${offset}`),
+
+  // Get chatbot by ID
+  getChatbotAgent: (chatbotId) => api.get(`/api/v1/chatbot-agents/${chatbotId}`),
+
+  // Update chatbot
+  updateChatbotAgent: (chatbotId, chatbotData) => api.put(`/api/v1/chatbot-agents/${chatbotId}`, chatbotData),
+
+  // Delete chatbot
+  deleteChatbotAgent: (chatbotId) => api.delete(`/api/v1/chatbot-agents/${chatbotId}`),
+
+  // Generate signed launcher token for a specific origin
+  generateEmbedToken: (chatbotId, origin) => api.post(`/api/v1/chatbot-agents/${chatbotId}/embed-token`, { origin }),
+
+  // Revoke all previously issued embed tokens
+  revokeEmbedTokens: (chatbotId) => api.post(`/api/v1/chatbot-agents/${chatbotId}/revoke-embed-tokens`),
+
+  // List runtime logs for chatbot
+  listRuntimeLogs: (chatbotId, limit = 100, statusFilter = '') =>
+    api.get(
+      `/api/v1/chatbot-agents/${chatbotId}/runtime-logs?limit=${limit}${
+        statusFilter ? `&status_filter=${encodeURIComponent(statusFilter)}` : ''
+      }`
+    ),
+
+  // Runtime kill switch controls (admin)
+  getRuntimeKillSwitch: () => api.get('/api/v1/chatbot-agents/runtime/kill-switch'),
+  setRuntimeKillSwitch: (enabled) => api.post('/api/v1/chatbot-agents/runtime/kill-switch', { enabled }),
+
+  // Public chatbot embed config endpoint
+  getEmbedConfig: (token) => api.get(`/api/v1/chatbot-embed/config?token=${encodeURIComponent(token)}`),
+};
+
 // Phone Number Management API
 export const phoneNumberAPI = {
   // Create phone number assignment
