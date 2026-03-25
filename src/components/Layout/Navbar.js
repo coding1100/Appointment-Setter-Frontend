@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogOut, User, Settings, Calendar, Building, Phone, Zap, Users } from 'lucide-react';
+import { LogOut, User, Calendar, Building, Phone, Zap, Users, PhoneCall } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -57,6 +57,22 @@ const Navbar = () => {
                   <Zap className="h-4 w-4" />
                   <span>Twilio Integration</span>
                 </Link>
+
+                {/* <Link
+                  to="/telephony-hub"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  <Phone className="h-4 w-4" />
+                  <span>Telephony Hub</span>
+                </Link>
+
+                <Link
+                  to="/cold-caller"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  <PhoneCall className="h-4 w-4" />
+                  <span>Cold Caller</span>
+                </Link> */}
 
                 <div className="flex items-center space-x-2">
                   <div className="flex items-center space-x-2 text-sm text-gray-700">
