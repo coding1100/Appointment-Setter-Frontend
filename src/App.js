@@ -12,6 +12,8 @@ import TenantDetail from './components/Tenants/TenantDetail';
 import VoiceAgentTest from './components/VoiceAgent/VoiceAgentTest';
 import TwilioIntegration from './components/TwilioIntegration/TwilioIntegration';
 import AgentManagement from './components/Agents/AgentManagement';
+import ColdCallerPage from './components/ColdCaller/ColdCallerPage';
+import TelephonyHub from './components/Telephony/TelephonyHub';
 import ErrorBoundary from './components/ErrorBoundary';
 import Loader from './components/Loader';
 import './App.css';
@@ -153,6 +155,22 @@ function App() {
                   <TwilioIntegration />
                 </ProtectedRoute>
               } 
+            />
+            <Route
+              path="/telephony-hub"
+              element={
+                <ProtectedRoute>
+                  <TelephonyHub />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cold-caller"
+              element={
+                <ProtectedRoute>
+                  <ColdCallerPage />
+                </ProtectedRoute>
+              }
             />
             
             {/* Catch all route */}

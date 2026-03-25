@@ -19,6 +19,18 @@ const getApiBaseUrl = () => {
   return baseUrl;
 };
 
+const getColdCallerBaseUrl = () => {
+  const envUrl = process.env.REACT_APP_COLD_CALLER_API_URL;
+  if (!envUrl) {
+    return 'http://localhost:8010';
+  }
+  let baseUrl = envUrl.trim();
+  if (baseUrl.endsWith('/')) {
+    baseUrl = baseUrl.slice(0, -1);
+  }
+  return baseUrl;
+};
+
 // Get base URL and ensure it has NO trailing slash
 let API_BASE_URL = getApiBaseUrl();
 // CRITICAL: Remove any trailing slashes from base URL
@@ -63,6 +75,75 @@ const normalizeUrl = (url) => {
   // Remove trailing slashes except for root path '/'
   return url === '/' ? url : url.replace(/\/+$/, '');
 };
+
+let COLD_CALLER_BASE_URL = getColdCallerBaseUrl();
+COLD_CALLER_BASE_URL = COLD_CALLER_BASE_URL.replace(/\/+$/, '');
+
+const coldCallerClient = axios.create({
+  baseURL: COLD_CALLER_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 30000,
+});
+
+coldCallerClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (config.baseURL) {
+      config.baseURL = normalizeUrl(String(config.baseURL));
+    }
+    if (config.url) {
+      config.url = normalizeUrl(String(config.url));
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor to handle token refresh for cold-caller backend
+coldCallerClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest?._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (refreshToken) {
+          const response = await api.post('/api/v1/auth/refresh', {
+            refresh_token: refreshToken
+          });
+
+          const { access_token } = response.data;
+          localStorage.setItem('access_token', access_token);
+
+          originalRequest.headers = originalRequest.headers || {};
+          originalRequest.headers.Authorization = `Bearer ${access_token}`;
+          return coldCallerClient(originalRequest);
+        }
+      } catch (refreshError) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
+      }
+    }
+
+    if (error.response?.data) {
+      error.response.data = {
+        detail: error.response.data.detail || error.response.data.message || 'An error occurred',
+        ...error.response.data
+      };
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 // Request interceptor to add auth token and normalize URLs
 api.interceptors.request.use(
@@ -282,6 +363,82 @@ export const agentAPI = {
   
   // Get voice preview audio URL
   getVoicePreviewUrl: (voiceId) => api.get(`/api/v1/agents/voices/preview/${voiceId}`),
+};
+
+// Chatbot Agent Management API
+export const chatbotAgentAPI = {
+  // Create chatbot agent (non-tenant)
+  createChatbotAgent: (chatbotData) => api.post('/api/v1/chatbot-agents', chatbotData),
+
+  // List chatbot agents visible to current user
+  listChatbotAgents: (limit = 100, offset = 0) => api.get(`/api/v1/chatbot-agents?limit=${limit}&offset=${offset}`),
+
+  // Get chatbot by ID
+  getChatbotAgent: (chatbotId) => api.get(`/api/v1/chatbot-agents/${chatbotId}`),
+
+  // Update chatbot
+  updateChatbotAgent: (chatbotId, chatbotData) => api.put(`/api/v1/chatbot-agents/${chatbotId}`, chatbotData),
+
+  // Delete chatbot
+  deleteChatbotAgent: (chatbotId) => api.delete(`/api/v1/chatbot-agents/${chatbotId}`),
+
+  // Generate signed launcher token for a specific origin
+  generateEmbedToken: (chatbotId, origin) => api.post(`/api/v1/chatbot-agents/${chatbotId}/embed-token`, { origin }),
+
+  // Revoke all previously issued embed tokens
+  revokeEmbedTokens: (chatbotId) => api.post(`/api/v1/chatbot-agents/${chatbotId}/revoke-embed-tokens`),
+
+  // List runtime logs for chatbot
+  listRuntimeLogs: (chatbotId, limit = 100, statusFilter = '') =>
+    api.get(
+      `/api/v1/chatbot-agents/${chatbotId}/runtime-logs?limit=${limit}${
+        statusFilter ? `&status_filter=${encodeURIComponent(statusFilter)}` : ''
+      }`
+    ),
+
+  // Runtime kill switch controls (admin)
+  getRuntimeKillSwitch: () => api.get('/api/v1/chatbot-agents/runtime/kill-switch'),
+  setRuntimeKillSwitch: (enabled) => api.post('/api/v1/chatbot-agents/runtime/kill-switch', { enabled }),
+
+  // Public chatbot embed config endpoint
+  getEmbedConfig: (token) => api.get(`/api/v1/chatbot-embed/config?token=${encodeURIComponent(token)}`),
+};
+
+// Cold Caller API (separate backend base URL)
+export const coldCallerAPI = {
+  createCampaign: (payload) => coldCallerClient.post('/api/v1/cold-caller/campaigns', payload),
+  listCampaigns: (tenantId, limit = 100, offset = 0) =>
+    coldCallerClient.get(`/api/v1/cold-caller/campaigns?tenant_id=${tenantId}&limit=${limit}&offset=${offset}`),
+  getCampaign: (campaignId) => coldCallerClient.get(`/api/v1/cold-caller/campaigns/${campaignId}`),
+  updateCampaign: (campaignId, payload) => coldCallerClient.put(`/api/v1/cold-caller/campaigns/${campaignId}`, payload),
+  uploadContacts: (campaignId, formData) =>
+    coldCallerClient.post(`/api/v1/cold-caller/campaigns/${campaignId}/contacts/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  createIntroAudioUploadUrl: (campaignId, payload) =>
+    coldCallerClient.post(`/api/v1/cold-caller/campaigns/${campaignId}/intro-audio/upload-url`, payload),
+  confirmIntroAudio: (campaignId, payload) =>
+    coldCallerClient.post(`/api/v1/cold-caller/campaigns/${campaignId}/intro-audio/confirm`, payload),
+  controlCampaign: (campaignId, action) =>
+    coldCallerClient.post(`/api/v1/cold-caller/campaigns/${campaignId}/${action}`),
+  listContacts: (campaignId, limit = 200, offset = 0) =>
+    coldCallerClient.get(`/api/v1/cold-caller/campaigns/${campaignId}/contacts?limit=${limit}&offset=${offset}`),
+  listAttempts: (campaignId, limit = 200, offset = 0) =>
+    coldCallerClient.get(`/api/v1/cold-caller/campaigns/${campaignId}/attempts?limit=${limit}&offset=${offset}`),
+  uploadDnc: (tenantId, formData) =>
+    coldCallerClient.post(`/api/v1/cold-caller/dnc/upload?tenant_id=${tenantId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+};
+
+// Telephony Ownership API (main backend)
+export const telephonyAPI = {
+  getTenantStatus: (tenantId) => api.get(`/api/v1/telephony/tenant/${tenantId}/status`),
+  listTenantNumbers: (tenantId) => api.get(`/api/v1/telephony/tenant/${tenantId}/numbers`),
+  bindColdCallerOutbound: (tenantId, phoneNumber) =>
+    api.post(`/api/v1/telephony/tenant/${tenantId}/cold-caller-outbound/bind`, { phone_number: phoneNumber }),
+  unbindColdCallerOutbound: (tenantId, phoneNumber) =>
+    api.post(`/api/v1/telephony/tenant/${tenantId}/cold-caller-outbound/unbind`, { phone_number: phoneNumber }),
 };
 
 // Phone Number Management API

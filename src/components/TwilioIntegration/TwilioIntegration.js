@@ -488,9 +488,9 @@ const TwilioIntegration = () => {
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Twilio Integration</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Shared Twilio Credentials</h1>
           <p className="mt-2 text-gray-600">
-            Connect your Twilio account to enable voice agent phone calls. You can also purchase numbers using our system account.
+            One credential set per tenant, shared by Appointment Setter and Cold Caller. Number ownership is managed in Telephony Hub.
           </p>
         </div>
 
@@ -518,7 +518,7 @@ const TwilioIntegration = () => {
                   Step 1: Connect Twilio Account
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Enter your Twilio credentials. Phone numbers can be added in the next step.
+                  Enter tenant-level Twilio credentials used by both services.
                 </p>
               </div>
               {integration && (
@@ -593,11 +593,11 @@ const TwilioIntegration = () => {
                 <div className="mt-3 space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="text-xs text-gray-500 mb-3">
                     <Info className="h-4 w-4 inline mr-1" />
-                    Webhooks are automatically configured from TWILIO_WEBHOOK_BASE_URL if left empty. Only override if you need custom URLs.
+                    Webhooks are auto-configured from TWILIO_WEBHOOK_BASE_URL. This page controls shared credentials only.
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Custom Webhook URL
+                      Appointment Setter Webhook URL
                     </label>
                     <input
                       type="url"
@@ -610,7 +610,7 @@ const TwilioIntegration = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Custom Status Callback URL
+                      Appointment Setter Status Callback URL
                     </label>
                     <input
                       type="url"

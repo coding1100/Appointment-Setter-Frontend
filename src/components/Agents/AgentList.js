@@ -4,7 +4,7 @@ import { Plus, Edit, Trash2, Power, PowerOff, User, Volume2 } from 'lucide-react
 import AgentForm from './AgentForm';
 import Loader from '../Loader';
 
-const AgentList = ({ tenantId }) => {
+const AgentList = ({ tenantId, createRequested = 0 }) => {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,6 +41,12 @@ const AgentList = ({ tenantId }) => {
       fetchAgents();
     }
   }, [tenantId]); // Intentionally excluding fetchAgents to prevent circular deps
+
+  useEffect(() => {
+    if (createRequested > 0) {
+      handleCreateAgent();
+    }
+  }, [createRequested]);
 
   const handleCreateAgent = () => {
     setEditingAgent(null);
