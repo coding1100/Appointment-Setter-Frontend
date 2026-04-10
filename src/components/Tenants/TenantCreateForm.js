@@ -1,82 +1,82 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Building, Mail, Save } from 'lucide-react';
+
 import { tenantAPI } from '../../services/api';
-import { Building, Mail, Save, ArrowLeft } from 'lucide-react';
 
 const TenantCreateForm = () => {
   const [formData, setFormData] = useState({
     name: '',
-    owner_email: ''
+    owner_email: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({
     name: '',
-    owner_email: ''
+    owner_email: '',
   });
 
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
-    // Clear errors when user starts typing
+
     if (error) {
       setError('');
     }
     if (fieldErrors[name]) {
-      setFieldErrors(prev => ({
+      setFieldErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: '',
       }));
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     setError('');
     setFieldErrors({ name: '', owner_email: '' });
 
     try {
       const response = await tenantAPI.createTenant(formData);
-      navigate(`/tenants/${response.data.id}/configure`);
-    } catch (error) {
-      const errorDetail = error.response?.data?.detail;
-      const statusCode = error.response?.status;
-      
-      // Handle duplicate tenant error (typically 400 or 409 status)
+      navigate(`/app/appointment-setter/tenants/${response.data.id}`);
+    } catch (submitError) {
+      const errorDetail = submitError.response?.data?.detail;
+      const statusCode = submitError.response?.status;
+
       if (statusCode === 400 || statusCode === 409 || (errorDetail && typeof errorDetail === 'string')) {
-        const errorMessage = typeof errorDetail === 'string' ? errorDetail : error.response?.data?.message || 'Failed to create tenant';
+        const errorMessage =
+          typeof errorDetail === 'string' ? errorDetail : submitError.response?.data?.message || 'Failed to create tenant';
         const lowerMessage = errorMessage.toLowerCase();
-        
-        // Check if it's a duplicate error
-        if (lowerMessage.includes('duplicate') || 
-            lowerMessage.includes('already exists') || 
-            lowerMessage.includes('unique constraint')) {
+
+        if (
+          lowerMessage.includes('duplicate') ||
+          lowerMessage.includes('already exists') ||
+          lowerMessage.includes('unique constraint')
+        ) {
           if (lowerMessage.includes('owner_email') || lowerMessage.includes('email')) {
             setError('A tenant with this owner email already exists. Please choose a different email.');
             setFieldErrors({
               name: '',
-              owner_email: 'This owner email is already in use.'
+              owner_email: 'This owner email is already in use.',
             });
           } else {
             setError('A tenant with this name already exists. Please choose a different name.');
             setFieldErrors({
               name: 'This tenant name is already in use.',
-              owner_email: ''
+              owner_email: '',
             });
           }
         } else {
           setError(errorMessage);
         }
       } else if (Array.isArray(errorDetail)) {
-        // Handle validation errors array
-        const errorMessages = errorDetail.map(e => `${e.loc?.join('.')} - ${e.msg}`).join(', ');
+        const errorMessages = errorDetail.map((entry) => `${entry.loc?.join('.')} - ${entry.msg}`).join(', ');
         setError(errorMessages);
       } else {
         setError(errorDetail || 'Failed to create tenant. Please try again.');
@@ -87,140 +87,101 @@ const TenantCreateForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center mb-4">
-            <button
-              onClick={() => navigate('/tenants')}
-              className="mr-4 p-2 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
+    <div className="space-y-6">
+      <div className="flex items-start gap-4">
+        <button
+          onClick={() => navigate('/app/appointment-setter/tenants')}
+          className="mt-1 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/6 text-white transition hover:bg-white/10"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div>
+          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-white/68">Tenant Setup</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-white">Create New Tenant</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-white/72">
+            Set up a new business tenant for Appointment Setter and keep the onboarding flow inside the same workspace
+            system as the rest of the platform.
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-[28px] border border-white/8 bg-white/[0.04] p-6 md:p-7">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && <div className="rounded-2xl border border-rose-300/18 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</div>}
+
+          <div className="grid gap-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Create New Tenant</h1>
-              <p className="mt-2 text-gray-600">
-                Set up a new business tenant for your AI phone scheduler.
+              <label htmlFor="name" className="mb-2 block text-sm font-medium text-white/84">
+                Tenant Name
+              </label>
+              <div className="relative">
+                <Building className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/34" />
+                <input
+                  type="text"
+                  name="name"
+                  id="name"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Enter tenant name"
+                  className={`shell-input pl-12 ${fieldErrors.name ? 'border-rose-300/40 text-rose-100' : ''}`}
+                />
+              </div>
+              <p className={`mt-2 text-sm ${fieldErrors.name ? 'text-rose-200' : 'text-white/50'}`}>
+                {fieldErrors.name || 'This will be the display name for your tenant.'}
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="owner_email" className="mb-2 block text-sm font-medium text-white/84">
+                Owner Email
+              </label>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/34" />
+                <input
+                  type="email"
+                  name="owner_email"
+                  id="owner_email"
+                  required
+                  value={formData.owner_email}
+                  onChange={handleChange}
+                  placeholder="Enter owner email"
+                  className={`shell-input pl-12 ${fieldErrors.owner_email ? 'border-rose-300/40 text-rose-100' : ''}`}
+                />
+              </div>
+              <p className={`mt-2 text-sm ${fieldErrors.owner_email ? 'text-rose-200' : 'text-white/50'}`}>
+                {fieldErrors.owner_email || 'This email will receive ownership-related notifications.'}
               </p>
             </div>
           </div>
-        </div>
 
-        {/* Form */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                  {error}
-                </div>
+          <div className="flex flex-col gap-3 border-t border-white/8 pt-6 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={() => navigate('/app/appointment-setter/tenants')}
+              className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Create Tenant
+                </>
               )}
-
-              <div className="grid grid-cols-1 gap-6">
-                {/* Tenant Name */}
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Tenant Name
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Building className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      name="name"
-                      id="name"
-                      required
-                      className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                        fieldErrors.name 
-                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                          : 'border-gray-300'
-                      }`}
-                      placeholder="Enter tenant name"
-                      value={formData.name}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  {fieldErrors.name && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {fieldErrors.name}
-                    </p>
-                  )}
-                  {!fieldErrors.name && (
-                    <p className="mt-1 text-sm text-gray-500">
-                      This will be the display name for your tenant.
-                    </p>
-                  )}
-                </div>
-
-                {/* Owner Email */}
-                <div>
-                  <label htmlFor="owner_email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Owner Email
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="email"
-                      name="owner_email"
-                      id="owner_email"
-                      required
-                      className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                        fieldErrors.owner_email 
-                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                          : 'border-gray-300'
-                      }`}
-                      placeholder="Enter owner email"
-                      value={formData.owner_email}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  {fieldErrors.owner_email && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {fieldErrors.owner_email}
-                    </p>
-                  )}
-                  {!fieldErrors.owner_email && (
-                    <p className="mt-1 text-sm text-gray-500">
-                      This email will receive ownership-related notifications.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Form Actions */}
-              <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => navigate('/tenants')}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Create Tenant
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+            </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

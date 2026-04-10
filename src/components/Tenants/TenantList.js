@@ -1,26 +1,34 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { Building, Calendar, Eye, Plus, Settings } from 'lucide-react';
+
 import { tenantAPI } from '../../services/api';
-import { Plus, Building, Settings, Eye } from 'lucide-react';
 import Loader from '../Loader';
+
+const formatTimestamp = (value) =>
+  new Date(value).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
 
 const TenantList = () => {
   const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Memoized fetch function to prevent recreating on every render
   const fetchTenants = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      
+
       const response = await tenantAPI.listTenants();
-      
-      // Handle both response formats: direct array or {data: [...]}
       const tenantsList = Array.isArray(response.data) ? response.data : response.data?.tenants || [];
-      
-      // Ensure it's an array
+
       if (Array.isArray(tenantsList)) {
         setTenants(tenantsList);
       } else {
@@ -28,10 +36,10 @@ const TenantList = () => {
         setTenants([]);
         setError('Invalid data structure received from server');
       }
-    } catch (error) {
+    } catch (fetchError) {
       setError('Failed to fetch tenants');
-      console.error('Error fetching tenants:', error);
-      setTenants([]); // Ensure we always have an array
+      console.error('Error fetching tenants:', fetchError);
+      setTenants([]);
     } finally {
       setLoading(false);
     }
@@ -39,134 +47,120 @@ const TenantList = () => {
 
   useEffect(() => {
     fetchTenants();
-  }, []); // Run only once on mount
+  }, [fetchTenants]);
 
   if (loading) {
-    return <Loader message="Loading tenants..." fullScreen />;
+    return <Loader message="Loading tenants..." />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Tenants</h1>
-              <p className="mt-2 text-gray-600">
-                Manage your business tenants and their configurations.
-              </p>
-            </div>
-            <Link
-              to="/tenants/create"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Tenant
-            </Link>
-          </div>
+    <div className="space-y-5">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-white/68">Tenant Directory</p>
+          <h1 className="mt-3 text-[2rem] font-semibold tracking-[-0.03em] text-white">Tenants</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-white/72">
+            Manage business tenants, ownership details, and operational entry points from the same unified Appointment
+            Setter workspace.
+          </p>
         </div>
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={fetchTenants}
+            className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+          >
+            Refresh
+          </button>
+          <Link
+            to="/app/appointment-setter/tenants/create"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] no-underline"
+          >
+            <Plus className="h-4 w-4" />
+            Create Tenant
+          </Link>
+        </div>
+      </div>
 
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error}
+      {error && <div className="rounded-2xl border border-rose-300/18 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</div>}
+
+      {tenants.length === 0 ? (
+        <div className="flex min-h-[380px] flex-col items-center justify-center rounded-[26px] border border-white/8 bg-white/[0.04] px-6 text-center">
+          <Building className="h-16 w-16 text-white/34" />
+          <h3 className="mt-6 text-2xl font-semibold tracking-[-0.02em] text-white">No tenants yet</h3>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/70">
+            Create your first tenant to configure business data, agents, Twilio integration, and appointment flows.
+          </p>
+          <Link
+            to="/app/appointment-setter/tenants/create"
+            className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-[#2f66ea] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] no-underline"
+          >
+            <Plus className="h-5 w-5" />
+            Create Tenant
+          </Link>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-[26px] border border-white/8 bg-white/[0.04]">
+          <div className="hidden grid-cols-[minmax(0,1.2fr)_220px_220px_180px] gap-4 border-b border-white/8 px-4 py-3 text-xs uppercase tracking-[0.28em] text-white/44 xl:grid">
+            <div>Tenant</div>
+            <div>Created</div>
+            <div>Updated</div>
+            <div>Actions</div>
           </div>
-        )}
 
-        {/* Tenants Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tenants.map((tenant) => (
-            <div key={tenant.id} className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-200">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <Building className="h-8 w-8 text-blue-600" />
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {tenant.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        Owner: {tenant.owner_email}
-                      </p>
+          <div className="divide-y divide-white/8">
+            {tenants.map((tenant) => (
+              <div key={tenant.id} className="px-4 py-4">
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_220px_220px_180px] xl:items-center">
+                  <div className="min-w-0">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/8">
+                        <Building className="h-5 w-5 text-sky-200" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="truncate text-lg font-semibold text-white">{tenant.name}</h3>
+                        <p className="mt-1 truncate text-sm text-white/66">{tenant.owner_email}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Created:</span>
-                    <span className="text-gray-900">
-                      {new Date(tenant.created_at).toLocaleString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true
-                      })}
-                    </span>
+                  <div className="text-sm text-white/70">
+                    <div className="text-[11px] uppercase tracking-[0.2em] text-white/42 xl:hidden">Created</div>
+                    <div className="mt-1 flex items-center gap-2 xl:mt-0">
+                      <Calendar className="h-4 w-4 text-white/38" />
+                      {formatTimestamp(tenant.created_at)}
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Updated:</span>
-                    <span className="text-gray-900">
-                      {new Date(tenant.updated_at).toLocaleString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true
-                      })}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="mt-6 flex items-center justify-between">
-                  <div className="flex space-x-2">
+                  <div className="text-sm text-white/70">
+                    <div className="text-[11px] uppercase tracking-[0.2em] text-white/42 xl:hidden">Updated</div>
+                    <div className="mt-1 flex items-center gap-2 xl:mt-0">
+                      <Calendar className="h-4 w-4 text-white/38" />
+                      {formatTimestamp(tenant.updated_at)}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
                     <Link
-                      to={`/tenants/${tenant.id}`}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      to={`/app/appointment-setter/tenants/${tenant.id}`}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-3.5 py-2.5 text-sm text-white transition hover:bg-white/10 no-underline"
                     >
-                      <Eye className="h-3 w-3 mr-1" />
+                      <Eye className="h-4 w-4" />
                       View
                     </Link>
                     <Link
-                      to={`/tenants/${tenant.id}/edit`}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      to={`/app/appointment-setter/tenants/${tenant.id}/edit`}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-3.5 py-2.5 text-sm text-white transition hover:bg-white/10 no-underline"
                     >
-                      <Settings className="h-3 w-3 mr-1" />
+                      <Settings className="h-4 w-4" />
                       Configure
                     </Link>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {tenants.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <Building className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No tenants</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Get started by creating a new tenant.
-            </p>
-            <div className="mt-6">
-              <Link
-                to="/tenants/create"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Tenant
-              </Link>
-            </div>
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
