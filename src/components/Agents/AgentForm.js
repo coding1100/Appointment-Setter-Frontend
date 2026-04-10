@@ -168,32 +168,28 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 my-8">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {agent ? 'Edit Agent' : 'Create New Agent'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition"
-          >
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#04070fcc] px-4 py-8 backdrop-blur-sm">
+      <div className="mx-4 my-8 w-full max-w-2xl rounded-[28px] border border-white/10 bg-[#11192b]/94 shadow-[0_30px_90px_rgba(2,6,18,0.55)]">
+        <div className="flex items-center justify-between border-b border-white/8 p-6">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-[-0.03em] text-white">{agent ? 'Edit Agent' : 'Create New Agent'}</h2>
+            <p className="mt-2 text-sm text-white/60">Set voice, language, greeting, and service behavior for this tenant.</p>
+          </div>
+          <button onClick={onClose} className="text-white/46 transition hover:text-white/80">
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 p-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="rounded-2xl border border-rose-300/18 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
               {error}
             </div>
           )}
 
           {/* Agent Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-white/84">
               Agent Name *
             </label>
             <input
@@ -203,18 +199,18 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
               onChange={handleChange}
               placeholder="e.g., Receptionist Sarah"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="shell-input"
             />
-            <p className="text-xs text-gray-500 mt-1">Give your agent a friendly name</p>
+            <p className="mt-1 text-xs text-white/50">Give your agent a friendly name</p>
           </div>
 
           {/* Voice Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-white/84">
               Voice *
             </label>
             {voicesLoading ? (
-              <div className="flex items-center gap-2 text-gray-500">
+              <div className="flex items-center gap-2 text-white/56">
                 <Loader className="h-4 w-4 animate-spin" />
                 Loading voices...
               </div>
@@ -225,7 +221,7 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
                   value={formData.voice_id}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="shell-input"
                 >
                   <option value="">Select a voice</option>
                   {voices.map((voice) => (
@@ -237,14 +233,14 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
                 
                 {/* Selected Voice Info */}
                 {formData.voice_id && getVoiceById(formData.voice_id) && (
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-900 font-medium">
+                  <div className="rounded-2xl border border-sky-300/18 bg-sky-300/10 p-3">
+                    <p className="text-sm font-medium text-sky-100">
                       {getVoiceById(formData.voice_id).name}
                     </p>
-                    <p className="text-xs text-blue-700 mt-1">
+                    <p className="mt-1 text-xs text-sky-100/84">
                       {getVoiceById(formData.voice_id).description}
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">
+                    <p className="mt-1 text-xs text-sky-100/72">
                       Best for: {getVoiceById(formData.voice_id).use_case.replace(/_/g, ' ')}
                     </p>
                   </div>
@@ -255,7 +251,7 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
 
           {/* Language */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-white/84">
               Language *
             </label>
             <select
@@ -263,7 +259,7 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
               value={formData.language}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="shell-input"
             >
               {languages.map((lang) => (
                 <option key={lang.code} value={lang.code}>
@@ -275,7 +271,7 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
 
           {/* Service Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-white/84">
               Service Type *
             </label>
             <select
@@ -283,7 +279,7 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
               value={formData.service_type}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="shell-input"
             >
               {serviceTypes.map((type) => (
                 <option key={type} value={type}>
@@ -295,7 +291,7 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
 
           {/* Greeting Message */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-white/84">
               Greeting Message *
             </label>
             <textarea
@@ -306,36 +302,35 @@ const AgentForm = ({ tenantId, agent, existingAgents = [], onClose, onSuccess })
               placeholder="Hello! Thank you for calling. How can I help you today?"
               required
               rows={4}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 resize-none ${
+              className={`shell-input resize-none ${
                 fieldErrors.greeting_message
-                  ? 'border-red-300 focus:ring-red-500'
-                  : 'border-gray-300 focus:ring-blue-500'
+                  ? 'border-rose-300/40 text-rose-100'
+                  : ''
               }`}
             />
             {fieldErrors.greeting_message ? (
-              <p className="text-xs text-red-600 mt-1">
+              <p className="mt-1 text-xs text-rose-200">
                 {fieldErrors.greeting_message}
               </p>
             ) : (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="mt-1 text-xs text-white/50">
                 This message will be spoken when a call is received (minimum 10 characters)
               </p>
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 border-t border-white/8 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+              className="flex-1 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Saving...' : agent ? 'Update Agent' : 'Create Agent'}
             </button>

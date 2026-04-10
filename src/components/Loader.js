@@ -8,15 +8,15 @@ const Loader = ({ message = 'Loading...', fullScreen = false, size = 'default' }
     large: 'h-12 w-12'
   };
 
-  const containerClasses = fullScreen 
-    ? 'flex items-center justify-center min-h-screen' 
-    : 'flex items-center justify-center';
+  const containerClasses = fullScreen
+    ? 'flex min-h-screen w-full items-center justify-center px-4'
+    : 'flex min-h-[52vh] w-full items-center justify-center px-4 py-10';
 
   return (
     <div className={containerClasses}>
       <div className="text-center">
-        <LoaderIcon className={`${sizeClasses[size]} animate-spin text-blue-600 mx-auto mb-4`} />
-        <p className="text-gray-600">{message}</p>
+        <LoaderIcon className={`${sizeClasses[size]} mx-auto mb-4 animate-spin text-[#2f66ea]`} />
+        <p className="text-sm font-medium text-white/68">{message}</p>
       </div>
     </div>
   );

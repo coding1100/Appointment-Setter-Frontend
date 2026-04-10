@@ -341,29 +341,38 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
 
   const canGoBack = step > 0;
   const canGoNext = step < STEPS.length - 1;
+  const fieldLabelClass = 'shell-field-label';
+  const helperTextClass = 'shell-field-help';
+  const inputClass = 'shell-input';
+  const colorInputClass = 'h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] p-1';
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 my-8">
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#04070fcc] px-4 py-8 backdrop-blur-sm">
+      <div className="shell-modal my-8 flex max-h-[calc(100vh-4rem)] w-full max-w-5xl flex-col overflow-hidden rounded-[28px]">
+        <div className="flex items-start justify-between border-b border-white/8 px-6 py-5">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">{chatbot ? 'Edit Chatbot Agent' : 'Create Chatbot Agent'}</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-[0.78rem] uppercase tracking-[0.28em] text-white/50">Chatbot Workspace</p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-white">
+              {chatbot ? 'Edit Chatbot Agent' : 'Create Chatbot Agent'}
+            </h2>
+            <p className="mt-2 text-sm text-white/56">
               Step {step + 1} of {STEPS.length}: {STEPS[step]}
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+          <button onClick={onClose} className="text-white/46 transition hover:text-white/80">
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        <div className="px-6 pt-4">
-          <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="border-b border-white/8 px-6 pt-4">
+          <div className="flex gap-2 overflow-x-auto pb-4">
             {STEPS.map((label, index) => (
               <div
                 key={label}
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  index === step ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
+                className={`rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap ${
+                  index === step
+                    ? 'bg-[#2f66ea] text-white'
+                    : 'border border-white/8 bg-white/[0.03] text-white/56'
                 }`}
               >
                 {label}
@@ -372,28 +381,33 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
+          <div className="space-y-6">
+            {error && (
+              <div className="rounded-2xl border border-rose-300/18 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
+                {error}
+              </div>
+            )}
 
           {step === 0 && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
+                  <label className={fieldLabelClass}>Name *</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleFieldChange('name', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className={inputClass}
                     placeholder="e.g., Customer Success Assistant"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status *</label>
+                  <label className={fieldLabelClass}>Status *</label>
                   <select
                     value={formData.status}
                     onChange={(e) => handleFieldChange('status', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className={inputClass}
                   >
                     <option value="active">active</option>
                     <option value="inactive">inactive</option>
@@ -402,48 +416,50 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Allowed Origins *</label>
+                <label className={fieldLabelClass}>Allowed Origins *</label>
                 <textarea
                   value={formData.allowed_origins_text}
                   onChange={(e) => handleFieldChange('allowed_origins_text', e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                  className={`${inputClass} resize-none`}
                   placeholder={'https://www.yourwebsite.com\nhttps://staging.yourwebsite.com'}
                 />
+                <p className={helperTextClass}>List each approved website origin on its own line.</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Welcome Message *</label>
+                <label className={fieldLabelClass}>Welcome Message *</label>
                 <textarea
                   value={formData.welcome_message}
                   onChange={(e) => handleFieldChange('welcome_message', e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                  className={`${inputClass} resize-none`}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Theme</label>
+              <div className="shell-info-panel">
+                <label className={fieldLabelClass}>Theme</label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <input
                     type="color"
                     value={formData.theme.primary_color}
                     onChange={(e) => handleThemeChange('primary_color', e.target.value)}
-                    className="w-full h-10 border border-gray-300 rounded"
+                    className={colorInputClass}
                   />
                   <input
                     type="color"
                     value={formData.theme.background_color}
                     onChange={(e) => handleThemeChange('background_color', e.target.value)}
-                    className="w-full h-10 border border-gray-300 rounded"
+                    className={colorInputClass}
                   />
                   <input
                     type="color"
                     value={formData.theme.text_color}
                     onChange={(e) => handleThemeChange('text_color', e.target.value)}
-                    className="w-full h-10 border border-gray-300 rounded"
+                    className={colorInputClass}
                   />
                 </div>
+                <p className={helperTextClass}>These colors affect the embedded launcher and chat widget appearance.</p>
               </div>
             </div>
           )}
@@ -451,11 +467,11 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Domain *</label>
+                <label className={fieldLabelClass}>Domain *</label>
                 <select
                   value={formData.domain_key}
                   onChange={(e) => handleFieldChange('domain_key', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className={inputClass}
                 >
                   {DOMAIN_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -467,12 +483,12 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
 
               {formData.domain_key === 'custom' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Custom Domain Name *</label>
+                  <label className={fieldLabelClass}>Custom Domain Name *</label>
                   <input
                     type="text"
                     value={formData.custom_domain_name}
                     onChange={(e) => handleFieldChange('custom_domain_name', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className={inputClass}
                     placeholder="e.g., Legal Intake Assistant"
                   />
                 </div>
@@ -482,29 +498,29 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
 
           {step === 2 && (
             <div className="space-y-4">
-              <div className="bg-sky-50 border border-sky-200 rounded-lg px-4 py-3">
-                <p className="text-sm font-semibold text-sky-900">Set your chatbot personality in plain language</p>
-                <p className="text-sm text-sky-700 mt-1">
+              <div className="rounded-[22px] border border-sky-300/18 bg-sky-300/10 px-4 py-3">
+                <p className="text-sm font-semibold text-sky-100">Set your chatbot personality in plain language</p>
+                <p className="mt-1 text-sm text-sky-100/80">
                   Start with a preset, then adjust tone and response style. Advanced controls are optional.
                 </p>
               </div>
 
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">Quick Setup Presets</p>
+                <p className={fieldLabelClass}>Quick Setup Presets</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {BEHAVIOR_PRESETS.map((preset) => (
                     <button
                       key={preset.id}
                       type="button"
                       onClick={() => applyBehaviorPreset(preset.id)}
-                      className={`text-left border rounded-lg p-3 transition ${
+                      className={`rounded-[22px] border p-4 text-left transition ${
                         activeBehaviorPreset === preset.id
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
+                          ? 'border-sky-300/24 bg-sky-300/10'
+                          : 'border-white/8 bg-white/[0.03] hover:border-sky-300/20 hover:bg-white/[0.05]'
                       }`}
                     >
-                      <p className="text-sm font-semibold text-gray-900">{preset.label}</p>
-                      <p className="text-xs text-gray-600 mt-1">{preset.description}</p>
+                      <p className="text-sm font-semibold text-white">{preset.label}</p>
+                      <p className="mt-1 text-xs text-white/58">{preset.description}</p>
                     </button>
                   ))}
                 </div>
@@ -512,22 +528,22 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Who is this bot? *</label>
+                  <label className={fieldLabelClass}>Who is this bot? *</label>
                   <input
                     type="text"
                     value={formData.behavior.persona}
                     onChange={(e) => handleBehaviorChange('persona', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className={inputClass}
                     placeholder="Example: Friendly support assistant"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Main job of the bot *</label>
+                  <label className={fieldLabelClass}>Main job of the bot *</label>
                   <input
                     type="text"
                     value={formData.behavior.goal}
                     onChange={(e) => handleBehaviorChange('goal', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className={inputClass}
                     placeholder="Example: Help customers with orders and returns"
                   />
                 </div>
@@ -535,11 +551,11 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tone *</label>
+                  <label className={fieldLabelClass}>Tone *</label>
                   <select
                     value={formData.behavior.tone}
                     onChange={(e) => handleBehaviorChange('tone', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className={inputClass}
                   >
                     {TONE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -549,11 +565,11 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Answer style *</label>
+                  <label className={fieldLabelClass}>Answer style *</label>
                   <select
                     value={formData.behavior.response_style}
                     onChange={(e) => handleBehaviorChange('response_style', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className={inputClass}
                   >
                     {RESPONSE_STYLE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -563,11 +579,11 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Language *</label>
+                  <label className={fieldLabelClass}>Language *</label>
                   <select
                     value={formData.behavior.language}
                     onChange={(e) => handleBehaviorChange('language', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className={inputClass}
                   >
                     {LANGUAGE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -582,25 +598,25 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">When should it hand over to a human? *</label>
+                <label className={fieldLabelClass}>When should it hand over to a human? *</label>
                 <textarea
                   value={formData.behavior.escalation_instructions}
                   onChange={(e) => handleBehaviorChange('escalation_instructions', e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                  className={`${inputClass} resize-none`}
                   placeholder="Example: Escalate billing disputes and account closure requests to support manager."
                 />
               </div>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
                 <button
                   type="button"
                   onClick={() => setShowAdvancedBehavior((value) => !value)}
-                  className="text-sm font-medium text-blue-700 hover:text-blue-800"
+                  className="text-sm font-medium text-sky-100 hover:text-white"
                 >
                   {showAdvancedBehavior ? 'Hide advanced behavior settings' : 'Show advanced behavior settings'}
                 </button>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="mt-1 text-xs text-white/50">
                   Advanced settings are optional. Use them only if you need strict topic boundaries.
                 </p>
               </div>
@@ -609,22 +625,22 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Allowed topics (optional)</label>
+                      <label className={fieldLabelClass}>Allowed topics (optional)</label>
                       <textarea
                         value={formData.behavior.allowed_topics_text}
                         onChange={(e) => handleBehaviorChange('allowed_topics_text', e.target.value)}
                         rows={5}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                        className={`${inputClass} resize-none`}
                         placeholder="One per line. Example: Orders, Pricing, Scheduling"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Blocked topics (optional)</label>
+                      <label className={fieldLabelClass}>Blocked topics (optional)</label>
                       <textarea
                         value={formData.behavior.blocked_topics_text}
                         onChange={(e) => handleBehaviorChange('blocked_topics_text', e.target.value)}
                         rows={5}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                        className={`${inputClass} resize-none`}
                         placeholder="One per line. Example: Medical advice, Legal advice"
                       />
                       <button
@@ -635,7 +651,7 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
                             mergeLineItems(formData.behavior.blocked_topics_text, 'Medical advice\nLegal advice\nFinancial advice')
                           )
                         }
-                        className="mt-2 text-xs text-blue-700 hover:text-blue-800"
+                        className="mt-2 text-xs text-sky-100 hover:text-white"
                       >
                         + Add common sensitive topics
                       </button>
@@ -643,12 +659,12 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Extra instructions for your team voice (optional)</label>
+                    <label className={fieldLabelClass}>Extra instructions for your team voice (optional)</label>
                     <textarea
                       value={formData.behavior.custom_instructions}
                       onChange={(e) => handleBehaviorChange('custom_instructions', e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                      className={`${inputClass} resize-none`}
                       placeholder="Example: Greet with first name when available. Never promise refunds without approval."
                     />
                   </div>
@@ -659,27 +675,29 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
 
           {step === 3 && (
             <div className="space-y-4">
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3">
-                <p className="text-sm font-semibold text-emerald-900">Give your bot trusted business information</p>
-                <p className="text-sm text-emerald-700 mt-1">The bot will use this information as source-of-truth while answering users.</p>
+              <div className="rounded-[22px] border border-emerald-300/18 bg-emerald-300/10 px-4 py-3">
+                <p className="text-sm font-semibold text-emerald-100">Give your bot trusted business information</p>
+                <p className="mt-1 text-sm text-emerald-100/78">
+                  The bot will use this information as source-of-truth while answering users.
+                </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Business facts *</label>
+                <label className={fieldLabelClass}>Business facts *</label>
                 <textarea
                   value={formData.knowledge.business_facts}
                   onChange={(e) => handleKnowledgeChange('business_facts', e.target.value)}
                   rows={6}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                  className={`${inputClass} resize-none`}
                   placeholder="Include hours, location, return policy, contact details, service areas, and important rules."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">FAQ pairs (optional)</label>
+                <label className={fieldLabelClass}>FAQ pairs (optional)</label>
                 <textarea
                   value={formData.knowledge.faq_text}
                   onChange={(e) => handleKnowledgeChange('faq_text', e.target.value)}
                   rows={7}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+                  className={`${inputClass} resize-none`}
                   placeholder={'Format: Question | Answer\nExample: What are your hours? | Mon-Fri 9 AM to 6 PM'}
                 />
               </div>
@@ -688,51 +706,53 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
 
           {step === 4 && (
             <div className="space-y-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-                <p className="text-sm font-semibold text-amber-900">Choose how the launcher looks on your website</p>
-                <p className="text-sm text-amber-700 mt-1">These settings control the floating button visitors click to open chat.</p>
+              <div className="rounded-[22px] border border-amber-300/18 bg-amber-300/10 px-4 py-3">
+                <p className="text-sm font-semibold text-amber-100">Choose how the launcher looks on your website</p>
+                <p className="mt-1 text-sm text-amber-100/78">
+                  These settings control the floating button visitors click to open chat.
+                </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Button position</label>
+                  <label className={fieldLabelClass}>Button position</label>
                   <select
                     value={formData.launcher.position}
                     onChange={(e) => handleLauncherChange('position', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className={inputClass}
                   >
                     <option value="bottom-right">Bottom right</option>
                     <option value="bottom-left">Bottom left</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Button label *</label>
+                  <label className={fieldLabelClass}>Button label *</label>
                   <input
                     type="text"
                     value={formData.launcher.button_label}
                     onChange={(e) => handleLauncherChange('button_label', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className={inputClass}
                     placeholder="Example: Chat with us"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Icon name</label>
+                  <label className={fieldLabelClass}>Icon name</label>
                   <input
                     type="text"
                     value={formData.launcher.button_icon}
                     onChange={(e) => handleLauncherChange('button_icon', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className={inputClass}
                     placeholder="Example: message-circle"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Accent color</label>
+                  <label className={fieldLabelClass}>Accent color</label>
                   <input
                     type="color"
                     value={formData.launcher.accent_color}
                     onChange={(e) => handleLauncherChange('accent_color', e.target.value)}
-                    className="w-full h-10 border border-gray-300 rounded"
+                    className={colorInputClass}
                   />
                 </div>
               </div>
@@ -740,32 +760,32 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
           )}
 
           {step === 5 && (
-            <div className="space-y-3 text-sm text-gray-700">
+            <div className="shell-info-panel space-y-3 text-sm text-white/76">
               <div>
-                <span className="font-medium">Name:</span> {formData.name || '-'}
+                <span className="font-medium text-white">Name:</span> {formData.name || '-'}
               </div>
               <div>
-                <span className="font-medium">Domain:</span>{' '}
+                <span className="font-medium text-white">Domain:</span>{' '}
                 {formData.domain_key === 'custom' ? formData.custom_domain_name || 'custom' : formData.domain_key}
               </div>
               <div>
-                <span className="font-medium">Allowed Origins:</span> {parsedOrigins.length}
+                <span className="font-medium text-white">Allowed Origins:</span> {parsedOrigins.length}
               </div>
               <div>
-                <span className="font-medium">Launcher:</span> {formData.launcher.position} / {formData.launcher.button_label}
+                <span className="font-medium text-white">Launcher:</span> {formData.launcher.position} / {formData.launcher.button_label}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-white/46">
                 Submitting saves production settings. Then use "Generate Launcher" or "Copy Launcher Snippet" from the list.
               </div>
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center justify-between border-t border-white/8 pt-5">
             <button
               type="button"
               onClick={() => setStep((value) => Math.max(0, value - 1))}
               disabled={!canGoBack}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ArrowLeft className="h-4 w-4" />
               Back
@@ -776,7 +796,7 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
                 <button
                   type="button"
                   onClick={() => setStep((value) => Math.min(STEPS.length - 1, value + 1))}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#295ad0]"
                 >
                   Next
                   <ArrowRight className="h-4 w-4" />
@@ -785,12 +805,13 @@ const ChatbotForm = ({ chatbot, existingChatbots = [], onClose, onSuccess }) => 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                  className="rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading ? 'Saving...' : chatbot ? 'Update Chatbot' : 'Create Chatbot'}
                 </button>
               )}
             </div>
+          </div>
           </div>
         </form>
       </div>

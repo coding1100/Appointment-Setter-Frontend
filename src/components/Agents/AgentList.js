@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Edit, Plus, Power, PowerOff, Trash2, User, Volume2 } from 'lucide-react';
+
 import { agentAPI } from '../../services/api';
-import { Plus, Edit, Trash2, Power, PowerOff, User, Volume2 } from 'lucide-react';
 import AgentForm from './AgentForm';
 import Loader from '../Loader';
 
@@ -15,15 +16,14 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
   const formatError = (err, defaultMsg) => {
     const errorDetail = err.response?.data?.detail;
     if (Array.isArray(errorDetail)) {
-      return errorDetail.map(e => `${e.loc?.join('.')} - ${e.msg}`).join(', ');
+      return errorDetail.map((entry) => `${entry.loc?.join('.')} - ${entry.msg}`).join(', ');
     }
     return typeof errorDetail === 'string' ? errorDetail : defaultMsg;
   };
 
-  // Memoized fetch function to prevent infinite loops
   const fetchAgents = useCallback(async () => {
     if (!tenantId) return;
-    
+
     try {
       setLoading(true);
       const response = await agentAPI.listAgents(tenantId);
@@ -40,7 +40,7 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
     if (tenantId) {
       fetchAgents();
     }
-  }, [tenantId]); // Intentionally excluding fetchAgents to prevent circular deps
+  }, [tenantId, fetchAgents]);
 
   useEffect(() => {
     if (createRequested > 0) {
@@ -102,127 +102,138 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Agent Management</h2>
-          <p className="text-gray-600 mt-1">Configure and manage your AI voice agents</p>
+          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-white/68">Voice Agent Directory</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-white">Agent Management</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-7 text-white/72">
+            Configure tenant-specific AI voice agents, greeting behavior, language, and activation state from a single
+            operational workspace.
+          </p>
         </div>
         <button
           onClick={handleCreateAgent}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0]"
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-4 w-4" />
           Create Agent
         </button>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {error}
-        </div>
-      )}
+      {error && <div className="rounded-2xl border border-rose-300/18 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</div>}
 
-      {/* Agents List */}
       {agents.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No agents yet</h3>
-          <p className="text-gray-600 mb-6">Create your first AI voice agent to get started</p>
+        <div className="flex min-h-[420px] flex-col items-center justify-center rounded-[28px] border border-white/8 bg-white/[0.04] px-6 text-center">
+          <User className="h-16 w-16 text-white/34" />
+          <h3 className="mt-6 text-2xl font-semibold tracking-[-0.02em] text-white">No agents yet</h3>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/70">
+            Create your first AI voice agent to start handling tenant-specific calls, greetings, and service workflows.
+          </p>
           <button
             onClick={handleCreateAgent}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-[#2f66ea] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0]"
           >
             <Plus className="h-5 w-5" />
             Create First Agent
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {agents.map((agent) => (
-            <div
-              key={agent.id}
-              className="bg-white rounded-lg shadow hover:shadow-lg transition p-6 border border-gray-200"
-            >
-              {/* Agent Status Badge */}
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-2">
-                  <User className="h-10 w-10 text-blue-600 bg-blue-50 p-2 rounded-full" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{agent.name}</h3>
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full ${
+        <div className="overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.04]">
+          <div className="hidden grid-cols-[minmax(0,1.2fr)_180px_160px_220px] gap-4 border-b border-white/8 px-5 py-3 text-xs uppercase tracking-[0.28em] text-white/44 lg:grid">
+            <div>Agent</div>
+            <div>Service</div>
+            <div>Status</div>
+            <div>Actions</div>
+          </div>
+
+          <div className="divide-y divide-white/8">
+            {agents.map((agent) => (
+              <div key={agent.id} className="px-5 py-5">
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_180px_160px_220px] lg:items-start">
+                  <div className="min-w-0">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/8">
+                        <User className="h-5 w-5 text-sky-200" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="truncate text-lg font-semibold text-white">{agent.name}</h3>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                              agent.status === 'active'
+                                ? 'bg-emerald-400/14 text-emerald-200'
+                                : 'bg-white/10 text-white/60'
+                            }`}
+                          >
+                            {agent.status}
+                          </span>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/50">
+                          <span className="flex items-center gap-2">
+                            <Volume2 className="h-3.5 w-3.5 text-white/34" />
+                            {agent.language}
+                          </span>
+                        </div>
+                        <p className="mt-3 max-w-2xl text-sm leading-6 text-white/66 line-clamp-2">
+                          {agent.greeting_message}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-white/72 lg:pt-2">
+                    <div className="text-[11px] uppercase tracking-[0.2em] text-white/42 lg:hidden">Service</div>
+                    <div className="mt-1 capitalize lg:mt-0">{agent.service_type}</div>
+                  </div>
+
+                  <div className="text-sm text-white/72 lg:pt-2">
+                    <div className="text-[11px] uppercase tracking-[0.2em] text-white/42 lg:hidden">Status</div>
+                    <div className="mt-1 lg:mt-0">{agent.status === 'active' ? 'Live and answering' : 'Inactive'}</div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handleEditAgent(agent)}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-3.5 py-2.5 text-sm text-white transition hover:bg-white/10"
+                    >
+                      <Edit className="h-4 w-4" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleToggleStatus(agent)}
+                      className={`inline-flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-medium transition ${
                         agent.status === 'active'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-700'
+                          ? 'bg-amber-300/12 text-amber-100 hover:bg-amber-300/18'
+                          : 'bg-emerald-300/12 text-emerald-100 hover:bg-emerald-300/18'
                       }`}
                     >
-                      {agent.status}
-                    </span>
+                      {agent.status === 'active' ? (
+                        <>
+                          <PowerOff className="h-4 w-4" />
+                          Deactivate
+                        </>
+                      ) : (
+                        <>
+                          <Power className="h-4 w-4" />
+                          Activate
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(agent)}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-rose-300/18 bg-rose-400/10 px-3.5 py-2.5 text-sm text-rose-100 transition hover:bg-rose-400/16"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </button>
                   </div>
                 </div>
               </div>
-
-              {/* Agent Details */}
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Volume2 className="h-4 w-4" />
-                  <span className="capitalize">{agent.service_type}</span>
-                </div>
-                <div className="text-sm text-gray-600">
-                  <span className="font-medium">Language:</span> {agent.language}
-                </div>
-              </div>
-
-              {/* Greeting Message Preview */}
-              <div className="bg-gray-50 rounded p-3 mb-4">
-                <p className="text-xs text-gray-500 mb-1">Greeting:</p>
-                <p className="text-sm text-gray-700 line-clamp-2">{agent.greeting_message}</p>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEditAgent(agent)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition text-sm"
-                >
-                  <Edit className="h-4 w-4" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleToggleStatus(agent)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded transition text-sm ${
-                    agent.status === 'active'
-                      ? 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'
-                      : 'bg-green-50 text-green-600 hover:bg-green-100'
-                  }`}
-                >
-                  {agent.status === 'active' ? (
-                    <>
-                      <PowerOff className="h-4 w-4" />
-                      Deactivate
-                    </>
-                  ) : (
-                    <>
-                      <Power className="h-4 w-4" />
-                      Activate
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => handleDeleteClick(agent)}
-                  className="px-3 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Agent Form Modal */}
       {showForm && (
         <AgentForm
           tenantId={tenantId}
@@ -233,25 +244,23 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Agent</h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete <strong>{deleteConfirm.name}</strong>? This action
-              cannot be undone.
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#04070fcc] px-4 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md rounded-[28px] border border-white/10 bg-[#11192b]/94 p-6 shadow-[0_30px_90px_rgba(2,6,18,0.55)]">
+            <h3 className="mb-2 text-lg font-semibold text-white">Delete Agent</h3>
+            <p className="mb-6 text-sm leading-7 text-white/70">
+              Are you sure you want to delete <strong>{deleteConfirm.name}</strong>? This action cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                className="flex-1 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                className="flex-1 rounded-2xl bg-[#dc2626] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#c81e1e]"
               >
                 Delete
               </button>
@@ -264,4 +273,3 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
 };
 
 export default AgentList;
-

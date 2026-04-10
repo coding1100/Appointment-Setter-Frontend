@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import api, { tenantAPI, agentAPI, phoneNumberAPI } from '../../services/api';
-import { Phone, CheckCircle, XCircle, AlertCircle, Settings, TestTube, User, Users, ShoppingCart, Search, Copy, RefreshCw, Info, ChevronDown, ChevronUp, Globe2, Key } from 'lucide-react';
+import { Phone, CheckCircle, XCircle, Settings, TestTube, User, Users, ShoppingCart, Search, Copy, RefreshCw, Info, ChevronDown, ChevronUp, Globe2, Key } from 'lucide-react';
 
 // Get API base URL for direct fetch calls (should NOT include /api/v1)
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001';
 
 const TwilioIntegration = () => {
-  const { user } = useAuth();
   const [tenants, setTenants] = useState([]);
   const [selectedTenant, setSelectedTenant] = useState('');
   const [integration, setIntegration] = useState(null);
@@ -438,28 +437,26 @@ const TwilioIntegration = () => {
     }
   };
 
-  const getAssignedPhone = (agentId) => {
-    return phoneAssignments.find(p => p.agent_id === agentId);
-  };
-
   const capabilityBadge = (label, enabled) => (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-1 ${enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}
+      className={`mr-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+        enabled ? 'bg-emerald-400/14 text-emerald-100' : 'bg-white/10 text-white/48'
+      }`}
     >
       {label}
     </span>
   );
 
   const NumberRow = ({ n, right, showCountry = true }) => (
-    <div className="border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:shadow-sm transition bg-white">
+    <div className="flex items-center justify-between rounded-[22px] border border-white/8 bg-white/[0.03] p-4 transition hover:bg-white/[0.05]">
       <div className="flex-1">
         <div className="flex items-center space-x-2 mb-1">
-          <p className="font-semibold text-gray-900">{n.phone_number}</p>
+          <p className="font-semibold text-white">{n.phone_number}</p>
           {showCountry && n.iso_country && (
-            <span className="text-[10px] uppercase tracking-wide bg-blue-50 text-blue-700 px-2 py-0.5 rounded">{n.iso_country}</span>
+            <span className="rounded px-2 py-0.5 text-[10px] uppercase tracking-wide bg-sky-300/12 text-sky-100">{n.iso_country}</span>
           )}
         </div>
-        {n.friendly_name && <p className="text-xs text-gray-500 mb-2">{n.friendly_name}</p>}
+        {n.friendly_name && <p className="mb-2 text-xs text-white/50">{n.friendly_name}</p>}
         <div className="flex items-center">
           {capabilityBadge('voice', Boolean(n.capabilities?.voice))}
           {capabilityBadge('sms', Boolean(n.capabilities?.sms))}
@@ -473,7 +470,7 @@ const TwilioIntegration = () => {
             setCopyToast(n.phone_number); 
             setTimeout(() => setCopyToast(''), 1500); 
           }}
-          className="inline-flex items-center px-2 py-1 border border-gray-200 text-xs rounded-md text-gray-600 hover:bg-gray-50"
+          className="inline-flex items-center rounded-xl border border-white/10 px-2 py-1 text-xs text-white/68 hover:bg-white/8"
           title="Copy number"
         >
           <Copy className="h-3.5 w-3.5" />
@@ -484,46 +481,52 @@ const TwilioIntegration = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Shared Twilio Credentials</h1>
-          <p className="mt-2 text-gray-600">
-            One credential set per tenant, shared by Appointment Setter and Cold Caller. Number ownership is managed in Telephony Hub.
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-white/68">Twilio Workspace</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-white">Shared Twilio Credentials</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-7 text-white/72">
+            One credential set per tenant for voice workflows, with phone purchasing and assignments managed from the same workspace.
           </p>
         </div>
+        <button
+          onClick={fetchIntegration}
+          disabled={!selectedTenant || loading}
+          className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Refresh integration
+        </button>
+      </div>
 
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
-            <XCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-            <span>{typeof error === 'string' ? error : JSON.stringify(error)}</span>
-          </div>
-        )}
+      {error && (
+        <div className="flex items-center rounded-2xl border border-rose-300/18 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
+          <XCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+          <span>{typeof error === 'string' ? error : JSON.stringify(error)}</span>
+        </div>
+      )}
 
-        {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
-            <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-            <span>{typeof success === 'string' ? success : JSON.stringify(success)}</span>
-          </div>
-        )}
+      {success && (
+        <div className="flex items-center rounded-2xl border border-emerald-300/18 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
+          <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+          <span>{typeof success === 'string' ? success : JSON.stringify(success)}</span>
+        </div>
+      )}
 
-        {/* Step 1: Connect Twilio Account */}
-        <div className="bg-white shadow rounded-lg mb-8">
-          <div className="px-4 py-5 sm:p-6">
+        <div className="rounded-[28px] border border-white/8 bg-white/[0.04] p-5">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                  <Key className="h-5 w-5 mr-2 text-blue-600" />
+                <h3 className="flex items-center text-lg font-semibold text-white">
+                  <Key className="mr-2 h-5 w-5 text-sky-200" />
                   Step 1: Connect Twilio Account
                 </h3>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-white/56">
                   Enter tenant-level Twilio credentials used by both services.
                 </p>
               </div>
               {integration && (
-                <div className="flex items-center text-green-600">
-                  <CheckCircle className="h-5 w-5 mr-2" />
+                <div className="flex items-center text-emerald-100">
+                  <CheckCircle className="mr-2 h-5 w-5" />
                   <span className="font-medium">Connected</span>
                 </div>
               )}
@@ -531,13 +534,13 @@ const TwilioIntegration = () => {
 
             {/* Tenant Selection */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-white/84">
                 Tenant
               </label>
               <select
                 value={selectedTenant}
                 onChange={(e) => setSelectedTenant(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="shell-input"
               >
                 {tenants.map((tenant) => (
                   <option key={tenant.id} value={tenant.id}>
@@ -550,7 +553,7 @@ const TwilioIntegration = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               {/* Account SID */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-white/84">
                   Account SID *
                 </label>
                 <input
@@ -559,13 +562,13 @@ const TwilioIntegration = () => {
                   value={formData.accountSid}
                   onChange={handleInputChange}
                   placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="shell-input"
                 />
               </div>
 
               {/* Auth Token */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-white/84">
                   Auth Token *
                 </label>
                 <input
@@ -574,7 +577,7 @@ const TwilioIntegration = () => {
                   value={formData.authToken}
                   onChange={handleInputChange}
                   placeholder="Enter your Twilio Auth Token"
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="shell-input"
                 />
               </div>
             </div>
@@ -583,20 +586,20 @@ const TwilioIntegration = () => {
             <div className="mb-4">
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                className="flex items-center text-sm font-medium text-white/72 hover:text-white"
               >
                 {showAdvanced ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
                 Advanced Settings (Optional)
               </button>
               
               {showAdvanced && (
-                <div className="mt-3 space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="text-xs text-gray-500 mb-3">
+                <div className="mt-3 space-y-4 rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
+                  <div className="mb-3 text-xs text-white/48">
                     <Info className="h-4 w-4 inline mr-1" />
                     Webhooks are auto-configured from TWILIO_WEBHOOK_BASE_URL. This page controls shared credentials only.
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-white/84">
                       Appointment Setter Webhook URL
                     </label>
                     <input
@@ -605,11 +608,11 @@ const TwilioIntegration = () => {
                       value={formData.webhookUrl}
                       onChange={handleInputChange}
                       placeholder="https://your-domain.com/api/v1/voice-agent/twilio/webhook"
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="shell-input"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-white/84">
                       Appointment Setter Status Callback URL
                     </label>
                     <input
@@ -618,7 +621,7 @@ const TwilioIntegration = () => {
                       value={formData.statusCallbackUrl}
                       onChange={handleInputChange}
                       placeholder="https://your-domain.com/api/v1/voice-agent/twilio/status"
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="shell-input"
                     />
                   </div>
                 </div>
@@ -630,7 +633,7 @@ const TwilioIntegration = () => {
               <button
                 onClick={testCredentials}
                 disabled={loading || !formData.accountSid || !formData.authToken}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center rounded-2xl border border-white/10 bg-white/6 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <TestTube className="h-4 w-4 mr-2" />
                 {loading ? 'Testing...' : 'Test Credentials'}
@@ -639,7 +642,7 @@ const TwilioIntegration = () => {
               <button
                 onClick={saveIntegration}
                 disabled={loading || !formData.accountSid || !formData.authToken}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center rounded-2xl bg-[#2f66ea] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Settings className="h-4 w-4 mr-2" />
                 {loading ? 'Saving...' : (integration ? 'Update Integration' : 'Save Integration')}
@@ -649,7 +652,7 @@ const TwilioIntegration = () => {
                 <button
                   onClick={deleteIntegration}
                   disabled={loading}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                  className="inline-flex items-center rounded-2xl bg-[#dc2626] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#c81e1e] disabled:opacity-50"
                 >
                   <XCircle className="h-4 w-4 mr-2" />
                   Delete
@@ -659,353 +662,343 @@ const TwilioIntegration = () => {
 
             {/* Test Results */}
             {testResult && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center text-blue-700 mb-2">
+              <div className="mt-4 rounded-[22px] border border-sky-300/18 bg-sky-300/10 p-4">
+                <div className="mb-2 flex items-center text-sky-100">
                   <CheckCircle className="h-5 w-5 mr-2" />
                   <span className="font-medium">Credentials Verified</span>
                 </div>
-                <div className="text-sm text-blue-800">
+                <div className="text-sm text-sky-100/84">
                   <p><strong>Account:</strong> {testResult.account_info?.friendly_name || 'Verified'}</p>
                   <p><strong>Status:</strong> {testResult.account_info?.status || 'Active'}</p>
                 </div>
               </div>
             )}
-          </div>
         </div>
 
         {/* Step 2: Phone Number Management */}
         {selectedTenant && agents.length > 0 && (
-          <div className="bg-white shadow rounded-lg mb-8">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                    <Phone className="h-5 w-5 mr-2 text-blue-600" />
-                    Step 2: Manage Phone Numbers
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {integration ? 'Use your existing numbers or buy new ones' : 'Buy phone numbers using our system account or connect your own'}
-                  </p>
-                </div>
+          <div className="rounded-[28px] border border-white/8 bg-white/[0.04] p-5">
+            <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <h3 className="flex items-center text-lg font-semibold text-white">
+                  <Phone className="mr-2 h-5 w-5 text-sky-200" />
+                  Step 2: Manage Phone Numbers
+                </h3>
+                <p className="mt-1 text-sm text-white/56">
+                  {integration
+                    ? 'Reuse numbers from your account or search for fresh inventory.'
+                    : 'Use the system account until a tenant-specific Twilio connection is added.'}
+                </p>
               </div>
+            </div>
 
-              {/* Agent and Flow Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Agent
-                  </label>
-                  <select
-                    value={selectedAgentId}
-                    onChange={(e) => setSelectedAgentId(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  >
-                    <option value="">Choose an agent</option>
-                    {agents.map(a => (
-                      <option key={a.id} value={a.id}>{a.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Action
-                  </label>
-                  <select
-                    value={flowMode}
-                    onChange={(e) => { 
-                      setFlowMode(e.target.value); 
-                      setAvailableNumbers([]); 
-                      setUnassignedNumbers([]); 
-                    }}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  >
-                    {integration ? (
-                      <>
-                        <option value="tenant">Use my existing numbers</option>
-                        <option value="tenant-purchase">Buy from my Twilio account</option>
-                      </>
-                    ) : (
-                      <option value="system">Buy from system account</option>
-                    )}
-                  </select>
-                </div>
-                <div className="flex items-end">
-                  {(flowMode === 'tenant' || flowMode === 'system') && (
-                    <button
-                      onClick={fetchUnassignedNumbers}
-                      disabled={loading}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 w-full justify-center"
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" /> Load Numbers
-                    </button>
-                  )}
-                </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-white/84">Select Agent</label>
+                <select value={selectedAgentId} onChange={(e) => setSelectedAgentId(e.target.value)} className="shell-input">
+                  <option value="">Choose an agent</option>
+                  {agents.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-
-              {/* Unassigned Numbers List */}
-              {flowMode === 'tenant' && (
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-md font-semibold text-gray-900">Your Unassigned Numbers</h4>
-                    {unassignedNumbers.length > 0 && (
-                      <span className="text-sm text-gray-500">{unassignedNumbers.length} available</span>
-                    )}
-                  </div>
-                  {!integration ? (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                      <div className="flex items-start">
-                        <Info className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
-                        <div>
-                          <p className="text-sm text-yellow-800 font-medium">Connect your Twilio account first</p>
-                          <p className="text-xs text-yellow-700 mt-1">
-                            Please save your credentials in Step 1 above to use your existing phone numbers.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-white/84">Action</label>
+                <select
+                  value={flowMode}
+                  onChange={(e) => {
+                    setFlowMode(e.target.value);
+                    setAvailableNumbers([]);
+                    setUnassignedNumbers([]);
+                  }}
+                  className="shell-input"
+                >
+                  {integration ? (
+                    <>
+                      <option value="tenant">Use my existing numbers</option>
+                      <option value="tenant-purchase">Buy from my Twilio account</option>
+                    </>
                   ) : (
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
-                      {unassignedNumbers.map((n, idx) => (
-                        <NumberRow
-                          key={idx}
-                          n={n}
-                          right={(
-                            <button
-                              disabled={!selectedAgentId || assignmentLoading}
-                              onClick={() => handleAssignPhone(selectedAgentId, n.phone_number)}
-                              className="inline-flex items-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <Phone className="h-4 w-4 mr-1" /> Assign
-                            </button>
-                          )}
-                        />
-                      ))}
-                      {unassignedNumbers.length === 0 && (
-                        <div className="text-center py-8 text-gray-500 border border-gray-200 rounded-lg">
-                          <Phone className="h-10 w-10 mx-auto mb-2 text-gray-400" />
-                          <p className="text-sm">No unassigned numbers found.</p>
-                          <p className="text-xs mt-1">Click "Load Numbers" to refresh or buy numbers below.</p>
-                        </div>
-                      )}
-                    </div>
+                    <option value="system">Buy from system account</option>
                   )}
-                </div>
-              )}
+                </select>
+              </div>
+              <div className="flex items-end">
+                {(flowMode === 'tenant' || flowMode === 'system') && (
+                  <button
+                    onClick={fetchUnassignedNumbers}
+                    disabled={loading}
+                    className="inline-flex w-full items-center justify-center rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Load Numbers
+                  </button>
+                )}
+              </div>
+            </div>
 
-              {/* Search & Purchase */}
-              {(flowMode === 'tenant-purchase' || flowMode === 'system') && (
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-md font-semibold text-gray-900">
-                      {flowMode === 'system' ? 'Buy Phone Number from System Account' : 'Buy Phone Number from Your Account'}
-                    </h4>
-                    {availableNumbers.length > 0 && (
-                      <span className="text-sm text-gray-500">{availableNumbers.length} available</span>
-                    )}
-                  </div>
-                  {flowMode === 'tenant-purchase' && !integration && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                      <div className="flex items-start">
-                        <Info className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
-                        <p className="text-sm text-yellow-800">
-                          Please connect your Twilio account in Step 1 first to purchase numbers from your account.
+            {flowMode === 'tenant' && (
+              <div className="mt-6">
+                <div className="mb-3 flex items-center justify-between">
+                  <h4 className="text-sm font-semibold uppercase tracking-[0.24em] text-white/58">Your Unassigned Numbers</h4>
+                  {unassignedNumbers.length > 0 && <span className="text-sm text-white/48">{unassignedNumbers.length} available</span>}
+                </div>
+                {!integration ? (
+                  <div className="rounded-[22px] border border-amber-300/18 bg-amber-300/10 p-4">
+                    <div className="flex items-start">
+                      <Info className="mr-2 mt-0.5 h-5 w-5 text-amber-100" />
+                      <div>
+                        <p className="text-sm font-medium text-amber-50">Connect your Twilio account first</p>
+                        <p className="mt-1 text-xs text-amber-100/78">
+                          Save tenant credentials in Step 1 if you want to reuse numbers that already exist in your own Twilio project.
                         </p>
                       </div>
                     </div>
-                  )}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-                    <input
-                      type="text"
-                      placeholder="Country (e.g., US)"
-                      value={searchParams.country}
-                      onChange={(e) => setSearchParams(p => ({ ...p, country: e.target.value }))}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                    <select
-                      value={searchParams.numberType}
-                      onChange={(e) => setSearchParams(p => ({ ...p, numberType: e.target.value }))}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    >
-                      <option value="local">Local</option>
-                      <option value="tollfree">Toll-Free</option>
-                    </select>
-                    <input
-                      type="text"
-                      placeholder="Area code (optional)"
-                      value={searchParams.areaCode}
-                      onChange={(e) => setSearchParams(p => ({ ...p, areaCode: e.target.value }))}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                    <button
-                      onClick={searchAvailable}
-                      disabled={loading}
-                      className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      <Search className="h-4 w-4 mr-2" /> Search
-                    </button>
                   </div>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {availableNumbers.map((n, idx) => (
+                ) : (
+                  <div className="space-y-3">
+                    {unassignedNumbers.map((n, idx) => (
                       <NumberRow
                         key={idx}
                         n={n}
-                        right={(
+                        right={
                           <button
-                            onClick={() => purchaseNumber(n.phone_number)}
-                            disabled={purchaseLoading || !selectedAgentId}
-                            className="inline-flex items-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={!selectedAgentId || assignmentLoading}
+                            onClick={() => handleAssignPhone(selectedAgentId, n.phone_number)}
+                            className="inline-flex items-center rounded-2xl bg-[#2f66ea] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            <ShoppingCart className="h-4 w-4 mr-1" /> Purchase
+                            <Phone className="mr-1 h-4 w-4" />
+                            Assign
                           </button>
-                        )}
+                        }
                       />
                     ))}
-                    {availableNumbers.length === 0 && (
-                      <div className="text-center py-8 text-gray-500 border border-gray-200 rounded-lg">
-                        <Search className="h-10 w-10 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm">No results yet.</p>
-                        <p className="text-xs mt-1">Enter search criteria above and click "Search" to find available numbers.</p>
+                    {unassignedNumbers.length === 0 && (
+                      <div className="rounded-[22px] border border-dashed border-white/14 bg-white/[0.02] px-6 py-10 text-center">
+                        <Phone className="mx-auto mb-3 h-10 w-10 text-white/36" />
+                        <p className="text-sm font-medium text-white/82">No unassigned numbers found.</p>
+                        <p className="mt-1 text-xs text-white/48">Load the latest inventory or search for new numbers below.</p>
                       </div>
                     )}
                   </div>
-                  {copyToast && (
-                    <div className="mt-2 text-xs text-green-600 flex items-center">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Copied {copyToast}
+                )}
+              </div>
+            )}
+
+            {(flowMode === 'tenant-purchase' || flowMode === 'system') && (
+              <div className="mt-6">
+                <div className="mb-3 flex items-center justify-between">
+                  <h4 className="text-sm font-semibold uppercase tracking-[0.24em] text-white/58">
+                    {flowMode === 'system' ? 'Buy From System Inventory' : 'Buy From Your Twilio Account'}
+                  </h4>
+                  {availableNumbers.length > 0 && <span className="text-sm text-white/48">{availableNumbers.length} available</span>}
+                </div>
+
+                {flowMode === 'tenant-purchase' && !integration && (
+                  <div className="mb-4 rounded-[22px] border border-amber-300/18 bg-amber-300/10 p-4 text-sm text-amber-50">
+                    Please connect your Twilio account in Step 1 before purchasing numbers through your own account.
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                  <input
+                    type="text"
+                    placeholder="Country (e.g. US)"
+                    value={searchParams.country}
+                    onChange={(e) => setSearchParams((p) => ({ ...p, country: e.target.value }))}
+                    className="shell-input"
+                  />
+                  <select
+                    value={searchParams.numberType}
+                    onChange={(e) => setSearchParams((p) => ({ ...p, numberType: e.target.value }))}
+                    className="shell-input"
+                  >
+                    <option value="local">Local</option>
+                    <option value="tollfree">Toll-Free</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Area code (optional)"
+                    value={searchParams.areaCode}
+                    onChange={(e) => setSearchParams((p) => ({ ...p, areaCode: e.target.value }))}
+                    className="shell-input"
+                  />
+                  <button
+                    onClick={searchAvailable}
+                    disabled={loading}
+                    className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Search className="mr-2 h-4 w-4" />
+                    Search
+                  </button>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {availableNumbers.map((n, idx) => (
+                    <NumberRow
+                      key={idx}
+                      n={n}
+                      right={
+                        <button
+                          onClick={() => purchaseNumber(n.phone_number)}
+                          disabled={purchaseLoading || !selectedAgentId}
+                          className="inline-flex items-center rounded-2xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <ShoppingCart className="mr-1 h-4 w-4" />
+                          Purchase
+                        </button>
+                      }
+                    />
+                  ))}
+                  {availableNumbers.length === 0 && (
+                    <div className="rounded-[22px] border border-dashed border-white/14 bg-white/[0.02] px-6 py-10 text-center">
+                      <Search className="mx-auto mb-3 h-10 w-10 text-white/36" />
+                      <p className="text-sm font-medium text-white/82">No results yet.</p>
+                      <p className="mt-1 text-xs text-white/48">Enter your search criteria and we&apos;ll bring back available numbers here.</p>
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+
+                {copyToast && (
+                  <div className="mt-3 flex items-center text-xs text-emerald-200">
+                    <CheckCircle className="mr-1 h-3 w-3" />
+                    Copied {copyToast}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
         {/* Step 3: Current Assignments Overview */}
         {selectedTenant && agents.length > 0 && (
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center mb-6">
-                <Users className="h-6 w-6 text-blue-600 mr-2" />
-                <div>
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    Step 3: Phone Number Assignments
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    View and manage phone numbers assigned to your agents
-                  </p>
-                </div>
+          <div className="rounded-[28px] border border-white/8 bg-white/[0.04] p-5">
+            <div className="mb-5 flex items-center">
+              <Users className="mr-2 h-5 w-5 text-sky-200" />
+              <div>
+                <h3 className="text-lg font-semibold text-white">Step 3: Phone Number Assignments</h3>
+                <p className="mt-1 text-sm text-white/56">Review current assignments and unassign numbers when routing needs to change.</p>
               </div>
+            </div>
 
-              <div className="space-y-3">
-                {agents.map((agent) => {
-                  const assignedPhone = getAssignedPhone(agent.id);
-                  const allAssignments = phoneAssignments.filter(p => p.agent_id === agent.id);
+            <div className="space-y-3">
+              {agents.map((agent) => {
+                const allAssignments = phoneAssignments.filter((p) => p.agent_id === agent.id);
 
-                  return (
-                    <div key={agent.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-3 flex-1">
-                          <div className="flex-shrink-0">
-                            <User className="h-10 w-10 text-blue-600 bg-blue-50 p-2 rounded-full" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-medium text-gray-900">{agent.name}</h4>
-                            <p className="text-sm text-gray-500 capitalize">{agent.service_type}</p>
-                            <p className="text-xs text-gray-400 mt-1">Language: {agent.language}</p>
-                            
-                            {allAssignments.length > 0 ? (
-                              <div className="mt-3 space-y-2">
-                                {allAssignments.map((assignment) => (
-                                  <div key={assignment.id} className="flex items-center space-x-2 bg-gray-50 p-2 rounded">
-                                    <div className="flex items-center text-green-600 flex-1">
-                                      <CheckCircle className="h-4 w-4 mr-1" />
-                                      <span className="text-sm font-medium">{assignment.phone_number}</span>
-                                    </div>
-                                    <button
-                                      onClick={() => handleUnassignPhone(agent.id)}
-                                      disabled={assignmentLoading}
-                                      className="text-xs text-red-600 hover:text-red-800 disabled:opacity-50"
-                                    >
-                                      Remove
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="mt-3 text-xs text-gray-400">
-                                No phone number assigned yet. Use Step 2 above to assign a number.
-                              </div>
-                            )}
-                          </div>
+                return (
+                  <div
+                    key={agent.id}
+                    className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4 transition hover:bg-white/[0.05]"
+                  >
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/8">
+                          <User className="h-5 w-5 text-sky-100" />
                         </div>
-                        
-                        <div className="flex-shrink-0 ml-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            agent.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {agent.status}
-                          </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h4 className="text-sm font-semibold text-white">{agent.name}</h4>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] ${
+                                agent.status === 'active'
+                                  ? 'bg-emerald-400/14 text-emerald-100'
+                                  : 'bg-white/10 text-white/56'
+                              }`}
+                            >
+                              {agent.status}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm capitalize text-white/56">{agent.service_type}</p>
+                          <p className="mt-1 text-xs uppercase tracking-[0.22em] text-white/38">Language: {agent.language}</p>
+
+                          {allAssignments.length > 0 ? (
+                            <div className="mt-4 space-y-2">
+                              {allAssignments.map((assignment) => (
+                                <div
+                                  key={assignment.id}
+                                  className="flex flex-col gap-3 rounded-2xl border border-white/8 bg-black/10 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                                >
+                                  <div className="flex items-center text-emerald-100">
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    <span className="text-sm font-medium">{assignment.phone_number}</span>
+                                  </div>
+                                  <button
+                                    onClick={() => handleUnassignPhone(agent.id)}
+                                    disabled={assignmentLoading}
+                                    className="inline-flex items-center justify-center rounded-2xl border border-rose-300/18 bg-rose-400/10 px-3 py-2 text-xs font-semibold text-rose-100 transition hover:bg-rose-400/18 disabled:opacity-50"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="mt-4 rounded-2xl border border-dashed border-white/12 bg-white/[0.02] px-4 py-4 text-xs text-white/46">
+                              No phone number assigned yet. Use Step 2 above to assign a number.
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-
-              {agents.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <User className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                  <p>No agents found. Create agents first before assigning phone numbers.</p>
-                  <a
-                    href="/agents"
-                    className="inline-flex items-center mt-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                  >
-                    Create Agents
-                  </a>
-                </div>
-              )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
 
         {/* Help Section */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-blue-900 mb-3 flex items-center">
-            <Globe2 className="h-5 w-5 mr-2" />
+        <div className="rounded-[28px] border border-white/8 bg-sky-300/8 p-5">
+          <h3 className="mb-4 flex items-center text-lg font-semibold text-white">
+            <Globe2 className="mr-2 h-5 w-5 text-sky-200" />
             Quick Start Guide
           </h3>
-          <div className="text-sm text-blue-800 space-y-2">
-            <div className="flex items-start">
-              <span className="font-semibold mr-2">1.</span>
-              <div>
-                <p className="font-medium">Connect your Twilio account (optional)</p>
-                <p className="text-xs text-blue-700 mt-1">
-                  Enter your Account SID and Auth Token. You can find these in your{' '}
-                  <a href="https://console.twilio.com/" target="_blank" rel="noopener noreferrer" className="underline">Twilio Console</a>.
-                </p>
-              </div>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/48">1. Connect</p>
+              <p className="mt-3 text-sm font-medium text-white">Add tenant credentials only when needed.</p>
+              <p className="mt-2 text-xs leading-6 text-white/58">
+                Account SID and Auth Token live in the{' '}
+                <a href="https://console.twilio.com/" target="_blank" rel="noopener noreferrer" className="text-sky-100 underline underline-offset-4">
+                  Twilio Console
+                </a>
+                . If you skip this step, you can still use system inventory.
+              </p>
             </div>
-            <div className="flex items-start">
-              <span className="font-semibold mr-2">2.</span>
-              <div>
-                <p className="font-medium">Manage phone numbers</p>
-                <p className="text-xs text-blue-700 mt-1">
-                  You can use existing numbers from your account, buy new numbers from your account, or buy from our system account (no credentials needed).
-                </p>
-              </div>
+            <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/48">2. Acquire</p>
+              <p className="mt-3 text-sm font-medium text-white">Use existing numbers or purchase new ones.</p>
+              <p className="mt-2 text-xs leading-6 text-white/58">
+                Search by country, number type, and area code to keep provisioning fast for each tenant.
+              </p>
             </div>
-            <div className="flex items-start">
-              <span className="font-semibold mr-2">3.</span>
-              <div>
-                <p className="font-medium">Assign to agents</p>
-                <p className="text-xs text-blue-700 mt-1">
-                  Select an agent and assign a phone number. One number can be assigned to one agent, but one agent can have multiple numbers.
-                </p>
-              </div>
+            <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/48">3. Assign</p>
+              <p className="mt-3 text-sm font-medium text-white">Attach numbers to active voice agents.</p>
+              <p className="mt-2 text-xs leading-6 text-white/58">
+                Each number should route intentionally. Review assignments regularly as agents or campaigns change.
+              </p>
             </div>
           </div>
         </div>
-      </div>
+
+        {selectedTenant && agents.length === 0 && (
+          <div className="rounded-[28px] border border-dashed border-white/12 bg-white/[0.03] px-6 py-10 text-center">
+            <User className="mx-auto mb-4 h-12 w-12 text-white/34" />
+            <h3 className="text-lg font-semibold text-white">Create voice agents before assigning numbers</h3>
+            <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-white/56">
+              Twilio routing becomes available once this tenant has at least one active voice agent ready to receive calls.
+            </p>
+            <Link
+              to="/app/appointment-setter/voice-agents"
+              className="mt-5 inline-flex items-center rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-white no-underline transition hover:bg-[#295ad0]"
+            >
+              Open Voice Agents
+            </Link>
+          </div>
+        )}
     </div>
   );
 };
