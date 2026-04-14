@@ -61,6 +61,27 @@
 
 ## Application Architecture
 
+The frontend is currently transitioning from a feature-folder layout to a domain-modular structure so the platform can stay in one repository without becoming one oversized SPA code surface. The intended architecture is:
+
+```text
+src/
+  app/                 # App assembly, providers, router
+  platform/            # Launcher, shell, platform navigation
+  domains/
+    appointment-setter/
+    chatbot-agents/
+  shared/              # UI, auth, api, permissions, config, utils
+  contexts/            # Transitional React contexts
+  components/          # Legacy components being migrated behind domain boundaries
+```
+
+Boundary rules:
+
+- `appointment-setter` and `chatbot-agents` do not import from each other directly
+- shared concerns move into `shared/*`
+- `platform/*` composes domains but should not contain domain business logic
+- route groups are lazy-loaded to reduce initial bundle weight
+
 ### High-Level Architecture
 
 ```

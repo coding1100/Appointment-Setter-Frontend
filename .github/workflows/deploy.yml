@@ -18,13 +18,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          cache: "pnpm"
+
+      - name: Enable pnpm
+        run: corepack enable
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
-      - name: Build application
-        run: npm run build
+      - name: Build platform shell
+        run: pnpm --filter @samai/platform-shell build
+        env:
+          REACT_APP_API_URL: https://app-setter.digitalmarketingservicesnewyork.com
+          DISABLE_ESLINT_PLUGIN: true
+
+      - name: Build appointment-setter app
+        run: pnpm --filter @samai/appointment-setter-app build
+        env:
+          REACT_APP_API_URL: https://app-setter.digitalmarketingservicesnewyork.com
+          DISABLE_ESLINT_PLUGIN: true
+
+      - name: Build chatbot-agents app
+        run: pnpm --filter @samai/chatbot-agents-app build
         env:
           REACT_APP_API_URL: https://app-setter.digitalmarketingservicesnewyork.com
           DISABLE_ESLINT_PLUGIN: true
@@ -37,7 +52,10 @@ jobs:
           aws-region: eu-north-1
 
       - name: Deploy to S3
-        run: aws s3 sync ./build s3://${{ secrets.AWS_S3_BUCKET }}/dev --delete
+        run: |
+          aws s3 sync ./apps/platform-shell/build s3://${{ secrets.AWS_S3_BUCKET }}/dev --delete --exclude "app/*"
+          aws s3 sync ./apps/appointment-setter/build s3://${{ secrets.AWS_S3_BUCKET }}/dev/app/appointment-setter --delete
+          aws s3 sync ./apps/chatbot-agents/build s3://${{ secrets.AWS_S3_BUCKET }}/dev/app/chatbot-agents --delete
 
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.DEV_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
@@ -53,13 +71,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          cache: "pnpm"
+
+      - name: Enable pnpm
+        run: corepack enable
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
-      - name: Build application
-        run: npm run build
+      - name: Build platform shell
+        run: pnpm --filter @samai/platform-shell build
+        env:
+          REACT_APP_API_URL: https://api.samairep.com
+          DISABLE_ESLINT_PLUGIN: true
+
+      - name: Build appointment-setter app
+        run: pnpm --filter @samai/appointment-setter-app build
+        env:
+          REACT_APP_API_URL: https://api.samairep.com
+          DISABLE_ESLINT_PLUGIN: true
+
+      - name: Build chatbot-agents app
+        run: pnpm --filter @samai/chatbot-agents-app build
         env:
           REACT_APP_API_URL: https://api.samairep.com
           DISABLE_ESLINT_PLUGIN: true
@@ -72,7 +105,10 @@ jobs:
           aws-region: eu-north-1
 
       - name: Deploy to S3
-        run: aws s3 sync ./build s3://${{ secrets.AWS_S3_BUCKET }}/prod --delete
+        run: |
+          aws s3 sync ./apps/platform-shell/build s3://${{ secrets.AWS_S3_BUCKET }}/prod --delete --exclude "app/*"
+          aws s3 sync ./apps/appointment-setter/build s3://${{ secrets.AWS_S3_BUCKET }}/prod/app/appointment-setter --delete
+          aws s3 sync ./apps/chatbot-agents/build s3://${{ secrets.AWS_S3_BUCKET }}/prod/app/chatbot-agents --delete
 
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
