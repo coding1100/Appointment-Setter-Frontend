@@ -1,0 +1,15 @@
+{
+  "name": "tmp-live-chat-embed",
+  "version": "1.0.0",
+  "description": "",
+  "main": "verify-live-chat.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@playwright/test": "^1.59.1"
+  }
+}

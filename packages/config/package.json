@@ -1,0 +1,10 @@
+{
+  "name": "@samai/config",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./env": "./src/env.js"
+  }
+}

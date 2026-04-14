@@ -1,0 +1,16 @@
+{
+  "name": "@samai/shared-ui",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./PageHeader": "./src/PageHeader.js",
+    "./InlineAlert": "./src/InlineAlert.js",
+    "./SectionPanel": "./src/SectionPanel.js",
+    "./EmptyState": "./src/EmptyState.js"
+  },
+  "dependencies": {
+    "react": "^18.2.0"
+  }
+}
