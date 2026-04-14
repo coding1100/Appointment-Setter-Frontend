@@ -1,0 +1,10 @@
+{
+  "name": "@samai/auth",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./session": "./src/session.js"
+  }
+}

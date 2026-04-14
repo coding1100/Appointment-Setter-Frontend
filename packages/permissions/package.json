@@ -1,0 +1,15 @@
+{
+  "name": "@samai/permissions",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./ability": "./src/ability.js"
+  },
+  "dependencies": {
+    "@casl/ability": "^6.8.0",
+    "@casl/react": "^5.0.1",
+    "react": "^18.2.0"
+  }
+}
