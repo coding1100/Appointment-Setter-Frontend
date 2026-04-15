@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { tenantAPI } from '../../services/api';
 import AgentList from '../Agents/AgentList';
 import Loader from '../Loader';
+import { getAppName } from '../../utils/appName';
 
 const VoiceAgentsPage = () => {
   const { user } = useAuth();
@@ -60,7 +61,7 @@ const VoiceAgentsPage = () => {
         <h1 className="mt-5 text-2xl font-semibold text-slate-50">No tenants available</h1>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-300">
           Create a tenant before adding a voice agent workspace. Once a tenant exists, this page becomes the focused
-          voice-agent management surface for Appointment Setter.
+          voice-agent management surface for {getAppName()}.
         </p>
         <Link
           to="/app/appointment-setter/tenants/create"

@@ -4,6 +4,7 @@ import { tenantAPI } from '../../services/api';
 import AgentList from './AgentList';
 import ChatbotList from './ChatbotList';
 import Loader from '../Loader';
+import { getAppName } from '../../utils/appName';
 
 const AgentManagement = () => {
   const [tenants, setTenants] = useState([]);
@@ -171,7 +172,7 @@ const AgentManagement = () => {
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">Voice Agent</p>
-                    <p className="text-sm text-gray-600">Tenant-based appointment setter voice flow</p>
+                    <p className="text-sm text-gray-600">Tenant-based {getAppName()} voice flow</p>
                   </div>
                 </div>
               </button>

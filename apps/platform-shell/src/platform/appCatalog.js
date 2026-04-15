@@ -8,12 +8,13 @@ import {
   Settings2,
   Users,
 } from 'lucide-react';
+import { getAppName } from '../utils/appName';
 
 export const PLATFORM_APPS = [
   {
     id: 'appointment_setter',
     slug: 'appointment-setter',
-    label: 'Appointment Setter',
+    label: getAppName(),
     iconKey: 'appointment_setter',
     defaultRoute: '/app/appointment-setter/dashboard',
     accent: 'from-amber-400/30 via-amber-300/10 to-transparent',
