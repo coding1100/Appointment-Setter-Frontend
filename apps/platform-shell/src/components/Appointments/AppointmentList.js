@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
   AlertCircle,
   Calendar,
@@ -10,19 +10,20 @@ import {
   Phone,
   Search,
   XCircle,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { appointmentAPI, tenantAPI } from '../../services/api';
-import Loader from '../Loader';
+import { appointmentAPI, tenantAPI } from "../../services/api";
+import Loader from "../Loader";
+import { getAppName } from "../../utils/appName";
 
 const AppointmentList = () => {
   const [appointments, setAppointments] = useState([]);
   const [tenants, setTenants] = useState([]);
-  const [selectedTenant, setSelectedTenant] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTenant, setSelectedTenant] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [tenantsLoaded, setTenantsLoaded] = useState(false);
 
   const fetchTenants = useCallback(async () => {
@@ -37,29 +38,32 @@ const AppointmentList = () => {
         setSelectedTenant((prev) => prev || tenantsList[0].id);
       }
     } catch (fetchError) {
-      setError('Failed to fetch tenants');
-      console.error('Error fetching tenants:', fetchError);
+      setError("Failed to fetch tenants");
+      console.error("Error fetching tenants:", fetchError);
       setTenants([]);
     }
   }, []);
 
   const fetchAppointments = useCallback(async () => {
-    if (!selectedTenant || selectedTenant === '') {
+    if (!selectedTenant || selectedTenant === "") {
       return;
     }
 
     try {
       setLoading(true);
-      setError('');
+      setError("");
       const params = {};
       if (statusFilter) {
         params.status = statusFilter;
       }
-      const response = await appointmentAPI.listAppointments(selectedTenant, params);
+      const response = await appointmentAPI.listAppointments(
+        selectedTenant,
+        params,
+      );
       setAppointments(response.data.appointments || []);
     } catch (fetchError) {
-      setError('Failed to fetch appointments');
-      console.error('Error fetching appointments:', fetchError);
+      setError("Failed to fetch appointments");
+      console.error("Error fetching appointments:", fetchError);
     } finally {
       setLoading(false);
     }
@@ -71,33 +75,38 @@ const AppointmentList = () => {
 
   useEffect(() => {
     if (!tenantsLoaded) return;
-    if (selectedTenant && selectedTenant !== '' && selectedTenant !== 'undefined' && typeof selectedTenant === 'string') {
+    if (
+      selectedTenant &&
+      selectedTenant !== "" &&
+      selectedTenant !== "undefined" &&
+      typeof selectedTenant === "string"
+    ) {
       fetchAppointments();
     }
   }, [selectedTenant, statusFilter, tenantsLoaded, fetchAppointments]);
 
   const getStatusMeta = (status) => {
     switch (status) {
-      case 'scheduled':
+      case "scheduled":
         return {
-          icon: <Clock className="h-4 w-4 text-sky-200" />,
-          badge: 'bg-sky-300/14 text-sky-100',
+          icon: <Clock className="h-4 w-4 text-sky-400" />,
+          badge: "bg-sky-300/15 text-sky-300",
         };
-      case 'confirmed':
-      case 'completed':
+      case "confirmed":
+      case "completed":
         return {
-          icon: <CheckCircle className="h-4 w-4 text-emerald-200" />,
-          badge: 'bg-emerald-300/14 text-emerald-100',
+          icon: <CheckCircle className="h-4 w-4 text-emerald-400" />,
+          badge: "bg-emerald-300/14 text-emerald-100",
         };
-      case 'cancelled':
+      case "cancelled":
         return {
           icon: <XCircle className="h-4 w-4 text-rose-200" />,
-          badge: 'bg-rose-300/14 text-rose-100',
+          badge: "bg-rose-300/14 text-rose-100",
         };
       default:
         return {
           icon: <AlertCircle className="h-4 w-4 text-white/58" />,
-          badge: 'bg-white/10 text-white/68',
+          badge: "bg-white/10 text-white/68",
         };
     }
   };
@@ -114,10 +123,12 @@ const AppointmentList = () => {
           appointment.customer_phone.includes(searchTerm)
         );
       }),
-    [appointments, searchTerm]
+    [appointments, searchTerm],
   );
 
-  const selectedTenantData = tenants.find((tenant) => tenant.id === selectedTenant);
+  const selectedTenantData = tenants.find(
+    (tenant) => tenant.id === selectedTenant,
+  );
 
   if (loading && !selectedTenant) {
     return <Loader message="Loading appointments..." />;
@@ -127,24 +138,30 @@ const AppointmentList = () => {
     <div className="space-y-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-white/68">Appointment Operations</p>
-          <h1 className="mt-3 text-[2rem] font-semibold tracking-[-0.03em] text-white">Appointments</h1>
+          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-white/68">
+            Appointment Operations
+          </p>
+          <h1 className="mt-3 text-[2rem] font-semibold tracking-[-0.03em] text-black">
+            Appointments
+          </h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-white/72">
-            Review booking activity for {selectedTenantData?.name || 'your tenants'}, filter by status, and keep the
-            scheduling workflow inside the unified Appointment Setter workspace.
+            Review booking activity for{" "}
+            {selectedTenantData?.name || "your tenants"}, filter by status, and
+            keep the scheduling workflow inside the unified {getAppName()}{" "}
+            workspace.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
           <button
             onClick={fetchAppointments}
-            className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+            className="inline-flex items-center justify-center rounded-2xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black transition hover:bg-black/10"
           >
             Refresh
           </button>
           {selectedTenant && (
             <Link
               to={`/app/appointment-setter/tenants/${selectedTenant}`}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] no-underline"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-black shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] no-underline"
             >
               Open Tenant
             </Link>
@@ -152,15 +169,27 @@ const AppointmentList = () => {
         </div>
       </div>
 
-      {error && <div className="rounded-2xl border border-rose-300/18 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</div>}
+      {error && (
+        <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-400">
+          {error}
+        </div>
+      )}
 
       <div className="rounded-[26px] border border-white/8 bg-white/[0.04] p-4">
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
           <div>
-            <label htmlFor="tenant" className="mb-2 block text-sm font-medium text-white/84">
+            <label
+              htmlFor="tenant"
+              className="mb-2 block text-sm font-medium text-white/84"
+            >
               Tenant
             </label>
-            <select id="tenant" value={selectedTenant} onChange={(e) => setSelectedTenant(e.target.value)} className="shell-input">
+            <select
+              id="tenant"
+              value={selectedTenant}
+              onChange={(e) => setSelectedTenant(e.target.value)}
+              className="shell-input"
+            >
               {tenants.map((tenant) => (
                 <option key={tenant.id} value={tenant.id}>
                   {tenant.name}
@@ -170,10 +199,18 @@ const AppointmentList = () => {
           </div>
 
           <div>
-            <label htmlFor="status" className="mb-2 block text-sm font-medium text-white/84">
+            <label
+              htmlFor="status"
+              className="mb-2 block text-sm font-medium text-white/84"
+            >
               Status
             </label>
-            <select id="status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="shell-input">
+            <select
+              id="status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="shell-input"
+            >
               <option value="">All Statuses</option>
               <option value="scheduled">Scheduled</option>
               <option value="confirmed">Confirmed</option>
@@ -184,7 +221,10 @@ const AppointmentList = () => {
           </div>
 
           <div>
-            <label htmlFor="search" className="mb-2 block text-sm font-medium text-white/84">
+            <label
+              htmlFor="search"
+              className="mb-2 block text-sm font-medium text-white/84"
+            >
               Search
             </label>
             <div className="relative">
@@ -205,10 +245,17 @@ const AppointmentList = () => {
       <div className="overflow-hidden rounded-[26px] border border-white/8 bg-white/[0.04]">
         <div className="flex flex-col gap-2 border-b border-white/8 px-4 py-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-[0.78rem] uppercase tracking-[0.28em] text-white/48">Booking Feed</p>
-            <h2 className="mt-2 text-xl font-semibold text-white">Appointment Records</h2>
+            <p className="text-[0.78rem] uppercase tracking-[0.28em] text-white/48">
+              Booking Feed
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-black">
+              Appointment Records
+            </h2>
           </div>
-          <p className="text-sm text-white/58">{filteredAppointments.length} matching appointment{filteredAppointments.length === 1 ? '' : 's'}</p>
+          <p className="text-sm text-white/58">
+            {filteredAppointments.length} matching appointment
+            {filteredAppointments.length === 1 ? "" : "s"}
+          </p>
         </div>
 
         {loading ? (
@@ -224,21 +271,29 @@ const AppointmentList = () => {
                   <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_240px_240px_160px] xl:items-start">
                     <div className="min-w-0">
                       <div className="flex items-start gap-4">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/8">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-black/8">
                           {meta.icon}
                         </div>
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="truncate text-lg font-semibold text-white">{appointment.customer_name}</h3>
-                            <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${meta.badge}`}>
+                            <h3 className="truncate text-lg font-semibold text-black">
+                              {appointment.customer_name}
+                            </h3>
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${meta.badge}`}
+                            >
                               {appointment.status}
                             </span>
                           </div>
-                          <p className="mt-2 text-sm text-white/68">{appointment.service_type}</p>
+                          <p className="mt-2 text-sm text-white/68">
+                            {appointment.service_type}
+                          </p>
                           <div className="mt-3 flex flex-col gap-2 text-sm text-white/62">
                             <div className="flex items-center gap-2">
                               <MapPin className="h-4 w-4 text-white/34" />
-                              <span className="truncate">{appointment.service_address}</span>
+                              <span className="truncate">
+                                {appointment.service_address}
+                              </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Phone className="h-4 w-4 text-white/34" />
@@ -247,7 +302,9 @@ const AppointmentList = () => {
                             {appointment.customer_email && (
                               <div className="flex items-center gap-2">
                                 <Mail className="h-4 w-4 text-white/34" />
-                                <span className="truncate">{appointment.customer_email}</span>
+                                <span className="truncate">
+                                  {appointment.customer_email}
+                                </span>
                               </div>
                             )}
                           </div>
@@ -256,16 +313,22 @@ const AppointmentList = () => {
                     </div>
 
                     <div className="text-sm text-white/72">
-                      <div className="text-[11px] uppercase tracking-[0.2em] text-white/42 xl:hidden">Scheduled for</div>
-                      <div className="mt-1 flex items-center gap-2 xl:mt-0">
+                      <div className="text-[11px] uppercase tracking-[0.2em] text-black xl:hidden">
+                        Scheduled for
+                      </div>
+                      <div className="mt-1 flex items-center gap-2 xl:mt-0 text-black">
                         <Calendar className="h-4 w-4 text-white/34" />
                         {formatDateTime(appointment.appointment_datetime)}
                       </div>
                     </div>
 
                     <div className="text-sm text-white/60">
-                      <div className="text-[11px] uppercase tracking-[0.2em] text-white/42 xl:hidden">Tenant</div>
-                      <div className="mt-1 xl:mt-0">{selectedTenantData?.name || 'Current tenant'}</div>
+                      <div className="text-[11px] uppercase tracking-[0.2em] text-black xl:hidden">
+                        Tenant
+                      </div>
+                      <div className="mt-1 xl:mt-0">
+                        {selectedTenantData?.name || "Current tenant"}
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
@@ -286,10 +349,12 @@ const AppointmentList = () => {
         ) : (
           <div className="px-4 py-10 text-center">
             <Calendar className="mx-auto h-14 w-14 text-white/30" />
-            <h3 className="mt-5 text-2xl font-semibold tracking-[-0.02em] text-white">No appointments found</h3>
+            <h3 className="mt-5 text-2xl font-semibold tracking-[-0.02em] text-black">
+              No appointments found
+            </h3>
             <p className="mt-3 text-sm leading-7 text-white/66">
-              Try switching tenants or filters. Detailed appointment creation can continue through tenant-specific
-              scheduling workflows.
+              Try switching tenants or filters. Detailed appointment creation
+              can continue through tenant-specific scheduling workflows.
             </p>
           </div>
         )}
