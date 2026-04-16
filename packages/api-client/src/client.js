@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { clearSessionTokens, getAccessToken, getRefreshToken } from '@samai/auth/session';
+import { clearSessionTokens, getAccessToken, getRefreshToken, setSessionTokens } from '@samai/auth/session';
 import { API_BASE_URL, COLD_CALLER_BASE_URL, WS_BASE_URL } from '@samai/config/env';
 
 if (process.env.NODE_ENV === 'development') {
@@ -11,6 +11,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
   timeout: 30000,
 });
 
@@ -24,6 +25,7 @@ const coldCallerClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
   timeout: 30000,
 });
 
@@ -54,18 +56,17 @@ coldCallerClient.interceptors.response.use(
 
       try {
         const refreshToken = getRefreshToken();
-        if (refreshToken) {
-          const response = await api.post('/api/v1/auth/refresh', {
-            refresh_token: refreshToken,
-          });
+        const refreshPayload = refreshToken ? { refresh_token: refreshToken } : {};
+        const response = await api.post('/api/v1/auth/refresh', refreshPayload);
 
-          const { access_token } = response.data;
-          localStorage.setItem('access_token', access_token);
+        const { access_token, refresh_token } = response.data;
+        setSessionTokens({ accessToken: access_token, refreshToken: refresh_token });
 
-          originalRequest.headers = originalRequest.headers || {};
+        originalRequest.headers = originalRequest.headers || {};
+        if (access_token) {
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
-          return coldCallerClient(originalRequest);
         }
+        return coldCallerClient(originalRequest);
       } catch (refreshError) {
         clearSessionTokens();
         window.location.href = '/login';
@@ -120,17 +121,17 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = getRefreshToken();
-        if (refreshToken) {
-          const response = await api.post('/api/v1/auth/refresh', {
-            refresh_token: refreshToken,
-          });
+        const refreshPayload = refreshToken ? { refresh_token: refreshToken } : {};
+        const response = await api.post('/api/v1/auth/refresh', refreshPayload);
 
-          const { access_token } = response.data;
-          localStorage.setItem('access_token', access_token);
+        const { access_token, refresh_token } = response.data;
+        setSessionTokens({ accessToken: access_token, refreshToken: refresh_token });
 
+        originalRequest.headers = originalRequest.headers || {};
+        if (access_token) {
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
-          return api(originalRequest);
         }
+        return api(originalRequest);
       } catch (refreshError) {
         clearSessionTokens();
         window.location.href = '/login';
@@ -151,9 +152,9 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (userData) => api.post('/api/v1/auth/register', userData),
   login: (credentials) => api.post('/api/v1/auth/login', credentials),
-  logout: (refreshToken) => api.post('/api/v1/auth/logout', { refresh_token: refreshToken }),
+  logout: (refreshToken) => api.post('/api/v1/auth/logout', refreshToken ? { refresh_token: refreshToken } : {}),
   getCurrentUser: () => api.get('/api/v1/auth/me'),
-  refreshToken: (refreshToken) => api.post('/api/v1/auth/refresh', { refresh_token: refreshToken }),
+  refreshToken: (refreshToken) => api.post('/api/v1/auth/refresh', refreshToken ? { refresh_token: refreshToken } : {}),
   listUsers: (limit = 100, offset = 0) => api.get(`/api/v1/auth/users?limit=${limit}&offset=${offset}`),
   getUser: (userId) => api.get(`/api/v1/auth/users/${userId}`),
   updateUser: (userId, userData) => api.put(`/api/v1/auth/users/${userId}`, userData),
