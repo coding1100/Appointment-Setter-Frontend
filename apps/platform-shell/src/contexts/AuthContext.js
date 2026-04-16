@@ -20,12 +20,12 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       const storedToken = getAccessToken();
-      if (storedToken) {
-        try {
-          const response = await authAPI.getCurrentUser();
-          setUser(response.data);
-          setToken(storedToken);
-        } catch (error) {
+      try {
+        const response = await authAPI.getCurrentUser();
+        setUser(response.data);
+        setToken(storedToken || 'cookie-session');
+      } catch (error) {
+        if (storedToken) {
           console.error('Failed to get current user:', error);
           clearSessionTokens();
         }
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
         refreshToken: refresh_token,
       });
       
-      setToken(access_token);
+      setToken(access_token || 'cookie-session');
       setUser(userData);
       
       return { success: true };
@@ -97,7 +97,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    isAuthenticated: !!token && !!user,
+    isAuthenticated: !!user,
   }), [user, token, loading, login, register, logout]);
 
   return (
