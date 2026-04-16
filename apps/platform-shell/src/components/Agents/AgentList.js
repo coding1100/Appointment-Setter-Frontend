@@ -7,6 +7,7 @@ import {
   Trash2,
   User,
   Volume2,
+  XCircle,
 } from "lucide-react";
 
 import { agentAPI } from "../../services/api";
@@ -127,7 +128,7 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
         </div>
         <button
           onClick={handleCreateAgent}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-black shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0]"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0]"
         >
           <Plus className="h-4 w-4" />
           Create Agent
@@ -236,8 +237,8 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
                       onClick={() => handleToggleStatus(agent)}
                       className={`inline-flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-medium transition ${
                         agent.status === "active"
-                          ? "bg-amber-300/10 text-amber-400 hover:bg-amber-300/20"
-                          : "bg-emerald-300/12 text-emerald-100 hover:bg-emerald-300/18"
+                          ? "bg-amber-400 hover:bg-amber-500 text-white"
+                          : "bg-emerald-400 text-white hover:bg-emerald-500"
                       }`}
                     >
                       {agent.status === "active" ? (
@@ -254,9 +255,9 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
                     </button>
                     <button
                       onClick={() => handleDeleteClick(agent)}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-rose-300/20 bg-rose-400/10 px-3.5 py-2.5 text-sm text-rose-300 transition hover:bg-rose-400/15"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-red-500 bg-red-500 px-3.5 py-2.5 text-sm text-white transition duration-300 hover:bg-red-600"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <XCircle className="h-4 w-4" />
                       Delete
                     </button>
                   </div>

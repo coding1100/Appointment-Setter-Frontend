@@ -579,7 +579,7 @@ const TwilioIntegration = () => {
           disabled={!selectedTenant || loading}
           className="inline-flex items-center justify-center rounded-2xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black transition hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Refresh integration
+          Refresh
         </button>
       </div>
 
@@ -735,7 +735,7 @@ const TwilioIntegration = () => {
           <button
             onClick={saveIntegration}
             disabled={loading || !formData.accountSid || !formData.authToken}
-            className="inline-flex items-center rounded-2xl bg-[#2f66ea] px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center rounded-2xl bg-[#2f66ea] px-4 py-2.5 text-sm font-semibold text-white transition duration-300 hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Settings className="h-4 w-4 mr-2" />
             {loading
@@ -749,7 +749,7 @@ const TwilioIntegration = () => {
             <button
               onClick={deleteIntegration}
               disabled={loading}
-              className="inline-flex items-center rounded-2xl bg-[#dc2626] px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-[#c81e1e] disabled:opacity-50"
+              className="inline-flex items-center rounded-2xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white transition duration-300 hover:bg-red-600 disabled:opacity-50"
             >
               <XCircle className="h-4 w-4 mr-2" />
               Delete
@@ -901,7 +901,7 @@ const TwilioIntegration = () => {
                   ))}
                   {unassignedNumbers.length === 0 && (
                     <div className="rounded-[22px] border border-dashed border-white/14 bg-white/[0.02] px-6 py-10 text-center">
-                      <Phone className="mx-auto mb-3 h-10 w-10 text-white/36" />
+                      <Phone className="mx-auto mb-3 h-10 w-10 text-sky-400" />
                       <p className="text-sm font-medium text-white/82">
                         No unassigned numbers found.
                       </p>
@@ -998,8 +998,8 @@ const TwilioIntegration = () => {
                   />
                 ))}
                 {availableNumbers.length === 0 && (
-                  <div className="rounded-[22px] border border-dashed border-white/14 bg-white/[0.02] px-6 py-10 text-center">
-                    <Search className="mx-auto mb-3 h-10 w-10 text-white/36" />
+                  <div className="rounded-[22px] border border-dashed border-black/15 bg-white/[0.02] px-6 py-10 text-center">
+                    <Search className="mx-auto mb-3 h-10 w-10 text-black/35" />
                     <p className="text-sm font-medium text-white/82">
                       No results yet.
                     </p>
@@ -1062,7 +1062,7 @@ const TwilioIntegration = () => {
                           <span
                             className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] ${
                               agent.status === "active"
-                                ? "bg-emerald-400/15 text-emerald-400"
+                                ? "bg-emerald-100 text-emerald-500"
                                 : "bg-black/10 text-black/55"
                             }`}
                           >
@@ -1092,7 +1092,7 @@ const TwilioIntegration = () => {
                                 <button
                                   onClick={() => handleUnassignPhone(agent.id)}
                                   disabled={assignmentLoading}
-                                  className="inline-flex items-center justify-center rounded-2xl border border-rose-400 bg-rose-400/70 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-400 disabled:opacity-50"
+                                  className="inline-flex items-center justify-center rounded-2xl border border-red-500 bg-red-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
                                 >
                                   Remove
                                 </button>
@@ -1181,7 +1181,7 @@ const TwilioIntegration = () => {
           </p>
           <Link
             to="/app/appointment-setter/voice-agents"
-            className="mt-5 inline-flex items-center rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-black no-underline transition hover:bg-[#295ad0]"
+            className="mt-5 inline-flex items-center rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-white no-underline transition hover:bg-[#295ad0]"
           >
             Open Voice Agents
           </Link>

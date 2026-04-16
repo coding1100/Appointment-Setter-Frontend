@@ -151,12 +151,12 @@ const TenantEditForm = () => {
       <div className="flex items-start gap-4">
         <button
           onClick={() => navigate(`/app/appointment-setter/tenants/${id}`)}
-          className="mt-1 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/6 text-white transition hover:bg-white/10"
+          className="mt-1 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-black/5 text-black transition hover:bg-white/10"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
-          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-white/68">
+          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-black/60">
             Tenant Setup
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black">
@@ -199,7 +199,7 @@ const TenantEditForm = () => {
                 />
               </div>
               <p
-                className={`mt-2 text-sm ${fieldErrors.name ? "text-rose-200" : "text-white/50"}`}
+                className={`mt-2 text-sm ${fieldErrors.name ? "text-rose-400" : "text-black"}`}
               >
                 {fieldErrors.name ||
                   "This will be the display name for your tenant."}
@@ -227,7 +227,7 @@ const TenantEditForm = () => {
                 />
               </div>
               <p
-                className={`mt-2 text-sm ${fieldErrors.owner_email ? "text-rose-200" : "text-white/50"}`}
+                className={`mt-2 text-sm ${fieldErrors.owner_email ? "text-rose-400" : "text-black"}`}
               >
                 {fieldErrors.owner_email ||
                   "This email will receive ownership-related notifications."}
@@ -246,11 +246,11 @@ const TenantEditForm = () => {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-black shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <>
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white" />
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-white" />
                   Updating...
                 </>
               ) : (
