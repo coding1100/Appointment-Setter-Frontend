@@ -388,8 +388,8 @@ const ChatbotLivePage = () => {
                         <span
                           className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
                             session.control_mode === "human"
-                              ? "bg-amber-300/15 text-amber-300"
-                              : "bg-sky-300/15 text-sky-300"
+                              ? "bg-amber-100 text-amber-500"
+                              : "bg-sky-100 text-sky-500"
                           }`}
                         >
                           {session.control_mode}
@@ -440,8 +440,8 @@ const ChatbotLivePage = () => {
                       <span
                         className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
                           liveSession?.control_mode === "human"
-                            ? "bg-amber-300/15 text-amber-300"
-                            : "bg-sky-300/15 text-sky-300"
+                            ? "bg-amber-100 text-amber-500"
+                            : "bg-sky-100 text-sky-500"
                         }`}
                       >
                         {liveSession?.control_mode || "bot"}
@@ -483,7 +483,7 @@ const ChatbotLivePage = () => {
                           !isAssignedToCurrentUser &&
                           !isAdmin)
                       }
-                      className="inline-flex items-center gap-2 rounded-2xl border border-amber-300/15 bg-amber-300/10 px-4 py-2.5 text-sm font-medium text-amber-400 transition hover:bg-amber-300/20 disabled:opacity-50"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-amber-400 bg-amber-400 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-amber-500 disabled:opacity-50"
                     >
                       <ShieldAlert className="h-4 w-4" />
                       {takeoverMutation.isPending ? "Claiming..." : "Take Over"}
@@ -495,7 +495,7 @@ const ChatbotLivePage = () => {
                         liveSession?.control_mode !== "human" ||
                         liveSession?.status !== "open"
                       }
-                      className="inline-flex items-center gap-2 rounded-2xl border border-sky-300 bg-sky-300 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-300/20 hover:text-sky-500 disabled:opacity-50"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-sky-400 bg-sky-400 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-500 disabled:opacity-50"
                     >
                       <PauseCircle className="h-4 w-4" />
                       {releaseMutation.isPending
@@ -508,7 +508,7 @@ const ChatbotLivePage = () => {
                         closeMutation.isPending ||
                         liveSession?.status !== "open"
                       }
-                      className="inline-flex items-center gap-2 rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-2.5 text-sm font-medium text-rose-400 transition hover:bg-rose-400/20 disabled:opacity-50"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-red-500 bg-red-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-600 disabled:opacity-50"
                     >
                       <XCircle className="h-4 w-4" />
                       {closeMutation.isPending ? "Closing..." : "Close Chat"}
@@ -531,19 +531,23 @@ const ChatbotLivePage = () => {
                         return (
                           <div
                             key={message.id}
-                            className={`max-w-[86%] rounded-[20px] px-4 py-3 text-sm leading-6 ${
+                            className={`max-w-[86%] w-fit rounded-[20px] px-4 py-3 text-sm leading-6 ${
                               isSystem
                                 ? "mx-auto bg-white/8 text-center text-white/74"
                                 : alignmentClass
                             }`}
                           >
                             {!isSystem && (
-                              <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-black/55">
+                              <div
+                                className={`mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${isVisitor ? "text-white/55" : "text-black/55"}`}
+                              >
                                 {message.sender_type}
                               </div>
                             )}
                             <div>{message.content}</div>
-                            <div className="mt-2 text-[11px] text-black/25">
+                            <div
+                              className={`text-[11px] text-black/25 text-end ${isVisitor ? "text-white/55" : "text-black/55"}`}
+                            >
                               {new Date(
                                 message.created_at,
                               ).toLocaleTimeString()}
