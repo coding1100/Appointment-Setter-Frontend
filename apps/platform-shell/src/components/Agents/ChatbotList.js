@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Trash2,
+  XCircle,
 } from "lucide-react";
 
 import { useAuth } from "../../contexts/AuthContext";
@@ -360,7 +361,7 @@ const ChatbotList = ({ createRequested = 0 }) => {
                       disabled={isBusy("delete")}
                       className="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <XCircle className="h-4 w-4 " />
                       Delete
                     </button>
                   </div>

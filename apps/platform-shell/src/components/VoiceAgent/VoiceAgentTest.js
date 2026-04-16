@@ -314,7 +314,7 @@ const VoiceAgentTest = () => {
           onClick={fetchCallHistory}
           className="inline-flex items-center justify-center rounded-2xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black transition hover:bg-black/10"
         >
-          Refresh history
+          Refresh
         </button>
       </div>
 
@@ -382,11 +382,11 @@ const VoiceAgentTest = () => {
                       ))}
                     </select>
                   ) : (
-                    <div className="rounded-2xl border border-white/10 bg-white/6 px-4 py-4 text-sm text-white/60">
+                    <div className="rounded-2xl border border-black/30 bg-black/30 px-4 py-4 text-sm text-white">
                       No active agents found.{" "}
                       <Link
                         to="/app/appointment-setter/voice-agents"
-                        className="text-sky-100 no-underline hover:text-white"
+                        className="text-sky-200 no-underline hover:text-sky-300"
                       >
                         Create or activate an agent first.
                       </Link>
@@ -497,7 +497,7 @@ const VoiceAgentTest = () => {
                   <button
                     onClick={startCall}
                     disabled={loading}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-[#0f9f6e] px-5 py-3 text-sm font-semibold text-black transition hover:bg-[#0c8a5f] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Phone className="h-4 w-4" />
                     {loading ? "Starting..." : "Start Call"}
