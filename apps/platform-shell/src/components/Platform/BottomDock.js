@@ -7,6 +7,7 @@ const PATHS = {
   apps: "/apps",
   home: "/app",
   chatbotAgents: "/app/chatbot-agents",
+  appointmentSetter: "/app/appointment-setter",
   appointmentSetterDashboard: "/app/appointment-setter/dashboard",
 };
 
@@ -17,9 +18,8 @@ const getDockLinks = (pathname) => {
   const isAppsRoute = path === PATHS.apps;
   const isChatbotAgentsRoute =
     path === PATHS.chatbotAgents || path.startsWith(`${PATHS.chatbotAgents}/`);
-  const isAppointmentSetterDashboardRoute =
-    path === PATHS.appointmentSetterDashboard ||
-    path.startsWith(`${PATHS.appointmentSetterDashboard}/`);
+  const isAppointmentSetterRoute =
+    path === PATHS.appointmentSetter || path.startsWith(`${PATHS.appointmentSetter}/`);
 
   if (isAppsRoute) {
     return [
@@ -43,7 +43,7 @@ const getDockLinks = (pathname) => {
     ];
   }
 
-  if (isAppointmentSetterDashboardRoute) {
+  if (isAppointmentSetterRoute) {
     return [
       { to: PATHS.home, label: "Home", icon: Home },
       { to: PATHS.chatbotAgents, label: "Chatbot Agents", icon: Sparkles },
