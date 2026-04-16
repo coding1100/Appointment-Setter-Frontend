@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Loader2, Link2, Link2Off, PhoneCall, PhoneIncoming, ShieldCheck } from 'lucide-react';
 
 import { telephonyAPI, tenantAPI } from '../../services/api';
+import { getAppName } from '../../utils/appName';
 
 const TelephonyHub = () => {
   const [tenants, setTenants] = useState([]);
@@ -120,7 +121,7 @@ const TelephonyHub = () => {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Telephony Hub</h1>
         <p className="text-sm text-gray-600 mt-1">
-          Shared Twilio credentials with strict number ownership between Appointment Setter and Cold Caller.
+          Shared Twilio credentials with strict number ownership between {getAppName()} and Cold Caller.
         </p>
       </div>
 
@@ -160,7 +161,7 @@ const TelephonyHub = () => {
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center gap-2 text-gray-700 mb-2">
             <PhoneIncoming className="h-5 w-5 text-indigo-600" />
-            <span className="font-semibold">Appointment Setter</span>
+            <span className="font-semibold">{getAppName()}</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">{statusData?.voice_agent_inbound_numbers || 0}</p>
           <p className="text-xs text-gray-500">Inbound owned numbers</p>

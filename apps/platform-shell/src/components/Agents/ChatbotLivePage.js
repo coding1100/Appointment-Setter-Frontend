@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Bot,
   CircleEllipsis,
@@ -11,19 +11,22 @@ import {
   ShieldAlert,
   User,
   XCircle,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { chatbotAgentAPI } from '../../services/api';
-import { useAuth } from '../../contexts/AuthContext';
-import { formatAbsoluteTime, formatRelativeTime } from '../../shared/utils/dates';
-import { formatApiError } from '../../shared/utils/errors';
-import Loader from '../Loader';
+import { chatbotAgentAPI } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
+import {
+  formatAbsoluteTime,
+  formatRelativeTime,
+} from "../../shared/utils/dates";
+import { formatApiError } from "../../shared/utils/errors";
+import Loader from "../Loader";
 
 const hostFromOrigin = (value) => {
   try {
     return new URL(value).host;
   } catch (_error) {
-    return value || 'Unknown site';
+    return value || "Unknown site";
   }
 };
 
@@ -32,15 +35,15 @@ const ChatbotLivePage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const [composer, setComposer] = useState('');
-  const [notice, setNotice] = useState('');
-  const [actionError, setActionError] = useState('');
+  const [composer, setComposer] = useState("");
+  const [notice, setNotice] = useState("");
+  const [actionError, setActionError] = useState("");
   const [liveSession, setLiveSession] = useState(null);
   const [liveMessages, setLiveMessages] = useState([]);
   const endOfMessagesRef = useRef(null);
 
   const liveChatsQuery = useQuery({
-    queryKey: ['chatbot-live-chats'],
+    queryKey: ["chatbot-live-chats"],
     queryFn: async () => {
       const response = await chatbotAgentAPI.listLiveChats(100);
       return Array.isArray(response.data) ? response.data : [];
@@ -49,7 +52,7 @@ const ChatbotLivePage = () => {
   });
 
   const detailQuery = useQuery({
-    queryKey: ['chatbot-live-chat', sessionId],
+    queryKey: ["chatbot-live-chat", sessionId],
     queryFn: async () => {
       const response = await chatbotAgentAPI.getLiveChat(sessionId);
       return response.data;
@@ -59,34 +62,43 @@ const ChatbotLivePage = () => {
 
   useEffect(() => {
     if (!sessionId && liveChatsQuery.data?.length) {
-      navigate(`/app/chatbot-agents/live/${liveChatsQuery.data[0].session.id}`, { replace: true });
+      navigate(
+        `/app/chatbot-agents/live/${liveChatsQuery.data[0].session.id}`,
+        { replace: true },
+      );
     }
   }, [liveChatsQuery.data, navigate, sessionId]);
 
   useEffect(() => {
     if (detailQuery.data?.session) {
       setLiveSession(detailQuery.data.session);
-      setLiveMessages(Array.isArray(detailQuery.data.messages) ? detailQuery.data.messages : []);
-      setActionError('');
+      setLiveMessages(
+        Array.isArray(detailQuery.data.messages)
+          ? detailQuery.data.messages
+          : [],
+      );
+      setActionError("");
     }
   }, [detailQuery.data]);
 
   useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
+    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [liveMessages]);
 
   useEffect(() => {
     if (!sessionId) return undefined;
 
-    const accessToken = localStorage.getItem('access_token');
+    const accessToken = localStorage.getItem("access_token");
     if (!accessToken) return undefined;
 
-    const socket = new WebSocket(chatbotAgentAPI.getLiveChatStreamUrl(sessionId, accessToken));
+    const socket = new WebSocket(
+      chatbotAgentAPI.getLiveChatStreamUrl(sessionId, accessToken),
+    );
 
     socket.onmessage = (event) => {
       try {
-        const payload = JSON.parse(event.data || '{}');
-        if (payload.type === 'message.created' && payload.message) {
+        const payload = JSON.parse(event.data || "{}");
+        if (payload.type === "message.created" && payload.message) {
           setLiveMessages((prev) => {
             if (prev.some((message) => message.id === payload.message.id)) {
               return prev;
@@ -99,15 +111,19 @@ const ChatbotLivePage = () => {
           setLiveSession(payload.session);
         }
 
-        queryClient.invalidateQueries({ queryKey: ['chatbot-live-chats'] });
-        queryClient.invalidateQueries({ queryKey: ['chatbot-live-chat', sessionId] });
+        queryClient.invalidateQueries({ queryKey: ["chatbot-live-chats"] });
+        queryClient.invalidateQueries({
+          queryKey: ["chatbot-live-chat", sessionId],
+        });
       } catch (_error) {
         // Ignore malformed events and keep the socket alive.
       }
     };
 
     socket.onerror = () => {
-      setActionError('Live chat stream disconnected. Trying to keep your view updated with refreshes.');
+      setActionError(
+        "Live chat stream disconnected. Trying to keep your view updated with refreshes.",
+      );
     };
 
     return () => {
@@ -116,18 +132,24 @@ const ChatbotLivePage = () => {
   }, [queryClient, sessionId]);
 
   const selectedChat = useMemo(
-    () => liveChatsQuery.data?.find((entry) => entry.session.id === sessionId)?.session || liveSession,
-    [liveChatsQuery.data, liveSession, sessionId]
+    () =>
+      liveChatsQuery.data?.find((entry) => entry.session.id === sessionId)
+        ?.session || liveSession,
+    [liveChatsQuery.data, liveSession, sessionId],
   );
 
   const liveMetrics = useMemo(() => {
     const sessions = liveChatsQuery.data || [];
-    const humanControlled = sessions.filter((entry) => entry.session.control_mode === 'human').length;
-    const botControlled = sessions.filter((entry) => entry.session.control_mode !== 'human').length;
+    const humanControlled = sessions.filter(
+      (entry) => entry.session.control_mode === "human",
+    ).length;
+    const botControlled = sessions.filter(
+      (entry) => entry.session.control_mode !== "human",
+    ).length;
     const uniqueSites = new Set(
       sessions
         .map((entry) => hostFromOrigin(entry.session.origin))
-        .filter(Boolean)
+        .filter(Boolean),
     ).size;
 
     return {
@@ -138,11 +160,12 @@ const ChatbotLivePage = () => {
     };
   }, [liveChatsQuery.data]);
 
-  const isAssignedToCurrentUser = String(liveSession?.assigned_operator_id || '') === String(user?.id || '');
-  const isAdmin = String(user?.role || '').toLowerCase() === 'admin';
+  const isAssignedToCurrentUser =
+    String(liveSession?.assigned_operator_id || "") === String(user?.id || "");
+  const isAdmin = String(user?.role || "").toLowerCase() === "admin";
   const canSendHumanMessage =
-    liveSession?.status === 'open' &&
-    liveSession?.control_mode === 'human' &&
+    liveSession?.status === "open" &&
+    liveSession?.control_mode === "human" &&
     (isAssignedToCurrentUser || isAdmin);
 
   const runAction = (successMessage) => ({
@@ -160,32 +183,35 @@ const ChatbotLivePage = () => {
         });
       }
       setNotice(successMessage);
-      setActionError('');
-      queryClient.invalidateQueries({ queryKey: ['chatbot-live-chats'] });
-      queryClient.invalidateQueries({ queryKey: ['chatbot-live-chat', sessionId] });
+      setActionError("");
+      queryClient.invalidateQueries({ queryKey: ["chatbot-live-chats"] });
+      queryClient.invalidateQueries({
+        queryKey: ["chatbot-live-chat", sessionId],
+      });
     },
     onError: (error) => {
-      setActionError(formatApiError(error, 'Action failed'));
+      setActionError(formatApiError(error, "Action failed"));
     },
   });
 
   const takeoverMutation = useMutation({
     mutationFn: () => chatbotAgentAPI.takeOverLiveChat(sessionId),
-    ...runAction('Chat claimed successfully.'),
+    ...runAction("Chat claimed successfully."),
   });
 
   const releaseMutation = useMutation({
     mutationFn: () => chatbotAgentAPI.releaseLiveChat(sessionId),
-    ...runAction('Chat released back to the bot.'),
+    ...runAction("Chat released back to the bot."),
   });
 
   const closeMutation = useMutation({
     mutationFn: () => chatbotAgentAPI.closeLiveChat(sessionId),
-    ...runAction('Chat closed.'),
+    ...runAction("Chat closed."),
   });
 
   const sendMutation = useMutation({
-    mutationFn: (payload) => chatbotAgentAPI.sendLiveChatMessage(sessionId, payload),
+    mutationFn: (payload) =>
+      chatbotAgentAPI.sendLiveChatMessage(sessionId, payload),
     onSuccess: (response) => {
       const payload = response.data || {};
       if (payload.message) {
@@ -199,12 +225,12 @@ const ChatbotLivePage = () => {
       if (payload.session) {
         setLiveSession(payload.session);
       }
-      setComposer('');
-      setActionError('');
-      queryClient.invalidateQueries({ queryKey: ['chatbot-live-chats'] });
+      setComposer("");
+      setActionError("");
+      queryClient.invalidateQueries({ queryKey: ["chatbot-live-chats"] });
     },
     onError: (error) => {
-      setActionError(formatApiError(error, 'Failed to send message'));
+      setActionError(formatApiError(error, "Failed to send message"));
     },
   });
 
@@ -224,17 +250,21 @@ const ChatbotLivePage = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-[0.78rem] uppercase tracking-[0.28em] text-white/46">Live Monitoring</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-white">Live Chats</h2>
+          <p className="text-[0.78rem] uppercase tracking-[0.28em] text-white/46">
+            Live Monitoring
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black">
+            Live Chats
+          </h2>
           <p className="mt-2 max-w-3xl text-sm leading-7 text-white/64">
-            Watch active website chats, see which page the visitor is on, and take over the conversation when the bot
-            needs a human hand.
+            Watch active website chats, see which page the visitor is on, and
+            take over the conversation when the bot needs a human hand.
           </p>
         </div>
 
         <Link
           to="/app/chatbot-agents"
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white no-underline transition hover:bg-white/10"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black no-underline transition hover:bg-black/10"
         >
           <Bot className="h-4 w-4" />
           Back to Chatbots
@@ -243,24 +273,48 @@ const ChatbotLivePage = () => {
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-[22px] border border-white/8 bg-white/[0.05] px-4 py-4">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">Open Chats</p>
-          <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-white">{liveMetrics.openChats}</p>
-          <p className="mt-1 text-sm text-white/56">Sessions currently visible in the operator queue.</p>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-black">
+            Open Chats
+          </p>
+          <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-black">
+            {liveMetrics.openChats}
+          </p>
+          <p className="mt-1 text-sm text-white/56">
+            Sessions currently visible in the operator queue.
+          </p>
         </div>
         <div className="rounded-[22px] border border-white/8 bg-white/[0.05] px-4 py-4">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">Human Controlled</p>
-          <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-white">{liveMetrics.humanControlled}</p>
-          <p className="mt-1 text-sm text-white/56">Chats already claimed away from the bot.</p>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-black">
+            Human Controlled
+          </p>
+          <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-black">
+            {liveMetrics.humanControlled}
+          </p>
+          <p className="mt-1 text-sm text-white/56">
+            Chats already claimed away from the bot.
+          </p>
         </div>
         <div className="rounded-[22px] border border-white/8 bg-white/[0.05] px-4 py-4">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">Bot Controlled</p>
-          <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-white">{liveMetrics.botControlled}</p>
-          <p className="mt-1 text-sm text-white/56">Sessions still running on the chatbot runtime.</p>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-black">
+            Bot Controlled
+          </p>
+          <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-black">
+            {liveMetrics.botControlled}
+          </p>
+          <p className="mt-1 text-sm text-white/56">
+            Sessions still running on the chatbot runtime.
+          </p>
         </div>
         <div className="rounded-[22px] border border-white/8 bg-white/[0.05] px-4 py-4">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">Active Sites</p>
-          <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-white">{liveMetrics.uniqueSites}</p>
-          <p className="mt-1 text-sm text-white/56">Unique website origins with current conversation traffic.</p>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-black">
+            Active Sites
+          </p>
+          <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-black">
+            {liveMetrics.uniqueSites}
+          </p>
+          <p className="mt-1 text-sm text-white/56">
+            Unique website origins with current conversation traffic.
+          </p>
         </div>
       </div>
 
@@ -271,29 +325,35 @@ const ChatbotLivePage = () => {
       )}
 
       {(actionError || liveChatsQuery.error || detailQuery.error) && (
-        <div className="rounded-2xl border border-rose-300/18 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
+        <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-400">
           {actionError ||
-            formatApiError(liveChatsQuery.error, 'Failed to load live chats') ||
-            formatApiError(detailQuery.error, 'Failed to load selected chat')}
+            formatApiError(liveChatsQuery.error, "Failed to load live chats") ||
+            formatApiError(detailQuery.error, "Failed to load selected chat")}
         </div>
       )}
 
       <div className="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
-        <section className="overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.04]">
+        <section className="flex min-h-[70vh] flex-col overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.04]">
           <div className="border-b border-white/8 px-5 py-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/44">Open Sessions</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-white/44">
+              Open Sessions
+            </p>
             <p className="mt-2 text-sm text-white/62">
-              {liveChatsQuery.data?.length || 0} active {liveChatsQuery.data?.length === 1 ? 'chat' : 'chats'}
+              {liveChatsQuery.data?.length || 0} active{" "}
+              {liveChatsQuery.data?.length === 1 ? "chat" : "chats"}
             </p>
           </div>
 
-          <div className="max-h-[70vh] overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {!liveChatsQuery.data?.length ? (
               <div className="flex min-h-[320px] flex-col items-center justify-center px-6 text-center">
                 <CircleEllipsis className="h-14 w-14 text-white/28" />
-                <h3 className="mt-5 text-xl font-semibold text-white">No live chats right now</h3>
+                <h3 className="mt-5 text-xl font-semibold text-black">
+                  No live chats right now
+                </h3>
                 <p className="mt-3 text-sm leading-7 text-white/62">
-                  Once website visitors start chatting with your embedded bot, the live session inbox will appear here.
+                  Once website visitors start chatting with your embedded bot,
+                  the live session inbox will appear here.
                 </p>
               </div>
             ) : (
@@ -304,37 +364,47 @@ const ChatbotLivePage = () => {
                   return (
                     <button
                       key={session.id}
-                      onClick={() => navigate(`/app/chatbot-agents/live/${session.id}`)}
+                      onClick={() =>
+                        navigate(`/app/chatbot-agents/live/${session.id}`)
+                      }
                       className={`w-full px-5 py-4 text-left transition ${
-                        active ? 'bg-white/[0.08]' : 'hover:bg-white/[0.05]'
+                        active ? "bg-white/[0.08]" : "hover:bg-white/[0.05]"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-white">{session.visitor_label}</p>
+                          <p className="truncate text-sm font-semibold text-black">
+                            {session.visitor_label}
+                          </p>
                           <p className="mt-1 truncate text-xs uppercase tracking-[0.16em] text-white/44">
                             {hostFromOrigin(session.origin)}
                           </p>
                           {session.page_title && (
-                            <p className="mt-2 truncate text-sm text-white/58">{session.page_title}</p>
+                            <p className="mt-2 truncate text-sm text-white/58">
+                              {session.page_title}
+                            </p>
                           )}
                         </div>
                         <span
                           className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
-                            session.control_mode === 'human'
-                              ? 'bg-amber-300/14 text-amber-100'
-                              : 'bg-sky-300/14 text-sky-100'
+                            session.control_mode === "human"
+                              ? "bg-amber-300/15 text-amber-300"
+                              : "bg-sky-300/15 text-sky-300"
                           }`}
                         >
                           {session.control_mode}
                         </span>
                       </div>
                       <p className="mt-3 line-clamp-2 text-sm leading-6 text-white/68">
-                        {session.last_message_preview || 'No messages yet'}
+                        {session.last_message_preview || "No messages yet"}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/44">
-                        <span>{formatRelativeTime(session.last_activity_at)}</span>
-                        {session.assigned_operator_name && <span>{session.assigned_operator_name}</span>}
+                        <span>
+                          {formatRelativeTime(session.last_activity_at)}
+                        </span>
+                        {session.assigned_operator_name && (
+                          <span>{session.assigned_operator_name}</span>
+                        )}
                       </div>
                     </button>
                   );
@@ -344,14 +414,16 @@ const ChatbotLivePage = () => {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.04]">
+        <section className="flex min-h-[70vh] flex-col overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.04]">
           {!selectedChat ? (
             <div className="flex min-h-[520px] flex-col items-center justify-center px-8 text-center">
-                <MessageSquare className="h-16 w-16 text-white/28" />
-              <h3 className="mt-6 text-2xl font-semibold text-white">Select a live chat</h3>
+              <MessageSquare className="h-16 w-16 text-white/28" />
+              <h3 className="mt-6 text-2xl font-semibold text-white">
+                Select a live chat
+              </h3>
               <p className="mt-3 max-w-xl text-sm leading-7 text-white/62">
-                Choose a session from the left to inspect the transcript, claim the conversation, or hand the chat back
-                to the bot.
+                Choose a session from the left to inspect the transcript, claim
+                the conversation, or hand the chat back to the bot.
               </p>
             </div>
           ) : detailQuery.isLoading && !liveSession ? (
@@ -362,92 +434,119 @@ const ChatbotLivePage = () => {
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-2xl font-semibold tracking-[-0.02em] text-white">{selectedChat.visitor_label}</h3>
+                      <h3 className="text-2xl font-semibold tracking-[-0.02em] text-black">
+                        {selectedChat.visitor_label}
+                      </h3>
                       <span
                         className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
-                          liveSession?.control_mode === 'human'
-                            ? 'bg-amber-300/14 text-amber-100'
-                            : 'bg-sky-300/14 text-sky-100'
+                          liveSession?.control_mode === "human"
+                            ? "bg-amber-300/15 text-amber-300"
+                            : "bg-sky-300/15 text-sky-300"
                         }`}
                       >
-                        {liveSession?.control_mode || 'bot'}
+                        {liveSession?.control_mode || "bot"}
                       </span>
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/62">
                       <span className="inline-flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-white/42" />
+                        <Globe className="h-4 w-4 text-black" />
                         {hostFromOrigin(selectedChat.origin)}
                       </span>
                       <span className="inline-flex items-center gap-2">
-                        <User className="h-4 w-4 text-white/42" />
-                        {liveSession?.assigned_operator_name || 'Bot handling'}
+                        <User className="h-4 w-4 text-black" />
+                        {liveSession?.assigned_operator_name || "Bot handling"}
                       </span>
                       <span className="inline-flex items-center gap-2">
-                        <CircleEllipsis className="h-4 w-4 text-white/42" />
+                        <CircleEllipsis className="h-4 w-4 text-black" />
                         {formatRelativeTime(selectedChat.last_activity_at)}
                       </span>
                     </div>
 
                     {selectedChat.page_title && (
-                      <p className="mt-3 text-base font-medium text-white/84">{selectedChat.page_title}</p>
+                      <p className="mt-3 text-base font-medium text-white/84">
+                        {selectedChat.page_title}
+                      </p>
                     )}
-                    <p className="mt-2 text-sm leading-6 text-white/52">{selectedChat.page_url}</p>
+                    <p className="mt-2 text-sm leading-6 text-white/52">
+                      {selectedChat.page_url}
+                    </p>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => takeoverMutation.mutate()}
-                      disabled={takeoverMutation.isPending || liveSession?.status !== 'open' || (liveSession?.control_mode === 'human' && !isAssignedToCurrentUser && !isAdmin)}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-amber-300/18 bg-amber-300/12 px-4 py-2.5 text-sm font-medium text-amber-100 transition hover:bg-amber-300/18 disabled:opacity-50"
+                      disabled={
+                        takeoverMutation.isPending ||
+                        liveSession?.status !== "open" ||
+                        (liveSession?.control_mode === "human" &&
+                          !isAssignedToCurrentUser &&
+                          !isAdmin)
+                      }
+                      className="inline-flex items-center gap-2 rounded-2xl border border-amber-300/15 bg-amber-300/10 px-4 py-2.5 text-sm font-medium text-amber-400 transition hover:bg-amber-300/20 disabled:opacity-50"
                     >
                       <ShieldAlert className="h-4 w-4" />
-                      {takeoverMutation.isPending ? 'Claiming...' : 'Take Over'}
+                      {takeoverMutation.isPending ? "Claiming..." : "Take Over"}
                     </button>
                     <button
                       onClick={() => releaseMutation.mutate()}
-                      disabled={releaseMutation.isPending || liveSession?.control_mode !== 'human' || liveSession?.status !== 'open'}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-sky-300/18 bg-sky-300/12 px-4 py-2.5 text-sm font-medium text-sky-100 transition hover:bg-sky-300/18 disabled:opacity-50"
+                      disabled={
+                        releaseMutation.isPending ||
+                        liveSession?.control_mode !== "human" ||
+                        liveSession?.status !== "open"
+                      }
+                      className="inline-flex items-center gap-2 rounded-2xl border border-sky-300 bg-sky-300 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-300/20 hover:text-sky-500 disabled:opacity-50"
                     >
                       <PauseCircle className="h-4 w-4" />
-                      {releaseMutation.isPending ? 'Releasing...' : 'Release to Bot'}
+                      {releaseMutation.isPending
+                        ? "Releasing..."
+                        : "Release to Bot"}
                     </button>
                     <button
                       onClick={() => closeMutation.mutate()}
-                      disabled={closeMutation.isPending || liveSession?.status !== 'open'}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-rose-300/18 bg-rose-400/10 px-4 py-2.5 text-sm font-medium text-rose-100 transition hover:bg-rose-400/16 disabled:opacity-50"
+                      disabled={
+                        closeMutation.isPending ||
+                        liveSession?.status !== "open"
+                      }
+                      className="inline-flex items-center gap-2 rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-2.5 text-sm font-medium text-rose-400 transition hover:bg-rose-400/20 disabled:opacity-50"
                     >
                       <XCircle className="h-4 w-4" />
-                      {closeMutation.isPending ? 'Closing...' : 'Close Chat'}
+                      {closeMutation.isPending ? "Closing..." : "Close Chat"}
                     </button>
                   </div>
                 </div>
               </div>
 
-              <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_280px]">
+              <div className="grid flex-1 min-h-0 gap-0 lg:grid-cols-[minmax(0,1fr)_280px]">
                 <div className="min-w-0 border-b border-white/8 lg:border-b-0 lg:border-r lg:border-white/8">
-                  <div className="flex h-[54vh] flex-col">
-                    <div className="flex-1 space-y-3 overflow-y-auto px-5 py-5">
+                  <div className="flex h-full min-h-0 flex-col">
+                    <div className="flex-1 min-h-0 space-y-3 overflow-y-auto px-5 py-5">
                       {liveMessages.map((message) => {
-                        const isVisitor = message.sender_type === 'visitor';
-                        const isSystem = message.sender_type === 'system';
-                        const alignmentClass = isVisitor ? 'ml-auto bg-[#2f66ea] text-white' : 'mr-auto bg-white/8 text-white';
+                        const isVisitor = message.sender_type === "visitor";
+                        const isSystem = message.sender_type === "system";
+                        const alignmentClass = isVisitor
+                          ? "ml-auto bg-[#2f66ea] text-white"
+                          : "mr-auto bg-black/10 text-black";
 
                         return (
                           <div
                             key={message.id}
                             className={`max-w-[86%] rounded-[20px] px-4 py-3 text-sm leading-6 ${
-                              isSystem ? 'mx-auto bg-white/8 text-center text-white/74' : alignmentClass
+                              isSystem
+                                ? "mx-auto bg-white/8 text-center text-white/74"
+                                : alignmentClass
                             }`}
                           >
                             {!isSystem && (
-                              <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/46">
+                              <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-black/55">
                                 {message.sender_type}
                               </div>
                             )}
                             <div>{message.content}</div>
-                            <div className="mt-2 text-[11px] text-white/38">
-                              {new Date(message.created_at).toLocaleTimeString()}
+                            <div className="mt-2 text-[11px] text-black/25">
+                              {new Date(
+                                message.created_at,
+                              ).toLocaleTimeString()}
                             </div>
                           </div>
                         );
@@ -460,22 +559,31 @@ const ChatbotLivePage = () => {
                         <textarea
                           value={composer}
                           onChange={(event) => setComposer(event.target.value)}
-                          rows={2}
+                          rows={3}
+                          minRows={1}
+                          maxRows={5}
                           placeholder={
                             canSendHumanMessage
-                              ? 'Reply as the human operator...'
-                              : 'Take over this chat to send human messages.'
+                              ? "Reply as the human operator..."
+                              : "Take over this chat to send human messages."
                           }
-                          disabled={!canSendHumanMessage || sendMutation.isPending}
-                          className="min-h-[52px] flex-1 rounded-[18px] border border-white/10 bg-white/6 px-4 py-3 text-sm text-black outline-none placeholder:text-white/34"
+                          disabled={
+                            !canSendHumanMessage || sendMutation.isPending
+                          }
+                          className="min-h-[52px] flex-1 rounded-[18px] border border-white/10 bg-white/6 px-4 py-3 text-sm text-black outline-none"
                         />
+
                         <button
                           onClick={handleSend}
-                          disabled={!canSendHumanMessage || sendMutation.isPending || !composer.trim()}
+                          disabled={
+                            !canSendHumanMessage ||
+                            sendMutation.isPending ||
+                            !composer.trim()
+                          }
                           className="inline-flex items-center gap-2 self-end rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#295ad0] disabled:opacity-50"
                         >
                           <Send className="h-4 w-4" />
-                          {sendMutation.isPending ? 'Sending...' : 'Send'}
+                          {sendMutation.isPending ? "Sending..." : "Send"}
                         </button>
                       </div>
                     </div>
@@ -484,37 +592,61 @@ const ChatbotLivePage = () => {
 
                 <aside className="space-y-4 px-5 py-5">
                   <div className="rounded-[22px] border border-white/8 bg-white/[0.05] p-4">
-                    <p className="text-xs uppercase tracking-[0.22em] text-white/42">Session Status</p>
-                    <p className="mt-3 text-lg font-semibold text-white">{liveSession?.status || 'open'}</p>
+                    <p className="text-xs uppercase tracking-[0.22em] text-black">
+                      Session Status
+                    </p>
+                    <p className="mt-3 text-lg font-semibold text-black">
+                      {liveSession?.status || "open"}
+                    </p>
                     <p className="mt-2 text-sm text-white/62">
-                      {liveSession?.control_mode === 'human'
-                        ? 'The bot is paused and a human operator owns the thread.'
-                        : 'The bot is currently handling replies for this visitor.'}
+                      {liveSession?.control_mode === "human"
+                        ? "The bot is paused and a human operator owns the thread."
+                        : "The bot is currently handling replies for this visitor."}
                     </p>
                   </div>
 
                   <div className="rounded-[22px] border border-white/8 bg-white/[0.05] p-4">
-                    <p className="text-xs uppercase tracking-[0.22em] text-white/42">Session Details</p>
+                    <p className="text-xs uppercase tracking-[0.22em] text-black">
+                      Session Details
+                    </p>
                     <div className="mt-3 space-y-3 text-sm text-white/68">
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-white/42">Origin</div>
-                        <div className="mt-1 break-all">{selectedChat.origin}</div>
+                        <div className="text-[11px] uppercase tracking-[0.16em] text-black">
+                          Origin
+                        </div>
+                        <div className="mt-1 break-all">
+                          {selectedChat.origin}
+                        </div>
                       </div>
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-white/42">Page</div>
-                        <div className="mt-1 break-all">{selectedChat.page_url}</div>
+                        <div className="text-[11px] uppercase tracking-[0.16em] text-black">
+                          Page
+                        </div>
+                        <div className="mt-1 break-all">
+                          {selectedChat.page_url}
+                        </div>
                       </div>
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-white/42">Last Activity</div>
-                        <div className="mt-1">{formatAbsoluteTime(selectedChat.last_activity_at)}</div>
+                        <div className="text-[11px] uppercase tracking-[0.16em] text-black">
+                          Last Activity
+                        </div>
+                        <div className="mt-1">
+                          {formatAbsoluteTime(selectedChat.last_activity_at)}
+                        </div>
                       </div>
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-white/42">Started</div>
-                        <div className="mt-1">{formatAbsoluteTime(selectedChat.started_at)}</div>
+                        <div className="text-[11px] uppercase tracking-[0.16em] text-black">
+                          Started
+                        </div>
+                        <div className="mt-1">
+                          {formatAbsoluteTime(selectedChat.started_at)}
+                        </div>
                       </div>
                       {selectedChat.page_title && (
                         <div>
-                          <div className="text-[11px] uppercase tracking-[0.16em] text-white/42">Page Title</div>
+                          <div className="text-[11px] uppercase tracking-[0.16em] text-black">
+                            Page Title
+                          </div>
                           <div className="mt-1">{selectedChat.page_title}</div>
                         </div>
                       )}

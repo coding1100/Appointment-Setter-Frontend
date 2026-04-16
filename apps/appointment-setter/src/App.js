@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router-dom';
 
 import { getAccessToken } from '@samai/auth/session';
+import { getAppName } from './utils/appName';
 
 const shell = {
   minHeight: '100vh',
@@ -29,7 +30,7 @@ const WorkspacePage = () => {
     <div style={shell}>
       <div style={card}>
         <p style={{ letterSpacing: '0.28em', fontSize: '12px', textTransform: 'uppercase', color: '#64748b' }}>
-          Appointment Setter Microfrontend
+          {getAppName()} Microfrontend
         </p>
         <h1 style={{ marginTop: '16px', fontSize: '40px', lineHeight: 1.05 }}>Workspace Scaffold Ready</h1>
         <p style={{ marginTop: '12px', maxWidth: '760px', color: '#475569', lineHeight: 1.7 }}>
