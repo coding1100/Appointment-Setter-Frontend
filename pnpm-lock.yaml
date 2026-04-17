@@ -14,10 +14,10 @@ importers:
 
   apps/appointment-setter:
     dependencies:
-      '@samai/auth':
+      '@mindrind/auth':
         specifier: workspace:*
         version: link:../../packages/auth
-      '@samai/config':
+      '@mindrind/config':
         specifier: workspace:*
         version: link:../../packages/config
       react:
@@ -35,10 +35,10 @@ importers:
 
   apps/chatbot-agents:
     dependencies:
-      '@samai/auth':
+      '@mindrind/auth':
         specifier: workspace:*
         version: link:../../packages/auth
-      '@samai/config':
+      '@mindrind/config':
         specifier: workspace:*
         version: link:../../packages/config
       react:
@@ -68,27 +68,27 @@ importers:
       '@livekit/components-styles':
         specifier: ^1.1.6
         version: 1.2.0
+      '@mindrind/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
+      '@mindrind/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@mindrind/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@mindrind/permissions':
+        specifier: workspace:*
+        version: link:../../packages/permissions
+      '@mindrind/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
+      '@mindrind/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.1.16
         version: 2.1.16(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@samai/api-client':
-        specifier: workspace:*
-        version: link:../../packages/api-client
-      '@samai/auth':
-        specifier: workspace:*
-        version: link:../../packages/auth
-      '@samai/config':
-        specifier: workspace:*
-        version: link:../../packages/config
-      '@samai/permissions':
-        specifier: workspace:*
-        version: link:../../packages/permissions
-      '@samai/shared-ui':
-        specifier: workspace:*
-        version: link:../../packages/shared-ui
-      '@samai/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
       '@tanstack/react-query':
         specifier: ^5.96.2
         version: 5.99.0(react@18.3.1)
@@ -150,10 +150,10 @@ importers:
 
   packages/api-client:
     dependencies:
-      '@samai/auth':
+      '@mindrind/auth':
         specifier: workspace:*
         version: link:../auth
-      '@samai/config':
+      '@mindrind/config':
         specifier: workspace:*
         version: link:../config
       axios:
