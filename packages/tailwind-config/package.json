@@ -1,5 +1,5 @@
 {
-  "name": "@samai/tailwind-config",
+  "name": "@mindrind/tailwind-config",
   "version": "1.0.0",
   "private": true,
   "main": "./index.js"

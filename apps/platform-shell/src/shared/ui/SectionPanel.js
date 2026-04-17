@@ -1,1 +1,1 @@
-export { default } from '@samai/shared-ui/SectionPanel';
+export { default } from '@mindrind/shared-ui/SectionPanel';

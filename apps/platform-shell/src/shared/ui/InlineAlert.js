@@ -1,1 +1,1 @@
-export { default } from '@samai/shared-ui/InlineAlert';
+export { default } from '@mindrind/shared-ui/InlineAlert';

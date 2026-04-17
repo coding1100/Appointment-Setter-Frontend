@@ -1,1 +1,1 @@
-export * from '@samai/utils/dates';
+export * from '@mindrind/utils/dates';
