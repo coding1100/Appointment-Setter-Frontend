@@ -350,7 +350,7 @@ export const chatbotAgentAPI = {
   getChatbotAgent: (chatbotId) => api.get(`/api/v1/chatbot-agents/${chatbotId}`),
   updateChatbotAgent: (chatbotId, chatbotData) => api.put(`/api/v1/chatbot-agents/${chatbotId}`, chatbotData),
   deleteChatbotAgent: (chatbotId) => api.delete(`/api/v1/chatbot-agents/${chatbotId}`),
-  generateEmbedToken: (chatbotId, origin) => api.post(`/api/v1/chatbot-agents/${chatbotId}/embed-token`, { origin }),
+  generateEmbedToken: (chatbotId, payload) => api.post(`/api/v1/chatbot-agents/${chatbotId}/embed-token`, payload),
   revokeEmbedTokens: (chatbotId) => api.post(`/api/v1/chatbot-agents/${chatbotId}/revoke-embed-tokens`),
   listRuntimeLogs: (chatbotId, limit = 100, statusFilter = '') =>
     api.get(`/api/v1/chatbot-agents/${chatbotId}/runtime-logs?limit=${limit}${statusFilter ? `&status_filter=${encodeURIComponent(statusFilter)}` : ''}`),

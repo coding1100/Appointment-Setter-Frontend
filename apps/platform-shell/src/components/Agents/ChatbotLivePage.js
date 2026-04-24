@@ -2,10 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
+  Bell,
   Bot,
   CircleEllipsis,
   Globe,
   MessageSquare,
+  Volume2,
+  VolumeX,
   PauseCircle,
   Send,
   ShieldAlert,
@@ -20,6 +23,7 @@ import {
   formatRelativeTime,
 } from "../../shared/utils/dates";
 import { formatApiError } from "../../shared/utils/errors";
+import { useLiveChatAudioAlerts } from "../../domains/chatbot-agents/hooks/useLiveChatAudioAlerts";
 import Loader from "../Loader";
 
 const hostFromOrigin = (value) => {
@@ -28,6 +32,12 @@ const hostFromOrigin = (value) => {
   } catch (_error) {
     return value || "Unknown site";
   }
+};
+
+const SOUND_THEME_LABELS = {
+  soft: "Soft (Calm)",
+  neutral: "Neutral (Balanced)",
+  crisp: "Crisp (Bright)",
 };
 
 const ChatbotLivePage = () => {
@@ -41,6 +51,23 @@ const ChatbotLivePage = () => {
   const [liveSession, setLiveSession] = useState(null);
   const [liveMessages, setLiveMessages] = useState([]);
   const endOfMessagesRef = useRef(null);
+  const knownSessionIdsRef = useRef(new Set());
+  const knownSelectedMessageIdsRef = useRef(new Set());
+  const backgroundSocketsRef = useRef(new Map());
+
+  const {
+    notifyNewSession,
+    notifyIncomingVisitorMessage,
+    settings: alertSettings,
+    setMuted,
+    setVolume,
+    setSoundTheme,
+    playTestSound,
+    unlockAudio,
+    isBlocked,
+    hint: audioHint,
+    soundThemes,
+  } = useLiveChatAudioAlerts();
 
   const liveChatsQuery = useQuery({
     queryKey: ["chatbot-live-chats"],
@@ -82,6 +109,16 @@ const ChatbotLivePage = () => {
   }, [detailQuery.data]);
 
   useEffect(() => {
+    if (!liveMessages.length) return;
+    const ids = knownSelectedMessageIdsRef.current;
+    liveMessages.forEach((message) => {
+      if (message?.id) {
+        ids.add(message.id);
+      }
+    });
+  }, [liveMessages]);
+
+  useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [liveMessages]);
 
@@ -99,12 +136,32 @@ const ChatbotLivePage = () => {
       try {
         const payload = JSON.parse(event.data || "{}");
         if (payload.type === "message.created" && payload.message) {
+          const message = payload.message;
+          const isNewMessage =
+            Boolean(message.id) &&
+            !knownSelectedMessageIdsRef.current.has(message.id);
+
+          if (isNewMessage && message.id) {
+            knownSelectedMessageIdsRef.current.add(message.id);
+          }
+
           setLiveMessages((prev) => {
-            if (prev.some((message) => message.id === payload.message.id)) {
+            if (prev.some((existing) => existing.id === message.id)) {
               return prev;
             }
-            return [...prev, payload.message];
+            return [...prev, message];
           });
+
+          if (
+            isNewMessage &&
+            message.sender_type === "visitor" &&
+            String(message.session_id || "") !== String(sessionId || "")
+          ) {
+            notifyIncomingVisitorMessage({
+              sessionId: message.session_id,
+              messageId: message.id,
+            }).catch(() => {});
+          }
         }
 
         if (payload.session) {
@@ -129,7 +186,88 @@ const ChatbotLivePage = () => {
     return () => {
       socket.close();
     };
-  }, [queryClient, sessionId]);
+  }, [notifyIncomingVisitorMessage, queryClient, sessionId]);
+
+  useEffect(() => {
+    const rows = Array.isArray(liveChatsQuery.data) ? liveChatsQuery.data : [];
+    const currentIds = new Set(rows.map((entry) => entry?.session?.id).filter(Boolean));
+    const knownIds = knownSessionIdsRef.current;
+
+    if (knownIds.size === 0) {
+      currentIds.forEach((id) => knownIds.add(id));
+      return;
+    }
+
+    rows.forEach((entry) => {
+      const id = entry?.session?.id;
+      if (!id || knownIds.has(id)) return;
+      knownIds.add(id);
+      notifyNewSession({
+        sessionId: id,
+        visitorLabel: entry?.session?.visitor_label,
+      }).catch(() => {});
+    });
+
+    Array.from(knownIds).forEach((id) => {
+      if (!currentIds.has(id)) {
+        knownIds.delete(id);
+      }
+    });
+  }, [liveChatsQuery.data, notifyNewSession]);
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem("access_token");
+    if (!accessToken) return undefined;
+
+    const rows = Array.isArray(liveChatsQuery.data) ? liveChatsQuery.data : [];
+    const targetSessionIds = rows
+      .map((entry) => entry?.session?.id)
+      .filter((id) => id && String(id) !== String(sessionId || ""));
+    const socketMap = backgroundSocketsRef.current;
+
+    targetSessionIds.forEach((id) => {
+      if (socketMap.has(id)) return;
+      const socket = new WebSocket(
+        chatbotAgentAPI.getLiveChatStreamUrl(id, accessToken),
+      );
+
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data || "{}");
+          if (payload.type !== "message.created" || !payload.message) return;
+          const message = payload.message;
+          if (message.sender_type !== "visitor") return;
+          if (!message.id) return;
+
+          notifyIncomingVisitorMessage({
+            sessionId: message.session_id || id,
+            messageId: message.id,
+          }).catch(() => {});
+          queryClient.invalidateQueries({ queryKey: ["chatbot-live-chats"] });
+        } catch (_error) {
+          // Keep socket alive even if a malformed payload appears.
+        }
+      };
+
+      socketMap.set(id, socket);
+    });
+
+    Array.from(socketMap.keys()).forEach((id) => {
+      if (!targetSessionIds.includes(id)) {
+        const socket = socketMap.get(id);
+        if (socket) socket.close();
+        socketMap.delete(id);
+      }
+    });
+
+    return () => {
+      Array.from(socketMap.keys()).forEach((id) => {
+        const socket = socketMap.get(id);
+        if (socket) socket.close();
+        socketMap.delete(id);
+      });
+    };
+  }, [liveChatsQuery.data, notifyIncomingVisitorMessage, queryClient, sessionId]);
 
   const selectedChat = useMemo(
     () =>
@@ -242,6 +380,15 @@ const ChatbotLivePage = () => {
     sendMutation.mutate({ content });
   };
 
+  const runAudioAction = async (action) => {
+    try {
+      await action();
+      setActionError("");
+    } catch (_error) {
+      setActionError("Could not play notification audio in this browser yet.");
+    }
+  };
+
   if (liveChatsQuery.isLoading && !liveChatsQuery.data) {
     return <Loader message="Loading live chats..." />;
   }
@@ -269,6 +416,98 @@ const ChatbotLivePage = () => {
           <Bot className="h-4 w-4" />
           Back to Chatbots
         </Link>
+      </div>
+
+      <div className="rounded-[20px] border border-black/10 bg-black/[0.03] px-4 py-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4 text-black/70" />
+            <p className="text-sm font-medium text-black">
+              Alerts
+            </p>
+            <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] uppercase tracking-[0.16em] text-black/70">
+              {alertSettings.muted ? "Muted" : "Active"}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() =>
+                runAudioAction(async () => {
+                  setMuted(!alertSettings.muted);
+                })
+              }
+              className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-black transition hover:bg-black/5"
+            >
+              {alertSettings.muted ? (
+                <>
+                  <Volume2 className="h-4 w-4" />
+                  Unmute
+                </>
+              ) : (
+                <>
+                  <VolumeX className="h-4 w-4" />
+                  Mute
+                </>
+              )}
+            </button>
+
+            <div className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2">
+              <span className="text-xs uppercase tracking-[0.14em] text-black/55">
+                Theme
+              </span>
+              <select
+                value={alertSettings.soundTheme}
+                onChange={(event) => setSoundTheme(event.target.value)}
+                className="rounded-lg border border-black/10 bg-white px-2.5 py-1.5 text-xs uppercase tracking-[0.1em] text-black"
+              >
+                {soundThemes.map((theme) => (
+                  <option key={theme} value={theme}>
+                    {SOUND_THEME_LABELS[theme] || theme}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2">
+              <span className="text-xs uppercase tracking-[0.14em] text-black/55">
+                Volume
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={alertSettings.volume}
+                onChange={(event) => setVolume(event.target.value)}
+                className="h-1.5 w-28 accent-[#2f66ea]"
+              />
+              <span className="w-8 text-right text-xs text-black/55">
+                {alertSettings.volume}
+              </span>
+            </div>
+
+            <button
+              onClick={() => runAudioAction(playTestSound)}
+              disabled={alertSettings.muted}
+              className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-black transition hover:bg-black/5 disabled:opacity-50"
+            >
+              Test
+            </button>
+
+            {isBlocked && (
+              <button
+                onClick={() => runAudioAction(unlockAudio)}
+                className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-100 px-3 py-2 text-sm text-amber-700 transition hover:bg-amber-200"
+              >
+                <Bell className="h-4 w-4" />
+                Enable Sounds
+              </button>
+            )}
+          </div>
+        </div>
+        {audioHint && (
+          <p className="mt-2 text-xs text-amber-600">{audioHint}</p>
+        )}
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
