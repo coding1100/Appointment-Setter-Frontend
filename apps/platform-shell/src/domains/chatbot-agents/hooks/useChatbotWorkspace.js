@@ -142,9 +142,14 @@ export const useChatbotWorkspace = ({ createRequested = 0, isAdmin = false } = {
     async (chatbot, options = {}) => {
       const origin = resolveOrigin(chatbot, options.origin);
       const expiresInMinutes = Number(options.expires_in_minutes);
+      const neverExpires = Boolean(options.never_expires);
       const requestPayload = {
         origin,
-        ...(Number.isFinite(expiresInMinutes) ? { expires_in_minutes: expiresInMinutes } : {}),
+        ...(neverExpires
+          ? { never_expires: true }
+          : Number.isFinite(expiresInMinutes)
+            ? { expires_in_minutes: expiresInMinutes }
+            : {}),
       };
       const response = await chatbotAgentAPI.generateEmbedToken(chatbot.id, requestPayload);
       const responsePayload = response?.data || {};
