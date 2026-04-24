@@ -10,6 +10,21 @@ const STORAGE_KEYS = {
 const DEFAULT_VOLUME = 100;
 const DEFAULT_THEME = "soft";
 const SOUND_THEMES = ["soft", "neutral", "crisp"];
+const MESSAGE_SOUND_FILE = "/sounds/live-chat/message.mp3";
+const VOICE_FILE_BY_THEME = {
+  soft: {
+    newSession: "/sounds/live-chat/new_visitor.mp3",
+    returningVisitor: "/sounds/live-chat/returning_visitor.mp3",
+  },
+  neutral: {
+    newSession: "/sounds/live-chat/new_visitor.mp3",
+    returningVisitor: "/sounds/live-chat/returning_visitor.mp3",
+  },
+  crisp: {
+    newSession: "/sounds/live-chat/new_visitor.mp3",
+    returningVisitor: "/sounds/live-chat/returning_visitor.mp3",
+  },
+};
 const MIN_GAP_MS = {
   newSession: 1300,
   message: 420,
@@ -102,32 +117,6 @@ const buildToneDataUri = (frequency = 880, durationMs = 170, gain = 0.44) => {
   return `data:audio/wav;base64,${btoa(binary)}`;
 };
 
-const pickBestVoice = (voices = []) => {
-  if (!Array.isArray(voices) || voices.length === 0) return null;
-
-  const preferredNames = [
-    "Samantha",
-    "Google US English",
-    "Microsoft Jenny",
-    "Microsoft Aria",
-    "Microsoft Zira",
-  ];
-
-  const directMatch = voices.find((voice) =>
-    preferredNames.some((name) =>
-      String(voice?.name || "").toLowerCase().includes(name.toLowerCase()),
-    ),
-  );
-  if (directMatch) return directMatch;
-
-  const enVoice = voices.find((voice) =>
-    String(voice?.lang || "").toLowerCase().startsWith("en"),
-  );
-  if (enVoice) return enVoice;
-
-  return voices[0];
-};
-
 export const useLiveChatAudioAlerts = () => {
   const [muted, setMuted] = useState(() => loadBoolean(STORAGE_KEYS.muted, false));
   const [enabled, setEnabled] = useState(() => loadBoolean(STORAGE_KEYS.enabled, true));
@@ -143,7 +132,14 @@ export const useLiveChatAudioAlerts = () => {
   const spokenSessionIdsRef = useRef(new Set());
   const notifiedMessageIdsRef = useRef(new Set());
   const audioContextRef = useRef(null);
-  const preferredVoiceRef = useRef(null);
+  const voiceFilesReadyRef = useRef({
+    "soft:newSession": false,
+    "soft:returningVisitor": false,
+    "neutral:newSession": false,
+    "neutral:returningVisitor": false,
+    "crisp:newSession": false,
+    "crisp:returningVisitor": false,
+  });
 
   const themeConfig = useMemo(() => {
     if (soundTheme === "crisp") {
@@ -233,16 +229,45 @@ export const useLiveChatAudioAlerts = () => {
   );
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return undefined;
+    if (typeof window === "undefined") return undefined;
 
-    const refreshVoice = () => {
-      preferredVoiceRef.current = pickBestVoice(window.speechSynthesis.getVoices());
-    };
+    let disposed = false;
+    const preload = [];
+    SOUND_THEMES.forEach((theme) => {
+      const themeFiles = VOICE_FILE_BY_THEME[theme] || {};
+      ["newSession", "returningVisitor"].forEach((kind) => {
+        const source = themeFiles[kind];
+        if (!source) return;
+        const key = `${theme}:${kind}`;
+        const audio = new Audio(source);
+        audio.preload = "auto";
+        const onReady = () => {
+          if (!disposed) {
+            voiceFilesReadyRef.current[key] = true;
+          }
+        };
+        const onError = () => {
+          if (!disposed) {
+            voiceFilesReadyRef.current[key] = false;
+          }
+        };
+        audio.addEventListener("canplaythrough", onReady, { once: true });
+        audio.addEventListener("loadeddata", onReady, { once: true });
+        audio.addEventListener("error", onError, { once: true });
+        audio.load();
+        preload.push(audio);
+      });
+    });
 
-    refreshVoice();
-    window.speechSynthesis.addEventListener("voiceschanged", refreshVoice);
     return () => {
-      window.speechSynthesis.removeEventListener("voiceschanged", refreshVoice);
+      disposed = true;
+      preload.forEach((audio) => {
+        try {
+          audio.pause();
+        } catch (_error) {
+          // No-op
+        }
+      });
     };
   }, []);
 
@@ -292,7 +317,7 @@ export const useLiveChatAudioAlerts = () => {
 
   const playToneWithAudioTag = useCallback(
     async (kind) => {
-      const source = toneUris[kind] || toneUris.message;
+      const source = kind === "message" ? MESSAGE_SOUND_FILE : (toneUris[kind] || toneUris.message);
       const audio = new Audio(source);
       audio.volume = Math.max(0, Math.min(1, (volume / 100) * 1.25));
       await audio.play();
@@ -384,57 +409,24 @@ export const useLiveChatAudioAlerts = () => {
     };
   }, [primeAudio]);
 
-  const speakNewUser = useCallback(
-    async (text) => {
-      if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-        throw new Error("Speech synthesis unavailable");
+  const playVoicePrompt = useCallback(
+    async (kind) => {
+      const source = VOICE_FILE_BY_THEME[soundTheme]?.[kind];
+      if (!source) {
+        throw new Error("Voice source not configured");
       }
 
-      await new Promise((resolve, reject) => {
-        let settled = false;
-        let timeoutId = null;
+      const key = `${soundTheme}:${kind}`;
+      if (!voiceFilesReadyRef.current[key]) {
+        throw new Error("Voice file not ready");
+      }
 
-        const finish = (fn) => {
-          if (settled) return;
-          settled = true;
-          if (timeoutId) {
-            window.clearTimeout(timeoutId);
-          }
-          fn();
-        };
-
-        try {
-          window.speechSynthesis.cancel();
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.voice = preferredVoiceRef.current;
-          utterance.volume = Math.max(
-            0,
-            Math.min(1, (volume / 100) * 1.35 * themeConfig.tts.gainMultiplier),
-          );
-          utterance.rate = themeConfig.tts.rate;
-          utterance.pitch = themeConfig.tts.pitch;
-          utterance.onend = () => finish(resolve);
-          utterance.onerror = () =>
-            finish(() => reject(new Error("Speech synthesis failed")));
-
-          timeoutId = window.setTimeout(() => {
-            try {
-              window.speechSynthesis.cancel();
-            } catch (_error) {
-              // No-op
-            }
-            finish(() =>
-              reject(new Error("Speech synthesis timed out in this tab state")),
-            );
-          }, 2200);
-
-          window.speechSynthesis.speak(utterance);
-        } catch (error) {
-          finish(() => reject(error));
-        }
-      });
+      const audio = new Audio(source);
+      audio.preload = "auto";
+      audio.volume = Math.max(0, Math.min(1, (volume / 100) * 1.25));
+      await audio.play();
     },
-    [themeConfig, volume],
+    [soundTheme, volume],
   );
 
   const rateLimited = useCallback((kind) => {
@@ -457,21 +449,17 @@ export const useLiveChatAudioAlerts = () => {
       if (!rateLimited("newSession")) return;
 
       spokenSessionIdsRef.current.add(dedupeKey);
-      const phrase = isReturningVisitor
-        ? "Returning visitor arrived"
-        : visitorLabel
-          ? "New user arrived"
-          : "New user arrived";
+      const voiceKind = isReturningVisitor ? "returningVisitor" : "newSession";
 
       try {
-        await speakNewUser(phrase);
+        await playVoicePrompt(voiceKind);
         setIsBlocked(false);
         setHint("");
       } catch (_error) {
         await playTone("newSession");
       }
     },
-    [playTone, rateLimited, shouldPlay, speakNewUser],
+    [playTone, playVoicePrompt, rateLimited, shouldPlay],
   );
 
   const notifyIncomingVisitorMessage = useCallback(
