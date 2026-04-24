@@ -7,7 +7,7 @@ const STORAGE_KEYS = {
   theme: "chat_live_alerts_theme",
 };
 
-const DEFAULT_VOLUME = 64;
+const DEFAULT_VOLUME = 100;
 const DEFAULT_THEME = "soft";
 const SOUND_THEMES = ["soft", "neutral", "crisp"];
 const MIN_GAP_MS = {
@@ -149,25 +149,25 @@ export const useLiveChatAudioAlerts = () => {
     if (soundTheme === "crisp") {
       return {
         tone: {
-          newSession: [756, 200, 0.42],
-          message: [1040, 95, 0.28],
-          test: [920, 140, 0.35],
+          newSession: [756, 480, 0.42],
+          message: [1040, 260, 0.28],
+          test: [920, 320, 0.35],
         },
         webAudio: {
           newSession: [
-            [760, 0, 0.16, "triangle", 0.15],
-            [950, 0.14, 0.17, "triangle", 0.15],
+            [760, 0, 0.30, "triangle", 0.15],
+            [950, 0.22, 0.33, "triangle", 0.15],
           ],
-          message: [[1020, 0, 0.08, "sine", 0.11]],
+          message: [[1020, 0, 0.20, "sine", 0.11]],
           test: [
-            [760, 0, 0.12, "triangle", 0.15],
-            [980, 0.11, 0.14, "triangle", 0.15],
+            [760, 0, 0.22, "triangle", 0.15],
+            [980, 0.18, 0.24, "triangle", 0.15],
           ],
         },
         tts: {
           rate: 0.99,
           pitch: 1.02,
-          gainMultiplier: 0.88,
+          gainMultiplier: 1,
         },
       };
     }
@@ -175,50 +175,50 @@ export const useLiveChatAudioAlerts = () => {
     if (soundTheme === "neutral") {
       return {
         tone: {
-          newSession: [710, 230, 0.40],
-          message: [968, 110, 0.30],
-          test: [980, 170, 0.36],
+          newSession: [710, 500, 0.40],
+          message: [968, 280, 0.30],
+          test: [980, 340, 0.36],
         },
         webAudio: {
           newSession: [
-            [712, 0, 0.19, "triangle", 0.16],
-            [870, 0.16, 0.20, "triangle", 0.16],
+            [712, 0, 0.34, "triangle", 0.16],
+            [870, 0.24, 0.34, "triangle", 0.16],
           ],
-          message: [[960, 0, 0.10, "sine", 0.11]],
+          message: [[960, 0, 0.22, "sine", 0.11]],
           test: [
-            [740, 0, 0.13, "triangle", 0.16],
-            [980, 0.11, 0.15, "triangle", 0.16],
+            [740, 0, 0.24, "triangle", 0.16],
+            [980, 0.18, 0.25, "triangle", 0.16],
           ],
         },
         tts: {
           rate: 0.97,
           pitch: 1.0,
-          gainMultiplier: 0.9,
+          gainMultiplier: 1,
         },
       };
     }
 
     return {
       tone: {
-        newSession: [684, 240, 0.42],
-        message: [912, 115, 0.32],
-        test: [980, 180, 0.38],
+        newSession: [684, 520, 0.42],
+        message: [912, 300, 0.32],
+        test: [980, 360, 0.38],
       },
       webAudio: {
         newSession: [
-          [684, 0, 0.20, "triangle", 0.16],
-          [812, 0.17, 0.21, "triangle", 0.16],
+          [684, 0, 0.36, "triangle", 0.16],
+          [812, 0.26, 0.36, "triangle", 0.16],
         ],
-        message: [[912, 0, 0.11, "sine", 0.12]],
+        message: [[912, 0, 0.24, "sine", 0.12]],
         test: [
-          [740, 0, 0.14, "triangle", 0.17],
-          [980, 0.12, 0.16, "triangle", 0.17],
+          [740, 0, 0.26, "triangle", 0.17],
+          [980, 0.2, 0.28, "triangle", 0.17],
         ],
       },
       tts: {
         rate: 0.96,
         pitch: 0.98,
-        gainMultiplier: 0.9,
+        gainMultiplier: 1,
       },
     };
   }, [soundTheme]);
@@ -294,7 +294,7 @@ export const useLiveChatAudioAlerts = () => {
     async (kind) => {
       const source = toneUris[kind] || toneUris.message;
       const audio = new Audio(source);
-      audio.volume = volume / 100;
+      audio.volume = Math.max(0, Math.min(1, (volume / 100) * 1.25));
       await audio.play();
     },
     [toneUris, volume],
@@ -311,7 +311,7 @@ export const useLiveChatAudioAlerts = () => {
 
       const now = context.currentTime;
       const outputGain = context.createGain();
-      outputGain.gain.value = 1;
+      outputGain.gain.value = 1.25;
       outputGain.connect(context.destination);
 
       const playNote = (frequency, start, duration, type = "triangle", gainAmount = 0.16) => {
@@ -409,7 +409,7 @@ export const useLiveChatAudioAlerts = () => {
           utterance.voice = preferredVoiceRef.current;
           utterance.volume = Math.max(
             0,
-            Math.min(1, (volume / 100) * themeConfig.tts.gainMultiplier),
+            Math.min(1, (volume / 100) * 1.35 * themeConfig.tts.gainMultiplier),
           );
           utterance.rate = themeConfig.tts.rate;
           utterance.pitch = themeConfig.tts.pitch;
