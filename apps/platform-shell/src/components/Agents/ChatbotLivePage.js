@@ -35,6 +35,19 @@ const hostFromOrigin = (value) => {
   }
 };
 
+const normalizeSenderType = (value) =>
+  String(value || "").trim().toLowerCase();
+
+const messageDedupeKey = (message = {}) => {
+  const id = String(message?.id || "").trim();
+  if (id) return id;
+  return [
+    String(message?.session_id || "session"),
+    String(message?.created_at || "time"),
+    String(message?.content || "").slice(0, 48),
+  ].join(":");
+};
+
 const SOUND_THEME_LABELS = {
   soft: "Soft (Calm)",
   neutral: "Neutral (Balanced)",
@@ -54,6 +67,7 @@ const ChatbotLivePage = () => {
   const endOfMessagesRef = useRef(null);
   const knownSessionIdsRef = useRef(new Set());
   const knownSelectedMessageIdsRef = useRef(new Set());
+  const detailBootstrappedRef = useRef(false);
   const backgroundSocketsRef = useRef(new Map());
   const selectedSocketRef = useRef(null);
   const selectedReconnectTimerRef = useRef(null);
@@ -104,24 +118,50 @@ const ChatbotLivePage = () => {
   }, [liveChatsQuery.data, navigate, sessionId]);
 
   useEffect(() => {
+    detailBootstrappedRef.current = false;
+    knownSelectedMessageIdsRef.current = new Set();
+  }, [sessionId]);
+
+  useEffect(() => {
     if (detailQuery.data?.session) {
+      const incomingMessages = Array.isArray(detailQuery.data.messages)
+        ? detailQuery.data.messages
+        : [];
+
+      if (!detailBootstrappedRef.current) {
+        incomingMessages.forEach((message) => {
+          knownSelectedMessageIdsRef.current.add(messageDedupeKey(message));
+        });
+        detailBootstrappedRef.current = true;
+      } else {
+        incomingMessages.forEach((message) => {
+          const dedupeKey = messageDedupeKey(message);
+          const senderType = normalizeSenderType(message?.sender_type);
+          if (knownSelectedMessageIdsRef.current.has(dedupeKey)) return;
+
+          knownSelectedMessageIdsRef.current.add(dedupeKey);
+          if (senderType === "visitor") {
+            notifyIncomingVisitorMessage({
+              sessionId: message.session_id || sessionId,
+              messageId: message.id,
+              createdAt: message.created_at,
+              content: message.content,
+            }).catch(() => {});
+          }
+        });
+      }
+
       setLiveSession(detailQuery.data.session);
-      setLiveMessages(
-        Array.isArray(detailQuery.data.messages)
-          ? detailQuery.data.messages
-          : [],
-      );
+      setLiveMessages(incomingMessages);
       setActionError("");
     }
-  }, [detailQuery.data]);
+  }, [detailQuery.data, notifyIncomingVisitorMessage, sessionId]);
 
   useEffect(() => {
     if (!liveMessages.length) return;
     const ids = knownSelectedMessageIdsRef.current;
     liveMessages.forEach((message) => {
-      if (message?.id) {
-        ids.add(message.id);
-      }
+      ids.add(messageDedupeKey(message));
     });
   }, [liveMessages]);
 
@@ -151,22 +191,24 @@ const ChatbotLivePage = () => {
           const payload = JSON.parse(event.data || "{}");
           if (payload.type === "message.created" && payload.message) {
             const message = payload.message;
+            const senderType = normalizeSenderType(message?.sender_type);
+            const dedupeKey = messageDedupeKey(message);
             const isNewMessage =
-              Boolean(message.id) &&
-              !knownSelectedMessageIdsRef.current.has(message.id);
+              !knownSelectedMessageIdsRef.current.has(dedupeKey);
 
-            if (isNewMessage && message.id) {
-              knownSelectedMessageIdsRef.current.add(message.id);
+            if (isNewMessage) {
+              knownSelectedMessageIdsRef.current.add(dedupeKey);
             }
 
             if (
               isNewMessage &&
-              message?.sender_type === "visitor" &&
-              message?.id
+              senderType === "visitor"
             ) {
               notifyIncomingVisitorMessage({
                 sessionId: message.session_id || sessionId,
                 messageId: message.id,
+                createdAt: message.created_at,
+                content: message.content,
               }).catch(() => {});
             }
 
@@ -275,12 +317,14 @@ const ChatbotLivePage = () => {
           const payload = JSON.parse(event.data || "{}");
           if (payload.type !== "message.created" || !payload.message) return;
           const message = payload.message;
-          if (message.sender_type !== "visitor") return;
-          if (!message.id) return;
+          const senderType = normalizeSenderType(message?.sender_type);
+          if (senderType !== "visitor") return;
 
           notifyIncomingVisitorMessage({
             sessionId: message.session_id || id,
             messageId: message.id,
+            createdAt: message.created_at,
+            content: message.content,
           }).catch(() => {});
           queryClient.invalidateQueries({ queryKey: ["chatbot-live-chats"] });
         } catch (_error) {

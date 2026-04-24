@@ -264,6 +264,32 @@ export const useLiveChatAudioAlerts = () => {
 
   const shouldPlay = useCallback(() => enabled && !muted, [enabled, muted]);
 
+  const primeAudio = useCallback(async () => {
+    try {
+      const context =
+        audioContextRef.current ||
+        new (window.AudioContext || window.webkitAudioContext)();
+      audioContextRef.current = context;
+
+      if (context.state === "suspended") {
+        await context.resume();
+      }
+
+      const source = toneUris.test || toneUris.message;
+      const audio = new Audio(source);
+      audio.volume = 0;
+      audio.muted = true;
+      await audio.play();
+      audio.pause();
+      audio.currentTime = 0;
+      setIsBlocked(false);
+      setHint("");
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }, [toneUris]);
+
   const playToneWithAudioTag = useCallback(
     async (kind) => {
       const source = toneUris[kind] || toneUris.message;
@@ -333,6 +359,30 @@ export const useLiveChatAudioAlerts = () => {
     },
     [playToneWithAudioTag, playToneWithWebAudio],
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    let cleaned = false;
+    const onFirstInteraction = async () => {
+      if (cleaned) return;
+      await primeAudio();
+      window.removeEventListener("pointerdown", onFirstInteraction);
+      window.removeEventListener("keydown", onFirstInteraction);
+      window.removeEventListener("touchstart", onFirstInteraction);
+    };
+
+    window.addEventListener("pointerdown", onFirstInteraction, { passive: true });
+    window.addEventListener("keydown", onFirstInteraction);
+    window.addEventListener("touchstart", onFirstInteraction, { passive: true });
+
+    return () => {
+      cleaned = true;
+      window.removeEventListener("pointerdown", onFirstInteraction);
+      window.removeEventListener("keydown", onFirstInteraction);
+      window.removeEventListener("touchstart", onFirstInteraction);
+    };
+  }, [primeAudio]);
 
   const speakNewUser = useCallback(
     async (text) => {
@@ -415,12 +465,18 @@ export const useLiveChatAudioAlerts = () => {
   );
 
   const notifyIncomingVisitorMessage = useCallback(
-    async ({ messageId }) => {
-      if (!messageId || !shouldPlay()) return;
-      if (notifiedMessageIdsRef.current.has(messageId)) return;
+    async ({ messageId, sessionId, createdAt, content }) => {
+      const fallbackMessageKey = [
+        sessionId || "session",
+        createdAt || "time",
+        String(content || "").slice(0, 42),
+      ].join(":");
+      const messageKey = messageId || fallbackMessageKey;
+      if (!messageKey || !shouldPlay()) return;
+      if (notifiedMessageIdsRef.current.has(messageKey)) return;
       if (!rateLimited("message")) return;
 
-      notifiedMessageIdsRef.current.add(messageId);
+      notifiedMessageIdsRef.current.add(messageKey);
       await playTone("message");
     },
     [playTone, rateLimited, shouldPlay],
