@@ -80,6 +80,7 @@ const ChatbotLivePage = () => {
       return Array.isArray(response.data) ? response.data : [];
     },
     refetchInterval: 5000,
+    refetchIntervalInBackground: true,
   });
 
   const detailQuery = useQuery({
@@ -156,6 +157,17 @@ const ChatbotLivePage = () => {
 
             if (isNewMessage && message.id) {
               knownSelectedMessageIdsRef.current.add(message.id);
+            }
+
+            if (
+              isNewMessage &&
+              message?.sender_type === "visitor" &&
+              message?.id
+            ) {
+              notifyIncomingVisitorMessage({
+                sessionId: message.session_id || sessionId,
+                messageId: message.id,
+              }).catch(() => {});
             }
 
             setLiveMessages((prev) => {

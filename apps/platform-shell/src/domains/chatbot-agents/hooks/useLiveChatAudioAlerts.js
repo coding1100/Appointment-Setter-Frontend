@@ -341,6 +341,18 @@ export const useLiveChatAudioAlerts = () => {
       }
 
       await new Promise((resolve, reject) => {
+        let settled = false;
+        let timeoutId = null;
+
+        const finish = (fn) => {
+          if (settled) return;
+          settled = true;
+          if (timeoutId) {
+            window.clearTimeout(timeoutId);
+          }
+          fn();
+        };
+
         try {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(text);
@@ -351,11 +363,24 @@ export const useLiveChatAudioAlerts = () => {
           );
           utterance.rate = themeConfig.tts.rate;
           utterance.pitch = themeConfig.tts.pitch;
-          utterance.onend = () => resolve();
-          utterance.onerror = () => reject(new Error("Speech synthesis failed"));
+          utterance.onend = () => finish(resolve);
+          utterance.onerror = () =>
+            finish(() => reject(new Error("Speech synthesis failed")));
+
+          timeoutId = window.setTimeout(() => {
+            try {
+              window.speechSynthesis.cancel();
+            } catch (_error) {
+              // No-op
+            }
+            finish(() =>
+              reject(new Error("Speech synthesis timed out in this tab state")),
+            );
+          }, 2200);
+
           window.speechSynthesis.speak(utterance);
         } catch (error) {
-          reject(error);
+          finish(() => reject(error));
         }
       });
     },
