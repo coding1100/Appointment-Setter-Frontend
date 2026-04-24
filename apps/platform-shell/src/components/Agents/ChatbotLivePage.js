@@ -48,6 +48,11 @@ const messageDedupeKey = (message = {}) => {
   ].join(":");
 };
 
+const parseEpochMs = (value) => {
+  const ms = Date.parse(String(value || ""));
+  return Number.isFinite(ms) ? ms : 0;
+};
+
 const SOUND_THEME_LABELS = {
   soft: "Soft (Calm)",
   neutral: "Neutral (Balanced)",
@@ -66,6 +71,7 @@ const ChatbotLivePage = () => {
   const [liveMessages, setLiveMessages] = useState([]);
   const endOfMessagesRef = useRef(null);
   const knownSessionIdsRef = useRef(new Set());
+  const knownSessionMetaRef = useRef(new Map());
   const knownSelectedMessageIdsRef = useRef(new Set());
   const detailBootstrappedRef = useRef(false);
   const backgroundSocketsRef = useRef(new Map());
@@ -262,26 +268,69 @@ const ChatbotLivePage = () => {
     const rows = Array.isArray(liveChatsQuery.data) ? liveChatsQuery.data : [];
     const currentIds = new Set(rows.map((entry) => entry?.session?.id).filter(Boolean));
     const knownIds = knownSessionIdsRef.current;
+    const knownMeta = knownSessionMetaRef.current;
+    const RESTORE_ANNOUNCE_MIN_GAP_MS = 5 * 60 * 1000;
 
     if (knownIds.size === 0) {
-      currentIds.forEach((id) => knownIds.add(id));
+      rows.forEach((entry) => {
+        const id = entry?.session?.id;
+        if (!id) return;
+        knownIds.add(id);
+        knownMeta.set(id, {
+          lastActivityMs: parseEpochMs(entry?.session?.last_activity_at),
+          lastRestoredMs: parseEpochMs(entry?.session?.last_restored_at),
+        });
+      });
       return;
     }
 
     rows.forEach((entry) => {
       const id = entry?.session?.id;
-      if (!id || knownIds.has(id)) return;
-      knownIds.add(id);
-      notifyNewSession({
-        sessionId: id,
-        visitorLabel: entry?.session?.visitor_label,
-        isReturningVisitor: Boolean(entry?.session?.is_returning_visitor),
-      }).catch(() => {});
+      if (!id) return;
+
+      const currentLastActivityMs = parseEpochMs(entry?.session?.last_activity_at);
+      const currentLastRestoredMs = parseEpochMs(entry?.session?.last_restored_at);
+
+      if (!knownIds.has(id)) {
+        knownIds.add(id);
+        knownMeta.set(id, {
+          lastActivityMs: currentLastActivityMs,
+          lastRestoredMs: currentLastRestoredMs,
+        });
+        notifyNewSession({
+          sessionId: id,
+          visitorLabel: entry?.session?.visitor_label,
+          isReturningVisitor: Boolean(entry?.session?.is_returning_visitor),
+        }).catch(() => {});
+        return;
+      }
+
+      const previous = knownMeta.get(id) || { lastActivityMs: 0, lastRestoredMs: 0 };
+      const restoredAdvanced =
+        currentLastRestoredMs > 0 && currentLastRestoredMs > (previous.lastRestoredMs || 0);
+      const inactiveLongEnough =
+        previous.lastActivityMs > 0 &&
+        currentLastActivityMs - previous.lastActivityMs >= RESTORE_ANNOUNCE_MIN_GAP_MS;
+
+      if (restoredAdvanced && inactiveLongEnough) {
+        notifyNewSession({
+          sessionId: id,
+          alertKey: `${id}:restore:${currentLastRestoredMs}`,
+          visitorLabel: entry?.session?.visitor_label,
+          isReturningVisitor: true,
+        }).catch(() => {});
+      }
+
+      knownMeta.set(id, {
+        lastActivityMs: currentLastActivityMs,
+        lastRestoredMs: currentLastRestoredMs,
+      });
     });
 
     Array.from(knownIds).forEach((id) => {
       if (!currentIds.has(id)) {
         knownIds.delete(id);
+        knownMeta.delete(id);
       }
     });
   }, [liveChatsQuery.data, notifyNewSession]);
