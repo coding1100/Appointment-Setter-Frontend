@@ -445,12 +445,18 @@ export const useLiveChatAudioAlerts = () => {
   }, []);
 
   const notifyNewSession = useCallback(
-    async ({ sessionId, visitorLabel, isReturningVisitor = false }) => {
+    async ({
+      sessionId,
+      visitorLabel,
+      isReturningVisitor = false,
+      alertKey,
+    }) => {
       if (!sessionId || !shouldPlay()) return;
-      if (spokenSessionIdsRef.current.has(sessionId)) return;
+      const dedupeKey = String(alertKey || sessionId);
+      if (spokenSessionIdsRef.current.has(dedupeKey)) return;
       if (!rateLimited("newSession")) return;
 
-      spokenSessionIdsRef.current.add(sessionId);
+      spokenSessionIdsRef.current.add(dedupeKey);
       const phrase = isReturningVisitor
         ? "Returning visitor arrived"
         : visitorLabel
