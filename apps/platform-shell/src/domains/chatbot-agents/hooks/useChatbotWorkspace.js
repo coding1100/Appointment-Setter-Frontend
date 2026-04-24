@@ -125,21 +125,31 @@ export const useChatbotWorkspace = ({ createRequested = 0, isAdmin = false } = {
     }
   }, [clearMessageAfterDelay, deleteConfirm, fetchChatbots, installInfo?.chatbot_id]);
 
-  const resolveOrigin = useCallback((chatbot) => {
+  const resolveOrigin = useCallback((chatbot, requestedOrigin) => {
+    const normalizedRequested = String(requestedOrigin || '').trim().replace(/\/+$/, '');
+    if (normalizedRequested) {
+      return normalizedRequested;
+    }
+
     const firstOrigin = chatbot?.allowed_origins?.[0];
     if (!firstOrigin) {
       throw new Error('This chatbot has no allowed origin configured.');
     }
-    return firstOrigin;
+    return String(firstOrigin).trim().replace(/\/+$/, '');
   }, []);
 
   const generateInstallInfo = useCallback(
-    async (chatbot) => {
-      const origin = resolveOrigin(chatbot);
-      const response = await chatbotAgentAPI.generateEmbedToken(chatbot.id, origin);
-      const payload = response?.data || {};
+    async (chatbot, options = {}) => {
+      const origin = resolveOrigin(chatbot, options.origin);
+      const expiresInMinutes = Number(options.expires_in_minutes);
+      const requestPayload = {
+        origin,
+        ...(Number.isFinite(expiresInMinutes) ? { expires_in_minutes: expiresInMinutes } : {}),
+      };
+      const response = await chatbotAgentAPI.generateEmbedToken(chatbot.id, requestPayload);
+      const responsePayload = response?.data || {};
 
-      if (!payload.loader_url || !payload.launcher_script) {
+      if (!responsePayload.loader_url || !responsePayload.launcher_script) {
         throw new Error('Backend did not return launcher install payload.');
       }
 
@@ -147,10 +157,10 @@ export const useChatbotWorkspace = ({ createRequested = 0, isAdmin = false } = {
         chatbot_id: chatbot.id,
         chatbot_name: chatbot.name,
         origin,
-        loader_url: payload.loader_url,
-        launcher_script: payload.launcher_script,
-        expires_at: payload.expires_at,
-        token_version: payload.token_version,
+        loader_url: responsePayload.loader_url,
+        launcher_script: responsePayload.launcher_script,
+        expires_at: responsePayload.expires_at,
+        token_version: responsePayload.token_version,
       };
 
       setInstallInfo(nextInstallInfo);
@@ -160,10 +170,10 @@ export const useChatbotWorkspace = ({ createRequested = 0, isAdmin = false } = {
   );
 
   const handleGenerateInstall = useCallback(
-    async (chatbot) => {
+    async (chatbot, options = {}) => {
       try {
         setBusyActionKey(`generate:${chatbot.id}`);
-        await generateInstallInfo(chatbot);
+        await generateInstallInfo(chatbot, options);
         setNotice(`Launcher install payload generated for ${chatbot.name}`);
         clearMessageAfterDelay();
         setError('');
@@ -177,10 +187,10 @@ export const useChatbotWorkspace = ({ createRequested = 0, isAdmin = false } = {
   );
 
   const handleCopyLauncherSnippet = useCallback(
-    async (chatbot) => {
+    async (chatbot, options = {}) => {
       try {
         setBusyActionKey(`copy-snippet:${chatbot.id}`);
-        const payload = await generateInstallInfo(chatbot);
+        const payload = await generateInstallInfo(chatbot, options);
         await copyText(payload.launcher_script, 'Launcher snippet copied to clipboard');
         setError('');
       } catch (err) {
