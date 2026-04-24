@@ -23,6 +23,7 @@ import {
   formatRelativeTime,
 } from "../../shared/utils/dates";
 import { formatApiError } from "../../shared/utils/errors";
+import { getAccessToken } from "../../shared/auth/session";
 import { useLiveChatAudioAlerts } from "../../domains/chatbot-agents/hooks/useLiveChatAudioAlerts";
 import Loader from "../Loader";
 
@@ -54,6 +55,9 @@ const ChatbotLivePage = () => {
   const knownSessionIdsRef = useRef(new Set());
   const knownSelectedMessageIdsRef = useRef(new Set());
   const backgroundSocketsRef = useRef(new Map());
+  const selectedSocketRef = useRef(null);
+  const selectedReconnectTimerRef = useRef(null);
+  const activeBackgroundSessionIdsRef = useRef(new Set());
 
   const {
     notifyNewSession,
@@ -85,6 +89,8 @@ const ChatbotLivePage = () => {
       return response.data;
     },
     enabled: Boolean(sessionId),
+    refetchInterval: sessionId ? 3000 : false,
+    refetchIntervalInBackground: true,
   });
 
   useEffect(() => {
@@ -124,67 +130,77 @@ const ChatbotLivePage = () => {
 
   useEffect(() => {
     if (!sessionId) return undefined;
+    let disposed = false;
 
-    const accessToken = localStorage.getItem("access_token");
-    if (!accessToken) return undefined;
+    const connect = () => {
+      const accessToken = getAccessToken();
+      if (!accessToken || disposed) return;
 
-    const socket = new WebSocket(
-      chatbotAgentAPI.getLiveChatStreamUrl(sessionId, accessToken),
-    );
-
-    socket.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data || "{}");
-        if (payload.type === "message.created" && payload.message) {
-          const message = payload.message;
-          const isNewMessage =
-            Boolean(message.id) &&
-            !knownSelectedMessageIdsRef.current.has(message.id);
-
-          if (isNewMessage && message.id) {
-            knownSelectedMessageIdsRef.current.add(message.id);
-          }
-
-          setLiveMessages((prev) => {
-            if (prev.some((existing) => existing.id === message.id)) {
-              return prev;
-            }
-            return [...prev, message];
-          });
-
-          if (
-            isNewMessage &&
-            message.sender_type === "visitor" &&
-            String(message.session_id || "") !== String(sessionId || "")
-          ) {
-            notifyIncomingVisitorMessage({
-              sessionId: message.session_id,
-              messageId: message.id,
-            }).catch(() => {});
-          }
-        }
-
-        if (payload.session) {
-          setLiveSession(payload.session);
-        }
-
-        queryClient.invalidateQueries({ queryKey: ["chatbot-live-chats"] });
-        queryClient.invalidateQueries({
-          queryKey: ["chatbot-live-chat", sessionId],
-        });
-      } catch (_error) {
-        // Ignore malformed events and keep the socket alive.
-      }
-    };
-
-    socket.onerror = () => {
-      setActionError(
-        "Live chat stream disconnected. Trying to keep your view updated with refreshes.",
+      const socket = new WebSocket(
+        chatbotAgentAPI.getLiveChatStreamUrl(sessionId, accessToken),
       );
+      selectedSocketRef.current = socket;
+
+      socket.onopen = () => {
+        setActionError("");
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data || "{}");
+          if (payload.type === "message.created" && payload.message) {
+            const message = payload.message;
+            const isNewMessage =
+              Boolean(message.id) &&
+              !knownSelectedMessageIdsRef.current.has(message.id);
+
+            if (isNewMessage && message.id) {
+              knownSelectedMessageIdsRef.current.add(message.id);
+            }
+
+            setLiveMessages((prev) => {
+              if (prev.some((existing) => existing.id === message.id)) {
+                return prev;
+              }
+              return [...prev, message];
+            });
+          }
+
+          if (payload.session) {
+            setLiveSession(payload.session);
+          }
+
+          queryClient.invalidateQueries({ queryKey: ["chatbot-live-chats"] });
+          queryClient.invalidateQueries({
+            queryKey: ["chatbot-live-chat", sessionId],
+          });
+        } catch (_error) {
+          // Ignore malformed events and keep the socket alive.
+        }
+      };
+
+      socket.onerror = () => {
+        setActionError("Live chat stream unstable. Reconnecting...");
+      };
+
+      socket.onclose = () => {
+        if (disposed) return;
+        selectedReconnectTimerRef.current = window.setTimeout(connect, 1500);
+      };
     };
+
+    connect();
 
     return () => {
-      socket.close();
+      disposed = true;
+      if (selectedReconnectTimerRef.current) {
+        window.clearTimeout(selectedReconnectTimerRef.current);
+        selectedReconnectTimerRef.current = null;
+      }
+      if (selectedSocketRef.current) {
+        selectedSocketRef.current.close();
+        selectedSocketRef.current = null;
+      }
     };
   }, [notifyIncomingVisitorMessage, queryClient, sessionId]);
 
@@ -216,20 +232,31 @@ const ChatbotLivePage = () => {
   }, [liveChatsQuery.data, notifyNewSession]);
 
   useEffect(() => {
-    const accessToken = localStorage.getItem("access_token");
-    if (!accessToken) return undefined;
-
     const rows = Array.isArray(liveChatsQuery.data) ? liveChatsQuery.data : [];
     const targetSessionIds = rows
       .map((entry) => entry?.session?.id)
       .filter((id) => id && String(id) !== String(sessionId || ""));
     const socketMap = backgroundSocketsRef.current;
+    activeBackgroundSessionIdsRef.current = new Set(targetSessionIds);
 
-    targetSessionIds.forEach((id) => {
-      if (socketMap.has(id)) return;
+    const connectBackgroundSocket = (id) => {
+      const accessToken = getAccessToken();
+      if (!accessToken) return;
+      if (!activeBackgroundSessionIdsRef.current.has(id)) return;
+
+      const existing = socketMap.get(id);
+      if (
+        existing?.socket &&
+        (existing.socket.readyState === WebSocket.OPEN ||
+          existing.socket.readyState === WebSocket.CONNECTING)
+      ) {
+        return;
+      }
+
       const socket = new WebSocket(
         chatbotAgentAPI.getLiveChatStreamUrl(id, accessToken),
       );
+      socketMap.set(id, { socket, retryTimer: null });
 
       socket.onmessage = (event) => {
         try {
@@ -249,21 +276,38 @@ const ChatbotLivePage = () => {
         }
       };
 
-      socketMap.set(id, socket);
+      socket.onclose = () => {
+        const entry = socketMap.get(id);
+        if (!entry) return;
+        if (!activeBackgroundSessionIdsRef.current.has(id)) {
+          socketMap.delete(id);
+          return;
+        }
+        entry.retryTimer = window.setTimeout(
+          () => connectBackgroundSocket(id),
+          1500,
+        );
+      };
+    };
+
+    targetSessionIds.forEach((id) => {
+      connectBackgroundSocket(id);
     });
 
     Array.from(socketMap.keys()).forEach((id) => {
       if (!targetSessionIds.includes(id)) {
-        const socket = socketMap.get(id);
-        if (socket) socket.close();
+        const entry = socketMap.get(id);
+        if (entry?.retryTimer) window.clearTimeout(entry.retryTimer);
+        if (entry?.socket) entry.socket.close();
         socketMap.delete(id);
       }
     });
 
     return () => {
       Array.from(socketMap.keys()).forEach((id) => {
-        const socket = socketMap.get(id);
-        if (socket) socket.close();
+        const entry = socketMap.get(id);
+        if (entry?.retryTimer) window.clearTimeout(entry.retryTimer);
+        if (entry?.socket) entry.socket.close();
         socketMap.delete(id);
       });
     };

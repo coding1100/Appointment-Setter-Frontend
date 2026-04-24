@@ -76,6 +76,7 @@ const ChatbotList = ({ createRequested = 0 }) => {
       chatbot,
       origin: firstOrigin,
       expires_in_minutes: String(DEFAULT_TOKEN_TTL_MINUTES),
+      never_expires: false,
       formError: "",
     });
   };
@@ -100,6 +101,7 @@ const ChatbotList = ({ createRequested = 0 }) => {
     if (!launcherConfigurator?.chatbot) return;
     const origin = String(launcherConfigurator.origin || "").trim().replace(/\/+$/, "");
     const ttlValue = Number(launcherConfigurator.expires_in_minutes);
+    const neverExpires = Boolean(launcherConfigurator.never_expires);
 
     if (!origin.startsWith("http://") && !origin.startsWith("https://")) {
       setLauncherConfigurator((prev) =>
@@ -108,7 +110,7 @@ const ChatbotList = ({ createRequested = 0 }) => {
       return;
     }
 
-    if (!Number.isFinite(ttlValue) || ttlValue < 5 || ttlValue > 10080) {
+    if (!neverExpires && (!Number.isFinite(ttlValue) || ttlValue < 5 || ttlValue > 10080)) {
       setLauncherConfigurator((prev) =>
         prev
           ? {
@@ -122,7 +124,9 @@ const ChatbotList = ({ createRequested = 0 }) => {
 
     const payload = {
       origin,
-      expires_in_minutes: Math.round(ttlValue),
+      ...(neverExpires
+        ? { never_expires: true }
+        : { expires_in_minutes: Math.round(ttlValue) }),
     };
 
     if (launcherConfigurator.action === "copy") {
@@ -144,13 +148,22 @@ const ChatbotList = ({ createRequested = 0 }) => {
         title="Chatbot Agents"
         description="Manage chatbot launchers, runtime controls, embed tokens, and live chat monitoring from one focused workspace."
         actions={
-          <Link
-            to="/app/chatbot-agents/live"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 no-underline transition hover:bg-slate-50"
-          >
-            <Activity className="h-4 w-4" />
-            Live Chats
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={openCreateForm}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#295ad0]"
+            >
+              <Plus className="h-4 w-4" />
+              Create Chatbot
+            </button>
+            <Link
+              to="/app/chatbot-agents/live"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 no-underline transition hover:bg-slate-50"
+            >
+              <Activity className="h-4 w-4" />
+              Live Chats
+            </Link>
+          </div>
         }
       />
 
@@ -215,7 +228,7 @@ const ChatbotList = ({ createRequested = 0 }) => {
               </p>
               <p className="mt-1 text-xs text-slate-500">
                 Token version: {installInfo.token_version} | Expires at:{" "}
-                {installInfo.expires_at}
+                {installInfo.expires_at || "Never"}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -611,6 +624,19 @@ const ChatbotList = ({ createRequested = 0 }) => {
                 <label className="text-sm font-medium text-slate-800">
                   Script Expiry (minutes)
                 </label>
+                <label className="mt-2 inline-flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={launcherConfigurator.never_expires}
+                    onChange={(event) =>
+                      updateLauncherConfigurator(
+                        "never_expires",
+                        event.target.checked,
+                      )
+                    }
+                  />
+                  Never expires
+                </label>
                 <input
                   type="number"
                   min={5}
@@ -622,10 +648,13 @@ const ChatbotList = ({ createRequested = 0 }) => {
                       event.target.value,
                     )
                   }
+                  disabled={launcherConfigurator.never_expires}
                   className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-slate-300"
                 />
                 <p className="mt-1 text-xs text-slate-500">
-                  Min 5 minutes, max 7 days (10080 minutes).
+                  {launcherConfigurator.never_expires
+                    ? "Token will not expire automatically."
+                    : "Min 5 minutes, max 7 days (10080 minutes)."}
                 </p>
               </div>
 
