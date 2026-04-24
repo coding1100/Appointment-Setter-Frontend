@@ -275,6 +275,7 @@ const ChatbotLivePage = () => {
       notifyNewSession({
         sessionId: id,
         visitorLabel: entry?.session?.visitor_label,
+        isReturningVisitor: Boolean(entry?.session?.is_returning_visitor),
       }).catch(() => {});
     });
 
