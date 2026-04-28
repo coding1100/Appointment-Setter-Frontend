@@ -582,20 +582,6 @@ const ChatbotForm = ({
     }
   };
 
-  const handleNext = () => {
-    const { fieldErrors: nextFieldErrors, firstError } = runValidation(
-      `step${step}`,
-    );
-    setFieldErrors(nextFieldErrors);
-    if (firstError) {
-      setError(firstError);
-      focusFirstInvalidField(nextFieldErrors);
-      return;
-    }
-    setError("");
-    setStep((value) => Math.min(STEPS.length - 1, value + 1));
-  };
-
   const canGoBack = step > 0;
   const canGoNext = step < STEPS.length - 1;
   const fieldLabelClass = "shell-field-label";
@@ -1258,8 +1244,8 @@ const ChatbotForm = ({
               <div className="flex gap-3">
                 {canGoNext ? (
                   <button
-                    type="button"
-                    onClick={handleNext}
+                    type="submit"
+                    disabled={loading}
                     className="inline-flex items-center gap-2 rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#295ad0]"
                   >
                     Next
