@@ -514,8 +514,8 @@ const TwilioIntegration = () => {
     <span
       className={`mr-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
         enabled
-          ? "bg-emerald-400/14 text-emerald-100"
-          : "bg-white/10 text-white/48"
+          ? "bg-emerald-50 text-emerald-700"
+          : "bg-slate-100 text-slate-500"
       }`}
     >
       {label}
@@ -523,18 +523,18 @@ const TwilioIntegration = () => {
   );
 
   const NumberRow = ({ n, right, showCountry = true }) => (
-    <div className="flex items-center justify-between rounded-[22px] border border-white/8 bg-white/[0.03] p-4 transition hover:bg-white/[0.05]">
+    <div className="flex items-center justify-between rounded-[22px] border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100">
       <div className="flex-1">
         <div className="flex items-center space-x-2 mb-1">
-          <p className="font-semibold text-white">{n.phone_number}</p>
+          <p className="font-semibold text-slate-800">{n.phone_number}</p>
           {showCountry && n.iso_country && (
-            <span className="rounded px-2 py-0.5 text-[10px] uppercase tracking-wide bg-sky-300/12 text-sky-100">
+            <span className="rounded px-2 py-0.5 text-[10px] uppercase tracking-wide bg-sky-50 text-sky-700">
               {n.iso_country}
             </span>
           )}
         </div>
         {n.friendly_name && (
-          <p className="mb-2 text-xs text-white/50">{n.friendly_name}</p>
+          <p className="mb-2 text-xs text-slate-600">{n.friendly_name}</p>
         )}
         <div className="flex items-center">
           {capabilityBadge("voice", Boolean(n.capabilities?.voice))}
@@ -549,7 +549,7 @@ const TwilioIntegration = () => {
             setCopyToast(n.phone_number);
             setTimeout(() => setCopyToast(""), 1500);
           }}
-          className="inline-flex items-center rounded-xl border border-white/10 px-2 py-1 text-xs text-white/68 hover:bg-white/8"
+          className="inline-flex items-center rounded-xl border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100"
           title="Copy number"
         >
           <Copy className="h-3.5 w-3.5" />
@@ -563,13 +563,13 @@ const TwilioIntegration = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-white/68">
+          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-slate-700">
             Twilio Workspace
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black">
             Shared Twilio Credentials
           </h1>
-          <p className="mt-2 max-w-3xl text-sm leading-7 text-white/72">
+          <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-700">
             One credential set per tenant for voice workflows, with phone
             purchasing and assignments managed from the same workspace.
           </p>
@@ -584,7 +584,7 @@ const TwilioIntegration = () => {
       </div>
 
       {error && (
-        <div className="flex items-center rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-400">
+        <div className="flex items-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
           <XCircle className="mr-2 h-5 w-5 flex-shrink-0" />
           <span>
             {typeof error === "string" ? error : JSON.stringify(error)}
@@ -593,7 +593,7 @@ const TwilioIntegration = () => {
       )}
 
       {success && (
-        <div className="flex items-center rounded-2xl border border-emerald-300/18 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
+        <div className="flex items-center rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
           <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
           <span>
             {typeof success === "string" ? success : JSON.stringify(success)}
@@ -601,19 +601,19 @@ const TwilioIntegration = () => {
         </div>
       )}
 
-      <div className="rounded-[28px] border border-white/8 bg-white/[0.04] p-5">
+      <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="flex items-center text-lg font-semibold text-black">
               <Key className="mr-2 h-5 w-5 text-sky-400" />
               Step 1: Connect Twilio Account
             </h3>
-            <p className="mt-1 text-sm text-white/56">
+            <p className="mt-1 text-sm text-slate-600">
               Enter tenant-level Twilio credentials used by both services.
             </p>
           </div>
           {integration && (
-            <div className="flex items-center text-emerald-400">
+            <div className="flex items-center text-emerald-600">
               <CheckCircle className="mr-2 h-5 w-5" />
               <span className="font-medium">Connected</span>
             </div>
@@ -622,7 +622,7 @@ const TwilioIntegration = () => {
 
         {/* Tenant Selection */}
         <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium text-white/84">
+          <label className="mb-2 block text-sm font-medium text-slate-800">
             Tenant
           </label>
           <select
@@ -641,7 +641,7 @@ const TwilioIntegration = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Account SID */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-white/84">
+            <label className="mb-2 block text-sm font-medium text-slate-800">
               Account SID *
             </label>
             <input
@@ -656,7 +656,7 @@ const TwilioIntegration = () => {
 
           {/* Auth Token */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-white/84">
+            <label className="mb-2 block text-sm font-medium text-slate-800">
               Auth Token *
             </label>
             <input
@@ -674,7 +674,7 @@ const TwilioIntegration = () => {
         <div className="mb-4">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center text-sm font-medium text-white/72 hover:text-black/50"
+            className="flex items-center text-sm font-medium text-slate-700 hover:text-black/50"
           >
             {showAdvanced ? (
               <ChevronUp className="h-4 w-4 mr-1" />
@@ -685,14 +685,14 @@ const TwilioIntegration = () => {
           </button>
 
           {showAdvanced && (
-            <div className="mt-3 space-y-4 rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
-              <div className="mb-3 text-xs text-white/48">
+            <div className="mt-3 space-y-4 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+              <div className="mb-3 text-xs text-slate-500">
                 <Info className="h-4 w-4 inline mr-1" />
                 Webhooks are auto-configured from TWILIO_WEBHOOK_BASE_URL. This
                 page controls shared credentials only.
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-white/84">
+                <label className="mb-2 block text-sm font-medium text-slate-800">
                   {getAppName()} Webhook URL
                 </label>
                 <input
@@ -705,7 +705,7 @@ const TwilioIntegration = () => {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-white/84">
+                <label className="mb-2 block text-sm font-medium text-slate-800">
                   {getAppName()} Status Callback URL
                 </label>
                 <input
@@ -759,12 +759,12 @@ const TwilioIntegration = () => {
 
         {/* Test Results */}
         {testResult && (
-          <div className="mt-4 rounded-[22px] border border-sky-300/18 bg-sky-300/10 p-4">
-            <div className="mb-2 flex items-center text-sky-100">
+          <div className="mt-4 rounded-[22px] border border-sky-200 bg-sky-50 p-4">
+            <div className="mb-2 flex items-center text-sky-700">
               <CheckCircle className="h-5 w-5 mr-2" />
               <span className="font-medium">Credentials Verified</span>
             </div>
-            <div className="text-sm text-sky-100/84">
+            <div className="text-sm text-sky-700">
               <p>
                 <strong>Account:</strong>{" "}
                 {testResult.account_info?.friendly_name || "Verified"}
@@ -780,14 +780,14 @@ const TwilioIntegration = () => {
 
       {/* Step 2: Phone Number Management */}
       {selectedTenant && agents.length > 0 && (
-        <div className="rounded-[28px] border border-white/8 bg-white/[0.04] p-5">
+        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
           <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h3 className="flex items-center text-lg font-semibold text-black">
                 <Phone className="mr-2 h-5 w-5 text-sky-400" />
                 Step 2: Manage Phone Numbers
               </h3>
-              <p className="mt-1 text-sm text-white/56">
+              <p className="mt-1 text-sm text-slate-600">
                 {integration
                   ? "Reuse numbers from your account or search for fresh inventory."
                   : "Use the system account until a tenant-specific Twilio connection is added."}
@@ -797,7 +797,7 @@ const TwilioIntegration = () => {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div>
-              <label className="mb-2 block text-sm font-medium text-white/84">
+              <label className="mb-2 block text-sm font-medium text-slate-800">
                 Select Agent
               </label>
               <select
@@ -814,7 +814,7 @@ const TwilioIntegration = () => {
               </select>
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-white/84">
+              <label className="mb-2 block text-sm font-medium text-slate-800">
                 Action
               </label>
               <select
@@ -855,11 +855,11 @@ const TwilioIntegration = () => {
           {flowMode === "tenant" && (
             <div className="mt-6">
               <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-sm font-semibold uppercase tracking-[0.24em] text-white/58">
+                <h4 className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
                   Your Unassigned Numbers
                 </h4>
                 {unassignedNumbers.length > 0 && (
-                  <span className="text-sm text-white/48">
+                  <span className="text-sm text-slate-500">
                     {unassignedNumbers.length} available
                   </span>
                 )}
@@ -900,12 +900,12 @@ const TwilioIntegration = () => {
                     />
                   ))}
                   {unassignedNumbers.length === 0 && (
-                    <div className="rounded-[22px] border border-dashed border-white/14 bg-white/[0.02] px-6 py-10 text-center">
+                    <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
                       <Phone className="mx-auto mb-3 h-10 w-10 text-sky-400" />
-                      <p className="text-sm font-medium text-white/82">
+                      <p className="text-sm font-medium text-slate-800">
                         No unassigned numbers found.
                       </p>
-                      <p className="mt-1 text-xs text-white/48">
+                      <p className="mt-1 text-xs text-slate-500">
                         Load the latest inventory or search for new numbers
                         below.
                       </p>
@@ -919,13 +919,13 @@ const TwilioIntegration = () => {
           {(flowMode === "tenant-purchase" || flowMode === "system") && (
             <div className="mt-6">
               <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-sm font-semibold uppercase tracking-[0.24em] text-white/58">
+                <h4 className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
                   {flowMode === "system"
                     ? "Buy From System Inventory"
                     : "Buy From Your Twilio Account"}
                 </h4>
                 {availableNumbers.length > 0 && (
-                  <span className="text-sm text-white/48">
+                  <span className="text-sm text-slate-500">
                     {availableNumbers.length} available
                   </span>
                 )}
@@ -998,12 +998,12 @@ const TwilioIntegration = () => {
                   />
                 ))}
                 {availableNumbers.length === 0 && (
-                  <div className="rounded-[22px] border border-dashed border-black/15 bg-white/[0.02] px-6 py-10 text-center">
+                  <div className="rounded-[22px] border border-dashed border-black/15 bg-slate-50 px-6 py-10 text-center">
                     <Search className="mx-auto mb-3 h-10 w-10 text-black/35" />
-                    <p className="text-sm font-medium text-white/82">
+                    <p className="text-sm font-medium text-slate-800">
                       No results yet.
                     </p>
-                    <p className="mt-1 text-xs text-white/48">
+                    <p className="mt-1 text-xs text-slate-500">
                       Enter your search criteria and we&apos;ll bring back
                       available numbers here.
                     </p>
@@ -1012,7 +1012,7 @@ const TwilioIntegration = () => {
               </div>
 
               {copyToast && (
-                <div className="mt-3 flex items-center text-xs text-emerald-400">
+                <div className="mt-3 flex items-center text-xs text-emerald-600">
                   <CheckCircle className="mr-1 h-3 w-3" />
                   Copied {copyToast}
                 </div>
@@ -1024,14 +1024,14 @@ const TwilioIntegration = () => {
 
       {/* Step 3: Current Assignments Overview */}
       {selectedTenant && agents.length > 0 && (
-        <div className="rounded-[28px] border border-white/8 bg-white/[0.04] p-5">
+        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
           <div className="mb-5 flex items-center">
             <Users className="mr-2 h-5 w-5 text-sky-400" />
             <div>
               <h3 className="text-lg font-semibold text-black">
                 Step 3: Phone Number Assignments
               </h3>
-              <p className="mt-1 text-sm text-white/56">
+              <p className="mt-1 text-sm text-slate-600">
                 Review current assignments and unassign numbers when routing
                 needs to change.
               </p>
@@ -1047,7 +1047,7 @@ const TwilioIntegration = () => {
               return (
                 <div
                   key={agent.id}
-                  className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4 transition hover:bg-white/[0.05]"
+                  className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100"
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -1069,10 +1069,10 @@ const TwilioIntegration = () => {
                             {agent.status}
                           </span>
                         </div>
-                        <p className="mt-1 text-sm capitalize text-white/56">
+                        <p className="mt-1 text-sm capitalize text-slate-600">
                           {agent.service_type}
                         </p>
-                        <p className="mt-1 text-xs uppercase tracking-[0.22em] text-white/38">
+                        <p className="mt-1 text-xs uppercase tracking-[0.22em] text-slate-500">
                           Language: {agent.language}
                         </p>
 
@@ -1083,7 +1083,7 @@ const TwilioIntegration = () => {
                                 key={assignment.id}
                                 className="flex flex-col gap-3 rounded-2xl border border-black/5 bg-black/5 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
                               >
-                                <div className="flex items-center text-emerald-400">
+                                <div className="flex items-center text-emerald-600">
                                   <CheckCircle className="mr-2 h-4 w-4" />
                                   <span className="text-sm font-medium">
                                     {assignment.phone_number}
@@ -1100,7 +1100,7 @@ const TwilioIntegration = () => {
                             ))}
                           </div>
                         ) : (
-                          <div className="mt-4 rounded-2xl border border-dashed border-white/12 bg-white/[0.02] px-4 py-4 text-xs text-white/46">
+                          <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-xs text-slate-500">
                             No phone number assigned yet. Use Step 2 above to
                             assign a number.
                           </div>
@@ -1116,20 +1116,20 @@ const TwilioIntegration = () => {
       )}
 
       {/* Help Section */}
-      <div className="rounded-[28px] border border-white/8 bg-sky-300/8 p-5">
+      <div className="rounded-[28px] border border-slate-200 bg-sky-50 p-5">
         <h3 className="mb-4 flex items-center text-lg font-semibold text-black">
           <Globe2 className="mr-2 h-5 w-5 text-sky-400" />
           Quick Start Guide
         </h3>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/48">
+          <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
               1. Connect
             </p>
             <p className="mt-3 text-sm font-medium text-black">
               Add tenant credentials only when needed.
             </p>
-            <p className="mt-2 text-xs leading-6 text-white/58">
+            <p className="mt-2 text-xs leading-6 text-slate-600">
               Account SID and Auth Token live in the{" "}
               <a
                 href="https://console.twilio.com/"
@@ -1142,26 +1142,26 @@ const TwilioIntegration = () => {
               . If you skip this step, you can still use system inventory.
             </p>
           </div>
-          <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/48">
+          <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
               2. Acquire
             </p>
             <p className="mt-3 text-sm font-medium text-black">
               Use existing numbers or purchase new ones.
             </p>
-            <p className="mt-2 text-xs leading-6 text-white/58">
+            <p className="mt-2 text-xs leading-6 text-slate-600">
               Search by country, number type, and area code to keep provisioning
               fast for each tenant.
             </p>
           </div>
-          <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/48">
+          <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
               3. Assign
             </p>
             <p className="mt-3 text-sm font-medium text-black">
               Attach numbers to active voice agents.
             </p>
-            <p className="mt-2 text-xs leading-6 text-white/58">
+            <p className="mt-2 text-xs leading-6 text-slate-600">
               Each number should route intentionally. Review assignments
               regularly as agents or campaigns change.
             </p>
@@ -1170,12 +1170,12 @@ const TwilioIntegration = () => {
       </div>
 
       {selectedTenant && agents.length === 0 && (
-        <div className="rounded-[28px] border border-dashed border-white/12 bg-white/[0.03] px-6 py-10 text-center">
-          <User className="mx-auto mb-4 h-12 w-12 text-white/34" />
+        <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
+          <User className="mx-auto mb-4 h-12 w-12 text-slate-400" />
           <h3 className="text-lg font-semibold text-black">
             Create voice agents before assigning numbers
           </h3>
-          <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-white/56">
+          <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-slate-600">
             Twilio routing becomes available once this tenant has at least one
             active voice agent ready to receive calls.
           </p>
