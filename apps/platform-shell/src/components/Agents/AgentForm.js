@@ -30,6 +30,7 @@ const AgentForm = ({
     "Carpenter",
     "Maids",
     "Healthcare",
+    "Scholarly Help",
   ];
 
   const languages = [
