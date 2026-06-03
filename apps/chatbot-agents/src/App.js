@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router-dom';
 
-import { getAccessToken } from '@samai/auth/session';
+import { getAccessToken } from '@mindrind/auth/session';
 
 const shell = {
   minHeight: '100vh',

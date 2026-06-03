@@ -153,12 +153,12 @@ const TenantDetail = () => {
         <div className="flex items-start gap-4">
           <button
             onClick={() => navigate("/app/appointment-setter/tenants")}
-            className="mt-1 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/6 text-white transition hover:bg-white/10"
+            className="mt-1 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-black/10 bg-black text-white hover:bg-black/10 hover:text-black transition-colors duration-300"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <p className="text-[0.78rem] uppercase tracking-[0.32em] text-white/68">
+            <p className="text-[0.78rem] uppercase tracking-[0.32em] text-black">
               Tenant Profile
             </p>
             <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black">
@@ -179,7 +179,7 @@ const TenantDetail = () => {
           </button>
           <Link
             to={`/app/appointment-setter/tenants/${tenant.id}/edit`}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-black shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] no-underline"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] no-underline"
           >
             <Edit className="h-4 w-4" />
             Edit Tenant
@@ -230,7 +230,7 @@ const TenantDetail = () => {
             action={
               <Link
                 to="/app/appointment-setter/voice-agents"
-                className="text-sm font-medium text-sky-100 no-underline transition hover:text-white"
+                className="text-sm font-medium text-sky-400 no-underline transition hover:text-sky-600"
               >
                 Manage agents
               </Link>
@@ -289,7 +289,7 @@ const TenantDetail = () => {
                 )}
                 <Link
                   to="/app/appointment-setter/twilio"
-                  className="inline-flex text-sm font-medium text-sky-100 no-underline transition hover:text-white"
+                  className="inline-flex text-sm font-medium text-sky-400 no-underline transition hover:text-sky-600"
                 >
                   Manage integration
                 </Link>
@@ -301,7 +301,7 @@ const TenantDetail = () => {
                 </span>
                 <Link
                   to="/app/appointment-setter/twilio"
-                  className="inline-flex text-sm font-medium text-sky-100 no-underline transition hover:text-white"
+                  className="inline-flex text-sm font-medium text-sky-400 no-underline transition hover:text-sky-600"
                 >
                   Set up integration
                 </Link>

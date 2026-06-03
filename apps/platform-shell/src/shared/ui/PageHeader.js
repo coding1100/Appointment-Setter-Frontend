@@ -1,1 +1,1 @@
-export { default } from '@samai/shared-ui/PageHeader';
+export { default } from '@mindrind/shared-ui/PageHeader';

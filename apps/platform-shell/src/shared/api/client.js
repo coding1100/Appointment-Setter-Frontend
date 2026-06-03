@@ -1,2 +1,2 @@
-export * from '@samai/api-client/client';
-export { default } from '@samai/api-client/client';
+export * from '@mindrind/api-client/client';
+export { default } from '@mindrind/api-client/client';

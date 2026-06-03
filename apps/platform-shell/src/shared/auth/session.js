@@ -1,1 +1,1 @@
-export * from '@samai/auth/session';
+export * from '@mindrind/auth/session';

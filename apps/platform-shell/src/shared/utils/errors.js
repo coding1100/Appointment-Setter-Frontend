@@ -1,1 +1,1 @@
-export * from '@samai/utils/errors';
+export * from '@mindrind/utils/errors';

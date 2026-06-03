@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Activity,
@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Trash2,
+  XCircle,
 } from "lucide-react";
 
 import { useAuth } from "../../contexts/AuthContext";
@@ -25,6 +26,7 @@ import Loader from "../Loader";
 import ChatbotForm from "./ChatbotForm";
 
 const ChatbotList = ({ createRequested = 0 }) => {
+  const DEFAULT_TOKEN_TTL_MINUTES = 1440;
   const { user } = useAuth();
   const isAdmin = String(user?.role || "").toLowerCase() === "admin";
   const {
@@ -55,6 +57,85 @@ const ChatbotList = ({ createRequested = 0 }) => {
     openEditForm,
     closeForm,
   } = useChatbotWorkspace({ createRequested, isAdmin });
+  const [launcherConfigurator, setLauncherConfigurator] = useState(null);
+
+  const launcherActionBusy = useMemo(() => {
+    if (!launcherConfigurator?.chatbot?.id) return false;
+    const chatbotId = launcherConfigurator.chatbot.id;
+    const actionKey =
+      launcherConfigurator.action === "copy"
+        ? `copy-snippet:${chatbotId}`
+        : `generate:${chatbotId}`;
+    return busyActionKey === actionKey;
+  }, [busyActionKey, launcherConfigurator]);
+
+  const openLauncherConfigurator = (chatbot, action) => {
+    const firstOrigin = String(chatbot?.allowed_origins?.[0] || "").trim();
+    setLauncherConfigurator({
+      action,
+      chatbot,
+      origin: firstOrigin,
+      expires_in_minutes: String(DEFAULT_TOKEN_TTL_MINUTES),
+      never_expires: false,
+      formError: "",
+    });
+  };
+
+  const closeLauncherConfigurator = () => {
+    setLauncherConfigurator(null);
+  };
+
+  const updateLauncherConfigurator = (field, value) => {
+    setLauncherConfigurator((prev) =>
+      prev
+        ? {
+            ...prev,
+            [field]: value,
+            formError: "",
+          }
+        : prev,
+    );
+  };
+
+  const submitLauncherConfigurator = async () => {
+    if (!launcherConfigurator?.chatbot) return;
+    const origin = String(launcherConfigurator.origin || "").trim().replace(/\/+$/, "");
+    const ttlValue = Number(launcherConfigurator.expires_in_minutes);
+    const neverExpires = Boolean(launcherConfigurator.never_expires);
+
+    if (!origin.startsWith("http://") && !origin.startsWith("https://")) {
+      setLauncherConfigurator((prev) =>
+        prev ? { ...prev, formError: "Origin must start with http:// or https://" } : prev,
+      );
+      return;
+    }
+
+    if (!neverExpires && (!Number.isFinite(ttlValue) || ttlValue < 5 || ttlValue > 10080)) {
+      setLauncherConfigurator((prev) =>
+        prev
+          ? {
+              ...prev,
+              formError: "Expiry must be between 5 and 10080 minutes.",
+            }
+          : prev,
+      );
+      return;
+    }
+
+    const payload = {
+      origin,
+      ...(neverExpires
+        ? { never_expires: true }
+        : { expires_in_minutes: Math.round(ttlValue) }),
+    };
+
+    if (launcherConfigurator.action === "copy") {
+      await handleCopyLauncherSnippet(launcherConfigurator.chatbot, payload);
+    } else {
+      await handleGenerateInstall(launcherConfigurator.chatbot, payload);
+    }
+    setLauncherConfigurator(null);
+  };
 
   if (loading) {
     return <Loader message="Loading chatbot agents..." />;
@@ -67,13 +148,22 @@ const ChatbotList = ({ createRequested = 0 }) => {
         title="Chatbot Agents"
         description="Manage chatbot launchers, runtime controls, embed tokens, and live chat monitoring from one focused workspace."
         actions={
-          <Link
-            to="/app/chatbot-agents/live"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 no-underline transition hover:bg-slate-50"
-          >
-            <Activity className="h-4 w-4" />
-            Live Chats
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={openCreateForm}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#295ad0]"
+            >
+              <Plus className="h-4 w-4" />
+              Create Chatbot
+            </button>
+            <Link
+              to="/app/chatbot-agents/live"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 no-underline transition hover:bg-slate-50"
+            >
+              <Activity className="h-4 w-4" />
+              Live Chats
+            </Link>
+          </div>
         }
       />
 
@@ -138,7 +228,7 @@ const ChatbotList = ({ createRequested = 0 }) => {
               </p>
               <p className="mt-1 text-xs text-slate-500">
                 Token version: {installInfo.token_version} | Expires at:{" "}
-                {installInfo.expires_at}
+                {installInfo.expires_at || "Never"}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -321,7 +411,7 @@ const ChatbotList = ({ createRequested = 0 }) => {
                           : "Activate"}
                     </button>
                     <button
-                      onClick={() => handleGenerateInstall(chatbot)}
+                      onClick={() => openLauncherConfigurator(chatbot, "generate")}
                       disabled={isBusy("generate")}
                       className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
                     >
@@ -331,7 +421,7 @@ const ChatbotList = ({ createRequested = 0 }) => {
                         : "Generate Launcher"}
                     </button>
                     <button
-                      onClick={() => handleCopyLauncherSnippet(chatbot)}
+                      onClick={() => openLauncherConfigurator(chatbot, "copy")}
                       disabled={isBusy("copy-snippet")}
                       className="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-3.5 py-2.5 text-sm text-sky-700 transition hover:bg-sky-100 disabled:opacity-50"
                     >
@@ -360,7 +450,7 @@ const ChatbotList = ({ createRequested = 0 }) => {
                       disabled={isBusy("delete")}
                       className="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <XCircle className="h-4 w-4 " />
                       Delete
                     </button>
                   </div>
@@ -491,6 +581,108 @@ const ChatbotList = ({ createRequested = 0 }) => {
                     </div>
                   </div>
                 ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {launcherConfigurator && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#04070fcc] px-4 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-lg rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_30px_90px_rgba(15,23,42,0.16)]">
+            <h3 className="text-lg font-semibold text-slate-900">
+              Launcher Settings
+            </h3>
+            <p className="mt-1 text-sm text-slate-600">
+              {launcherConfigurator.action === "copy"
+                ? "Set origin and expiry before copying the launcher snippet."
+                : "Set origin and expiry before generating launcher payload."}
+            </p>
+
+            <div className="mt-5 space-y-4">
+              <div>
+                <label className="text-sm font-medium text-slate-800">
+                  Allowed CORS Origin
+                </label>
+                <input
+                  value={launcherConfigurator.origin}
+                  onChange={(event) =>
+                    updateLauncherConfigurator("origin", event.target.value)
+                  }
+                  placeholder="https://example.com"
+                  className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-slate-300"
+                />
+                {Array.isArray(launcherConfigurator.chatbot?.allowed_origins) &&
+                  launcherConfigurator.chatbot.allowed_origins.length > 0 && (
+                    <p className="mt-1 text-xs text-slate-500">
+                      Configured origins:{" "}
+                      {launcherConfigurator.chatbot.allowed_origins.join(", ")}
+                    </p>
+                  )}
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-800">
+                  Script Expiry (minutes)
+                </label>
+                <label className="mt-2 inline-flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={launcherConfigurator.never_expires}
+                    onChange={(event) =>
+                      updateLauncherConfigurator(
+                        "never_expires",
+                        event.target.checked,
+                      )
+                    }
+                  />
+                  Never expires
+                </label>
+                <input
+                  type="number"
+                  min={5}
+                  max={10080}
+                  value={launcherConfigurator.expires_in_minutes}
+                  onChange={(event) =>
+                    updateLauncherConfigurator(
+                      "expires_in_minutes",
+                      event.target.value,
+                    )
+                  }
+                  disabled={launcherConfigurator.never_expires}
+                  className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-slate-300"
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  {launcherConfigurator.never_expires
+                    ? "Token will not expire automatically."
+                    : "Min 5 minutes, max 7 days (10080 minutes)."}
+                </p>
+              </div>
+
+              {launcherConfigurator.formError ? (
+                <InlineAlert variant="error">
+                  {launcherConfigurator.formError}
+                </InlineAlert>
+              ) : null}
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={closeLauncherConfigurator}
+                className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitLauncherConfigurator}
+                disabled={launcherActionBusy}
+                className="flex-1 rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#295ad0] disabled:opacity-50"
+              >
+                {launcherActionBusy
+                  ? "Please wait..."
+                  : launcherConfigurator.action === "copy"
+                    ? "Copy Launcher"
+                    : "Generate Launcher"}
+              </button>
             </div>
           </div>
         </div>

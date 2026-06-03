@@ -161,7 +161,7 @@ const AppointmentList = () => {
           {selectedTenant && (
             <Link
               to={`/app/appointment-setter/tenants/${selectedTenant}`}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-black shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] no-underline"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] no-underline"
             >
               Open Tenant
             </Link>
@@ -348,11 +348,11 @@ const AppointmentList = () => {
           </div>
         ) : (
           <div className="px-4 py-10 text-center">
-            <Calendar className="mx-auto h-14 w-14 text-white/30" />
+            <Calendar className="mx-auto h-14 w-14 text-black" />
             <h3 className="mt-5 text-2xl font-semibold tracking-[-0.02em] text-black">
               No appointments found
             </h3>
-            <p className="mt-3 text-sm leading-7 text-white/66">
+            <p className="mt-3 text-sm leading-7 text-black">
               Try switching tenants or filters. Detailed appointment creation
               can continue through tenant-specific scheduling workflows.
             </p>

@@ -1,5 +1,5 @@
 {
-  "name": "@samai/chatbot-agents-app",
+  "name": "@mindrind/chatbot-agents-app",
   "version": "1.0.0",
   "private": true,
   "homepage": "/app/chatbot-agents",
@@ -10,8 +10,8 @@
     "test": "react-scripts test"
   },
   "dependencies": {
-    "@samai/auth": "workspace:*",
-    "@samai/config": "workspace:*",
+    "@mindrind/auth": "workspace:*",
+    "@mindrind/config": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.1",

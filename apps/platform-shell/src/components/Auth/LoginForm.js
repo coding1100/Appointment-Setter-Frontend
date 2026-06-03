@@ -51,7 +51,7 @@ const LoginForm = () => {
         <div className="flex items-center gap-3">
 
           <div className="leading-tight">
-            <h1 className="text-2xl font-semibold tracking-wide text-gray-900">SAMAI REP</h1>
+            <h1 className="text-2xl font-semibold tracking-wide text-gray-900">MindRind</h1>
             
           </div>
         </div>
@@ -123,9 +123,9 @@ const LoginForm = () => {
                     />
                     Remember me
                   </label>
-                  <button type="button" className="font-medium text-indigo-600 hover:underline">
+                  <Link to="/forgot-password" className="font-medium text-indigo-600 hover:underline">
                     Forgot password?
-                  </button>
+                  </Link>
                 </div>
 
                 <button

@@ -29,22 +29,28 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build platform shell
-        run: pnpm --filter @samai/platform-shell build
+        run: pnpm --filter @mindrind/platform-shell build
         env:
           REACT_APP_API_URL: https://app-setter.digitalmarketingservicesnewyork.com
           DISABLE_ESLINT_PLUGIN: true
 
       - name: Build appointment-setter app
-        run: pnpm --filter @samai/appointment-setter-app build
+        run: pnpm --filter @mindrind/appointment-setter-app build
         env:
           REACT_APP_API_URL: https://app-setter.digitalmarketingservicesnewyork.com
           DISABLE_ESLINT_PLUGIN: true
 
       - name: Build chatbot-agents app
-        run: pnpm --filter @samai/chatbot-agents-app build
+        run: pnpm --filter @mindrind/chatbot-agents-app build
         env:
           REACT_APP_API_URL: https://app-setter.digitalmarketingservicesnewyork.com
           DISABLE_ESLINT_PLUGIN: true
+
+      - name: Verify build outputs
+        run: |
+          test -d ./apps/platform-shell/build
+          test -d ./apps/appointment-setter/build
+          test -d ./apps/chatbot-agents/build
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -84,22 +90,28 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build platform shell
-        run: pnpm --filter @samai/platform-shell build
+        run: pnpm --filter @mindrind/platform-shell build
         env:
           REACT_APP_API_URL: https://api.samairep.com
           DISABLE_ESLINT_PLUGIN: true
 
       - name: Build appointment-setter app
-        run: pnpm --filter @samai/appointment-setter-app build
+        run: pnpm --filter @mindrind/appointment-setter-app build
         env:
           REACT_APP_API_URL: https://api.samairep.com
           DISABLE_ESLINT_PLUGIN: true
 
       - name: Build chatbot-agents app
-        run: pnpm --filter @samai/chatbot-agents-app build
+        run: pnpm --filter @mindrind/chatbot-agents-app build
         env:
           REACT_APP_API_URL: https://api.samairep.com
           DISABLE_ESLINT_PLUGIN: true
+
+      - name: Verify build outputs
+        run: |
+          test -d ./apps/platform-shell/build
+          test -d ./apps/appointment-setter/build
+          test -d ./apps/chatbot-agents/build
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

@@ -136,7 +136,7 @@ const RegisterForm = () => {
       <div className="px-8 py-6 flex items-center">
         <div className="flex items-center gap-3">
           <div className="leading-tight">
-            <h1 className="text-2xl font-semibold tracking-wide text-gray-900">SAMAI REP</h1>
+            <h1 className="text-2xl font-semibold tracking-wide text-gray-900">MindRind</h1>
           </div>
         </div>
       </div>

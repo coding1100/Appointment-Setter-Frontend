@@ -29,6 +29,12 @@ const getTileTone = (appId) => {
       iconColor: "text-sky-500",
     };
   }
+  if (appId === "users") {
+    return {
+      iconWrap: "from-emerald-50 via-white to-teal-100",
+      iconColor: "text-emerald-600",
+    };
+  }
 
   return {
     iconWrap: "from-white to-slate-100",
@@ -39,6 +45,7 @@ const getTileTone = (appId) => {
 const getCompactDescription = (appId) => {
   if (appId === "appointment_setter") return "Calling and scheduling";
   if (appId === "chatbot_agents") return "Launchers and embeds";
+  if (appId === "users") return "Staff and access";
   return "Workspace";
 };
 
@@ -77,7 +84,7 @@ const LauncherTile = ({ app, index }) => {
 
 const LauncherPage = () => {
   const { user } = useAuth();
-  const { apps } = usePlatform();
+  const { activeOrg, apps, branding, entitlements } = usePlatform();
 
   return (
     <div className="flex flex-col justify-center">
@@ -95,6 +102,15 @@ const LauncherPage = () => {
                   <h1 className="text-[1.95rem] font-normal tracking-[-0.03em] text-slate-900 md:text-[2.2rem]">
                     {getGreeting()}, {user?.first_name || "there"}!
                   </h1>
+                  <p className="mt-2 text-sm text-slate-500">
+                    {branding?.brand_name || "MindRind"} workspace
+                    {activeOrg?.name ? ` - ${activeOrg.name}` : ""}
+                  </p>
+                  {!entitlements?.appointment_setter_enabled && (
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-amber-600">
+                      Appointment Setter is pending partner approval
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
