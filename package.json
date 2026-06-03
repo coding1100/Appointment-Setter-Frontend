@@ -1,5 +1,5 @@
 {
-  "name": "samai-rep-frontend-monorepo",
+  "name": "mindrind-frontend-monorepo",
   "private": true,
   "packageManager": "pnpm@9.15.2",
   "scripts": {
@@ -7,12 +7,12 @@
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
-    "dev:platform-shell": "pnpm --filter @samai/platform-shell dev",
-    "dev:appointment-setter": "pnpm --filter @samai/appointment-setter-app dev",
-    "dev:chatbot-agents": "pnpm --filter @samai/chatbot-agents-app dev",
-    "build:platform-shell": "pnpm --filter @samai/platform-shell build",
-    "build:appointment-setter": "pnpm --filter @samai/appointment-setter-app build",
-    "build:chatbot-agents": "pnpm --filter @samai/chatbot-agents-app build"
+    "dev:platform-shell": "pnpm --filter @mindrind/platform-shell dev",
+    "dev:appointment-setter": "pnpm --filter @mindrind/appointment-setter-app dev",
+    "dev:chatbot-agents": "pnpm --filter @mindrind/chatbot-agents-app dev",
+    "build:platform-shell": "pnpm --filter @mindrind/platform-shell build",
+    "build:appointment-setter": "pnpm --filter @mindrind/appointment-setter-app build",
+    "build:chatbot-agents": "pnpm --filter @mindrind/chatbot-agents-app build"
   },
   "devDependencies": {
     "turbo": "^2.5.8"

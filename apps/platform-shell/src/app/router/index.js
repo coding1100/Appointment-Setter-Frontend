@@ -13,15 +13,20 @@ import { useAuth } from "../../contexts/AuthContext";
 import { usePlatform } from "../../contexts/PlatformContext";
 import Loader from "../../components/Loader";
 import {
+  PlatformAccessBlocked,
   AppWorkspaceLayout,
   PlatformBootstrapError,
   PlatformLayout,
 } from "../../components/Platform/PlatformShell";
 import { getAppointmentSetterRoutes } from "../../domains/appointment-setter/routes";
 import { getChatbotAgentRoutes } from "../../domains/chatbot-agents/routes";
+import { getUsersRoutes } from "../../domains/users/routes";
 
 const LoginForm = lazy(() => import("../../components/Auth/LoginForm"));
 const RegisterForm = lazy(() => import("../../components/Auth/RegisterForm"));
+const ForgotPasswordForm = lazy(() => import("../../components/Auth/ForgotPasswordForm"));
+const SetupPasswordForm = lazy(() => import("../../components/Auth/SetupPasswordForm"));
+const ResetPasswordForm = lazy(() => import("../../components/Auth/ResetPasswordForm"));
 const LauncherPage = lazy(
   () => import("../../components/Platform/LauncherPage"),
 );
@@ -54,7 +59,7 @@ const PublicOnlyRoute = () => {
 
 const ProtectedRoute = () => {
   const { isAuthenticated, loading } = useAuth();
-  const { loading: platformLoading, error, ability } = usePlatform();
+  const { loading: platformLoading, error, accessBlocked, ability } = usePlatform();
 
   if (loading || platformLoading) {
     return <Loader message="Loading platform..." fullScreen />;
@@ -65,6 +70,9 @@ const ProtectedRoute = () => {
   }
 
   if (error) {
+    if (accessBlocked) {
+      return <PlatformAccessBlocked />;
+    }
     return <PlatformBootstrapError />;
   }
 
@@ -134,6 +142,18 @@ export const createAppRouter = () =>
           path: "/register",
           element: withSuspense(RegisterForm, "Preparing registration..."),
         },
+        {
+          path: "/forgot-password",
+          element: withSuspense(ForgotPasswordForm, "Preparing password reset..."),
+        },
+        {
+          path: "/setup-password",
+          element: withSuspense(SetupPasswordForm, "Preparing account setup..."),
+        },
+        {
+          path: "/reset-password",
+          element: withSuspense(ResetPasswordForm, "Preparing password reset..."),
+        },
       ],
     },
     {
@@ -152,6 +172,11 @@ export const createAppRouter = () =>
           path: "/app/chatbot-agents",
           element: <AppGate appId="chatbot_agents" />,
           children: getChatbotAgentRoutes(),
+        },
+        {
+          path: "/app/users",
+          element: <AppGate appId="users" />,
+          children: getUsersRoutes(),
         },
         {
           path: "/dashboard",

@@ -181,20 +181,20 @@ const AgentForm = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#04070fcc] px-4 py-8 backdrop-blur-sm">
-      <div className="mx-4 my-8 w-full max-w-2xl rounded-[28px] border border-white/10 bg-[#11192b]/94 shadow-[0_30px_90px_rgba(2,6,18,0.55)]">
-        <div className="flex items-center justify-between border-b border-white/8 p-6">
+      <div className="mx-4 my-8 w-full max-w-2xl rounded-[28px] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(2,6,18,0.18)]">
+        <div className="flex items-center justify-between border-b border-slate-200 p-6">
           <div>
-            <h2 className="text-2xl font-semibold tracking-[-0.03em] text-white">
+            <h2 className="text-2xl font-semibold tracking-[-0.03em] text-slate-900">
               {agent ? "Edit Agent" : "Create New Agent"}
             </h2>
-            <p className="mt-2 text-sm text-white/60">
+            <p className="mt-2 text-sm text-slate-600">
               Set voice, language, greeting, and service behavior for this
               tenant.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-white/46 transition hover:text-white/80"
+            className="text-slate-500 transition hover:text-slate-800"
           >
             <X className="h-6 w-6" />
           </button>
@@ -202,14 +202,14 @@ const AgentForm = ({
 
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
           {error && (
-            <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-400">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
               {error}
             </div>
           )}
 
           {/* Agent Name */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-white/84">
+            <label className="mb-2 block text-sm font-medium text-slate-800">
               Agent Name *
             </label>
             <input
@@ -221,18 +221,18 @@ const AgentForm = ({
               required
               className="shell-input"
             />
-            <p className="mt-1 text-xs text-white/50">
+            <p className="mt-1 text-xs text-slate-600">
               Give your agent a friendly name
             </p>
           </div>
 
           {/* Voice Selection */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-white/84">
+            <label className="mb-2 block text-sm font-medium text-slate-800">
               Voice *
             </label>
             {voicesLoading ? (
-              <div className="flex items-center gap-2 text-white/56">
+              <div className="flex items-center gap-2 text-slate-600">
                 <Loader className="h-4 w-4 animate-spin" />
                 Loading voices...
               </div>
@@ -255,14 +255,14 @@ const AgentForm = ({
 
                 {/* Selected Voice Info */}
                 {formData.voice_id && getVoiceById(formData.voice_id) && (
-                  <div className="rounded-2xl border border-sky-300/18 bg-sky-300/10 p-3">
-                    <p className="text-sm font-medium text-sky-100">
+                  <div className="rounded-2xl border border-sky-200 bg-sky-50 p-3">
+                    <p className="text-sm font-medium text-sky-700">
                       {getVoiceById(formData.voice_id).name}
                     </p>
-                    <p className="mt-1 text-xs text-sky-100/84">
+                    <p className="mt-1 text-xs text-sky-700">
                       {getVoiceById(formData.voice_id).description}
                     </p>
-                    <p className="mt-1 text-xs text-sky-100/72">
+                    <p className="mt-1 text-xs text-sky-700">
                       Best for:{" "}
                       {getVoiceById(formData.voice_id).use_case.replace(
                         /_/g,
@@ -277,7 +277,7 @@ const AgentForm = ({
 
           {/* Language */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-white/84">
+            <label className="mb-2 block text-sm font-medium text-slate-800">
               Language *
             </label>
             <select
@@ -297,7 +297,7 @@ const AgentForm = ({
 
           {/* Service Type */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-white/84">
+            <label className="mb-2 block text-sm font-medium text-slate-800">
               Service Type *
             </label>
             <select
@@ -317,7 +317,7 @@ const AgentForm = ({
 
           {/* Greeting Message */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-white/84">
+            <label className="mb-2 block text-sm font-medium text-slate-800">
               Greeting Message *
             </label>
             <textarea
@@ -330,34 +330,34 @@ const AgentForm = ({
               rows={4}
               className={`shell-input resize-none ${
                 fieldErrors.greeting_message
-                  ? "border-rose-300/40 text-rose-100"
+                  ? "border-rose-200 text-rose-700"
                   : ""
               }`}
             />
             {fieldErrors.greeting_message ? (
-              <p className="mt-1 text-xs text-rose-200">
+              <p className="mt-1 text-xs text-rose-700">
                 {fieldErrors.greeting_message}
               </p>
             ) : (
-              <p className="mt-1 text-xs text-white/50">
+              <p className="mt-1 text-xs text-slate-600">
                 This message will be spoken when a call is received (minimum 10
                 characters)
               </p>
             )}
           </div>
 
-          <div className="flex gap-3 border-t border-white/8 pt-4">
+          <div className="flex gap-3 border-t border-slate-200 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+              className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-black transition hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-1 rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? "Saving..." : agent ? "Update Agent" : "Create Agent"}
             </button>

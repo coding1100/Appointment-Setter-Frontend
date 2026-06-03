@@ -1,1 +1,1 @@
-export { default } from '@samai/shared-ui/EmptyState';
+export { default } from '@mindrind/shared-ui/EmptyState';

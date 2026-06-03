@@ -7,6 +7,7 @@ import {
   Trash2,
   User,
   Volume2,
+  XCircle,
 } from "lucide-react";
 
 import { agentAPI } from "../../services/api";
@@ -114,20 +115,20 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-white/68">
+          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-slate-700">
             Voice Agent Directory
           </p>
           <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black">
             Agent Management
           </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-7 text-white/72">
+          <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-700">
             Configure tenant-specific AI voice agents, greeting behavior,
             language, and activation state from a single operational workspace.
           </p>
         </div>
         <button
           onClick={handleCreateAgent}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-black shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0]"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0]"
         >
           <Plus className="h-4 w-4" />
           Create Agent
@@ -135,18 +136,18 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-400">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
           {error}
         </div>
       )}
 
       {agents.length === 0 ? (
-        <div className="flex min-h-[420px] flex-col items-center justify-center rounded-[28px] border border-white/8 bg-white/[0.04] px-6 text-center">
-          <User className="h-16 w-16 text-white/34" />
+        <div className="flex min-h-[420px] flex-col items-center justify-center rounded-[28px] border border-slate-200 bg-slate-50 px-6 text-center">
+          <User className="h-16 w-16 text-slate-400" />
           <h3 className="mt-6 text-2xl font-semibold tracking-[-0.02em] text-black">
             No agents yet
           </h3>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/70">
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-700">
             Create your first AI voice agent to start handling tenant-specific
             calls, greetings, and service workflows.
           </p>
@@ -159,21 +160,21 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
           </button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.04]">
-          <div className="hidden grid-cols-[minmax(0,1.2fr)_180px_160px_220px] gap-4 border-b border-white/8 px-5 py-3 text-xs uppercase tracking-[0.28em] text-white/44 lg:grid">
+        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50">
+          <div className="hidden grid-cols-[minmax(0,1.2fr)_180px_160px_220px] gap-4 border-b border-slate-200 px-5 py-3 text-xs uppercase tracking-[0.28em] text-slate-500 lg:grid">
             <div>Agent</div>
             <div>Service</div>
             <div>Status</div>
             <div>Actions</div>
           </div>
 
-          <div className="divide-y divide-white/8">
+          <div className="divide-y divide-slate-200">
             {agents.map((agent) => (
               <div key={agent.id} className="px-5 py-5">
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_180px_160px_220px] lg:items-start">
                   <div className="min-w-0">
                     <div className="flex items-start gap-4">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-white/8">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-slate-50">
                         <User className="h-5 w-5 text-sky-400" />
                       </div>
                       <div className="min-w-0">
@@ -184,14 +185,14 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
                           <span
                             className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
                               agent.status === "active"
-                                ? "bg-emerald-400/14 text-emerald-400"
-                                : "bg-white/10 text-white/60"
+                                ? "bg-emerald-50 text-emerald-600"
+                                : "bg-slate-50 text-slate-600"
                             }`}
                           >
                             {agent.status}
                           </span>
                         </div>
-                        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/50">
+                        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-600">
                           <span className="flex items-center gap-2 text-black/35">
                             <Volume2 className="h-3.5 w-3.5 text-black/35" />
                             {agent.language}
@@ -204,7 +205,7 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
                     </div>
                   </div>
 
-                  <div className="text-sm text-white/72 lg:pt-2">
+                  <div className="text-sm text-slate-700 lg:pt-2">
                     <div className="text-[11px] uppercase tracking-[0.2em] text-black lg:hidden">
                       Service
                     </div>
@@ -213,7 +214,7 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
                     </div>
                   </div>
 
-                  <div className="text-sm text-white/72 lg:pt-2">
+                  <div className="text-sm text-slate-700 lg:pt-2">
                     <div className="text-[11px] uppercase tracking-[0.2em] text-black lg:hidden">
                       Status
                     </div>
@@ -227,7 +228,7 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => handleEditAgent(agent)}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white/6 px-3.5 py-2.5 text-sm text-black transition hover:bg-black/10"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-slate-50 px-3.5 py-2.5 text-sm text-black transition hover:bg-black/10"
                     >
                       <Edit className="h-4 w-4" />
                       Edit
@@ -236,8 +237,8 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
                       onClick={() => handleToggleStatus(agent)}
                       className={`inline-flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-medium transition ${
                         agent.status === "active"
-                          ? "bg-amber-300/10 text-amber-400 hover:bg-amber-300/20"
-                          : "bg-emerald-300/12 text-emerald-100 hover:bg-emerald-300/18"
+                          ? "bg-amber-400 hover:bg-amber-500 text-white"
+                          : "bg-emerald-400 text-white hover:bg-emerald-500"
                       }`}
                     >
                       {agent.status === "active" ? (
@@ -254,9 +255,9 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
                     </button>
                     <button
                       onClick={() => handleDeleteClick(agent)}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-rose-300/20 bg-rose-400/10 px-3.5 py-2.5 text-sm text-rose-300 transition hover:bg-rose-400/15"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-red-500 bg-red-500 px-3.5 py-2.5 text-sm text-white transition duration-300 hover:bg-red-600"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <XCircle className="h-4 w-4" />
                       Delete
                     </button>
                   </div>
@@ -279,11 +280,11 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
 
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#04070fcc] px-4 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-md rounded-[28px] border border-white/10 bg-[#11192b]/94 p-6 shadow-[0_30px_90px_rgba(2,6,18,0.55)]">
-            <h3 className="mb-2 text-lg font-semibold text-black">
+          <div className="mx-4 w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_30px_90px_rgba(2,6,18,0.18)]">
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">
               Delete Agent
             </h3>
-            <p className="mb-6 text-sm leading-7 text-white/70">
+            <p className="mb-6 text-sm leading-7 text-slate-700">
               Are you sure you want to delete{" "}
               <strong>{deleteConfirm.name}</strong>? This action cannot be
               undone.
@@ -291,7 +292,7 @@ const AgentList = ({ tenantId, createRequested = 0 }) => {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+                className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
               >
                 Cancel
               </button>

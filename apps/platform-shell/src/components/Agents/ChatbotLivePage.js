@@ -2,10 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
+  Bell,
   Bot,
   CircleEllipsis,
   Globe,
   MessageSquare,
+  Volume2,
+  VolumeX,
   PauseCircle,
   Send,
   ShieldAlert,
@@ -20,6 +23,8 @@ import {
   formatRelativeTime,
 } from "../../shared/utils/dates";
 import { formatApiError } from "../../shared/utils/errors";
+import { getAccessToken } from "../../shared/auth/session";
+import { useLiveChatAudioAlerts } from "../../domains/chatbot-agents/hooks/useLiveChatAudioAlerts";
 import Loader from "../Loader";
 
 const hostFromOrigin = (value) => {
@@ -28,6 +33,30 @@ const hostFromOrigin = (value) => {
   } catch (_error) {
     return value || "Unknown site";
   }
+};
+
+const normalizeSenderType = (value) =>
+  String(value || "").trim().toLowerCase();
+
+const messageDedupeKey = (message = {}) => {
+  const id = String(message?.id || "").trim();
+  if (id) return id;
+  return [
+    String(message?.session_id || "session"),
+    String(message?.created_at || "time"),
+    String(message?.content || "").slice(0, 48),
+  ].join(":");
+};
+
+const parseEpochMs = (value) => {
+  const ms = Date.parse(String(value || ""));
+  return Number.isFinite(ms) ? ms : 0;
+};
+
+const SOUND_THEME_LABELS = {
+  soft: "Soft (Calm)",
+  neutral: "Neutral (Balanced)",
+  crisp: "Crisp (Bright)",
 };
 
 const ChatbotLivePage = () => {
@@ -41,6 +70,28 @@ const ChatbotLivePage = () => {
   const [liveSession, setLiveSession] = useState(null);
   const [liveMessages, setLiveMessages] = useState([]);
   const endOfMessagesRef = useRef(null);
+  const knownSessionIdsRef = useRef(new Set());
+  const knownSessionMetaRef = useRef(new Map());
+  const knownSelectedMessageIdsRef = useRef(new Set());
+  const detailBootstrappedRef = useRef(false);
+  const backgroundSocketsRef = useRef(new Map());
+  const selectedSocketRef = useRef(null);
+  const selectedReconnectTimerRef = useRef(null);
+  const activeBackgroundSessionIdsRef = useRef(new Set());
+
+  const {
+    notifyNewSession,
+    notifyIncomingVisitorMessage,
+    settings: alertSettings,
+    setMuted,
+    setVolume,
+    setSoundTheme,
+    playTestSound,
+    unlockAudio,
+    isBlocked,
+    hint: audioHint,
+    soundThemes,
+  } = useLiveChatAudioAlerts();
 
   const liveChatsQuery = useQuery({
     queryKey: ["chatbot-live-chats"],
@@ -49,6 +100,7 @@ const ChatbotLivePage = () => {
       return Array.isArray(response.data) ? response.data : [];
     },
     refetchInterval: 5000,
+    refetchIntervalInBackground: true,
   });
 
   const detailQuery = useQuery({
@@ -58,6 +110,8 @@ const ChatbotLivePage = () => {
       return response.data;
     },
     enabled: Boolean(sessionId),
+    refetchInterval: sessionId ? 3000 : false,
+    refetchIntervalInBackground: true,
   });
 
   useEffect(() => {
@@ -70,16 +124,52 @@ const ChatbotLivePage = () => {
   }, [liveChatsQuery.data, navigate, sessionId]);
 
   useEffect(() => {
+    detailBootstrappedRef.current = false;
+    knownSelectedMessageIdsRef.current = new Set();
+  }, [sessionId]);
+
+  useEffect(() => {
     if (detailQuery.data?.session) {
+      const incomingMessages = Array.isArray(detailQuery.data.messages)
+        ? detailQuery.data.messages
+        : [];
+
+      if (!detailBootstrappedRef.current) {
+        incomingMessages.forEach((message) => {
+          knownSelectedMessageIdsRef.current.add(messageDedupeKey(message));
+        });
+        detailBootstrappedRef.current = true;
+      } else {
+        incomingMessages.forEach((message) => {
+          const dedupeKey = messageDedupeKey(message);
+          const senderType = normalizeSenderType(message?.sender_type);
+          if (knownSelectedMessageIdsRef.current.has(dedupeKey)) return;
+
+          knownSelectedMessageIdsRef.current.add(dedupeKey);
+          if (senderType === "visitor") {
+            notifyIncomingVisitorMessage({
+              sessionId: message.session_id || sessionId,
+              messageId: message.id,
+              createdAt: message.created_at,
+              content: message.content,
+            }).catch(() => {});
+          }
+        });
+      }
+
       setLiveSession(detailQuery.data.session);
-      setLiveMessages(
-        Array.isArray(detailQuery.data.messages)
-          ? detailQuery.data.messages
-          : [],
-      );
+      setLiveMessages(incomingMessages);
       setActionError("");
     }
-  }, [detailQuery.data]);
+  }, [detailQuery.data, notifyIncomingVisitorMessage, sessionId]);
+
+  useEffect(() => {
+    if (!liveMessages.length) return;
+    const ids = knownSelectedMessageIdsRef.current;
+    liveMessages.forEach((message) => {
+      ids.add(messageDedupeKey(message));
+    });
+  }, [liveMessages]);
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -87,49 +177,247 @@ const ChatbotLivePage = () => {
 
   useEffect(() => {
     if (!sessionId) return undefined;
+    let disposed = false;
 
-    const accessToken = localStorage.getItem("access_token");
-    if (!accessToken) return undefined;
+    const connect = () => {
+      const accessToken = getAccessToken();
+      if (!accessToken || disposed) return;
 
-    const socket = new WebSocket(
-      chatbotAgentAPI.getLiveChatStreamUrl(sessionId, accessToken),
-    );
-
-    socket.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data || "{}");
-        if (payload.type === "message.created" && payload.message) {
-          setLiveMessages((prev) => {
-            if (prev.some((message) => message.id === payload.message.id)) {
-              return prev;
-            }
-            return [...prev, payload.message];
-          });
-        }
-
-        if (payload.session) {
-          setLiveSession(payload.session);
-        }
-
-        queryClient.invalidateQueries({ queryKey: ["chatbot-live-chats"] });
-        queryClient.invalidateQueries({
-          queryKey: ["chatbot-live-chat", sessionId],
-        });
-      } catch (_error) {
-        // Ignore malformed events and keep the socket alive.
-      }
-    };
-
-    socket.onerror = () => {
-      setActionError(
-        "Live chat stream disconnected. Trying to keep your view updated with refreshes.",
+      const socket = new WebSocket(
+        chatbotAgentAPI.getLiveChatStreamUrl(sessionId, accessToken),
       );
+      selectedSocketRef.current = socket;
+
+      socket.onopen = () => {
+        setActionError("");
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data || "{}");
+          if (payload.type === "message.created" && payload.message) {
+            const message = payload.message;
+            const senderType = normalizeSenderType(message?.sender_type);
+            const dedupeKey = messageDedupeKey(message);
+            const isNewMessage =
+              !knownSelectedMessageIdsRef.current.has(dedupeKey);
+
+            if (isNewMessage) {
+              knownSelectedMessageIdsRef.current.add(dedupeKey);
+            }
+
+            if (
+              isNewMessage &&
+              senderType === "visitor"
+            ) {
+              notifyIncomingVisitorMessage({
+                sessionId: message.session_id || sessionId,
+                messageId: message.id,
+                createdAt: message.created_at,
+                content: message.content,
+              }).catch(() => {});
+            }
+
+            setLiveMessages((prev) => {
+              if (prev.some((existing) => existing.id === message.id)) {
+                return prev;
+              }
+              return [...prev, message];
+            });
+          }
+
+          if (payload.session) {
+            setLiveSession(payload.session);
+          }
+
+          queryClient.invalidateQueries({ queryKey: ["chatbot-live-chats"] });
+          queryClient.invalidateQueries({
+            queryKey: ["chatbot-live-chat", sessionId],
+          });
+        } catch (_error) {
+          // Ignore malformed events and keep the socket alive.
+        }
+      };
+
+      socket.onerror = () => {
+        setActionError("Live chat stream unstable. Reconnecting...");
+      };
+
+      socket.onclose = () => {
+        if (disposed) return;
+        selectedReconnectTimerRef.current = window.setTimeout(connect, 1500);
+      };
     };
+
+    connect();
 
     return () => {
-      socket.close();
+      disposed = true;
+      if (selectedReconnectTimerRef.current) {
+        window.clearTimeout(selectedReconnectTimerRef.current);
+        selectedReconnectTimerRef.current = null;
+      }
+      if (selectedSocketRef.current) {
+        selectedSocketRef.current.close();
+        selectedSocketRef.current = null;
+      }
     };
-  }, [queryClient, sessionId]);
+  }, [notifyIncomingVisitorMessage, queryClient, sessionId]);
+
+  useEffect(() => {
+    const rows = Array.isArray(liveChatsQuery.data) ? liveChatsQuery.data : [];
+    const currentIds = new Set(rows.map((entry) => entry?.session?.id).filter(Boolean));
+    const knownIds = knownSessionIdsRef.current;
+    const knownMeta = knownSessionMetaRef.current;
+    const RESTORE_ANNOUNCE_MIN_GAP_MS = 5 * 60 * 1000;
+
+    if (knownIds.size === 0) {
+      rows.forEach((entry) => {
+        const id = entry?.session?.id;
+        if (!id) return;
+        knownIds.add(id);
+        knownMeta.set(id, {
+          lastActivityMs: parseEpochMs(entry?.session?.last_activity_at),
+          lastRestoredMs: parseEpochMs(entry?.session?.last_restored_at),
+        });
+      });
+      return;
+    }
+
+    rows.forEach((entry) => {
+      const id = entry?.session?.id;
+      if (!id) return;
+
+      const currentLastActivityMs = parseEpochMs(entry?.session?.last_activity_at);
+      const currentLastRestoredMs = parseEpochMs(entry?.session?.last_restored_at);
+
+      if (!knownIds.has(id)) {
+        knownIds.add(id);
+        knownMeta.set(id, {
+          lastActivityMs: currentLastActivityMs,
+          lastRestoredMs: currentLastRestoredMs,
+        });
+        notifyNewSession({
+          sessionId: id,
+          visitorLabel: entry?.session?.visitor_label,
+          isReturningVisitor: Boolean(entry?.session?.is_returning_visitor),
+        }).catch(() => {});
+        return;
+      }
+
+      const previous = knownMeta.get(id) || { lastActivityMs: 0, lastRestoredMs: 0 };
+      const restoredAdvanced =
+        currentLastRestoredMs > 0 && currentLastRestoredMs > (previous.lastRestoredMs || 0);
+      const inactiveLongEnough =
+        previous.lastActivityMs > 0 &&
+        currentLastActivityMs - previous.lastActivityMs >= RESTORE_ANNOUNCE_MIN_GAP_MS;
+
+      if (restoredAdvanced && inactiveLongEnough) {
+        notifyNewSession({
+          sessionId: id,
+          alertKey: `${id}:restore:${currentLastRestoredMs}`,
+          visitorLabel: entry?.session?.visitor_label,
+          isReturningVisitor: true,
+        }).catch(() => {});
+      }
+
+      knownMeta.set(id, {
+        lastActivityMs: currentLastActivityMs,
+        lastRestoredMs: currentLastRestoredMs,
+      });
+    });
+
+    Array.from(knownIds).forEach((id) => {
+      if (!currentIds.has(id)) {
+        knownIds.delete(id);
+        knownMeta.delete(id);
+      }
+    });
+  }, [liveChatsQuery.data, notifyNewSession]);
+
+  useEffect(() => {
+    const rows = Array.isArray(liveChatsQuery.data) ? liveChatsQuery.data : [];
+    const targetSessionIds = rows
+      .map((entry) => entry?.session?.id)
+      .filter((id) => id && String(id) !== String(sessionId || ""));
+    const socketMap = backgroundSocketsRef.current;
+    activeBackgroundSessionIdsRef.current = new Set(targetSessionIds);
+
+    const connectBackgroundSocket = (id) => {
+      const accessToken = getAccessToken();
+      if (!accessToken) return;
+      if (!activeBackgroundSessionIdsRef.current.has(id)) return;
+
+      const existing = socketMap.get(id);
+      if (
+        existing?.socket &&
+        (existing.socket.readyState === WebSocket.OPEN ||
+          existing.socket.readyState === WebSocket.CONNECTING)
+      ) {
+        return;
+      }
+
+      const socket = new WebSocket(
+        chatbotAgentAPI.getLiveChatStreamUrl(id, accessToken),
+      );
+      socketMap.set(id, { socket, retryTimer: null });
+
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data || "{}");
+          if (payload.type !== "message.created" || !payload.message) return;
+          const message = payload.message;
+          const senderType = normalizeSenderType(message?.sender_type);
+          if (senderType !== "visitor") return;
+
+          notifyIncomingVisitorMessage({
+            sessionId: message.session_id || id,
+            messageId: message.id,
+            createdAt: message.created_at,
+            content: message.content,
+          }).catch(() => {});
+          queryClient.invalidateQueries({ queryKey: ["chatbot-live-chats"] });
+        } catch (_error) {
+          // Keep socket alive even if a malformed payload appears.
+        }
+      };
+
+      socket.onclose = () => {
+        const entry = socketMap.get(id);
+        if (!entry) return;
+        if (!activeBackgroundSessionIdsRef.current.has(id)) {
+          socketMap.delete(id);
+          return;
+        }
+        entry.retryTimer = window.setTimeout(
+          () => connectBackgroundSocket(id),
+          1500,
+        );
+      };
+    };
+
+    targetSessionIds.forEach((id) => {
+      connectBackgroundSocket(id);
+    });
+
+    Array.from(socketMap.keys()).forEach((id) => {
+      if (!targetSessionIds.includes(id)) {
+        const entry = socketMap.get(id);
+        if (entry?.retryTimer) window.clearTimeout(entry.retryTimer);
+        if (entry?.socket) entry.socket.close();
+        socketMap.delete(id);
+      }
+    });
+
+    return () => {
+      Array.from(socketMap.keys()).forEach((id) => {
+        const entry = socketMap.get(id);
+        if (entry?.retryTimer) window.clearTimeout(entry.retryTimer);
+        if (entry?.socket) entry.socket.close();
+        socketMap.delete(id);
+      });
+    };
+  }, [liveChatsQuery.data, notifyIncomingVisitorMessage, queryClient, sessionId]);
 
   const selectedChat = useMemo(
     () =>
@@ -242,6 +530,15 @@ const ChatbotLivePage = () => {
     sendMutation.mutate({ content });
   };
 
+  const runAudioAction = async (action) => {
+    try {
+      await action();
+      setActionError("");
+    } catch (_error) {
+      setActionError("Could not play notification audio in this browser yet.");
+    }
+  };
+
   if (liveChatsQuery.isLoading && !liveChatsQuery.data) {
     return <Loader message="Loading live chats..." />;
   }
@@ -269,6 +566,98 @@ const ChatbotLivePage = () => {
           <Bot className="h-4 w-4" />
           Back to Chatbots
         </Link>
+      </div>
+
+      <div className="rounded-[20px] border border-black/10 bg-black/[0.03] px-4 py-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4 text-black/70" />
+            <p className="text-sm font-medium text-black">
+              Alerts
+            </p>
+            <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] uppercase tracking-[0.16em] text-black/70">
+              {alertSettings.muted ? "Muted" : "Active"}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() =>
+                runAudioAction(async () => {
+                  setMuted(!alertSettings.muted);
+                })
+              }
+              className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-black transition hover:bg-black/5"
+            >
+              {alertSettings.muted ? (
+                <>
+                  <Volume2 className="h-4 w-4" />
+                  Unmute
+                </>
+              ) : (
+                <>
+                  <VolumeX className="h-4 w-4" />
+                  Mute
+                </>
+              )}
+            </button>
+
+            <div className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2">
+              <span className="text-xs uppercase tracking-[0.14em] text-black/55">
+                Theme
+              </span>
+              <select
+                value={alertSettings.soundTheme}
+                onChange={(event) => setSoundTheme(event.target.value)}
+                className="rounded-lg border border-black/10 bg-white px-2.5 py-1.5 text-xs uppercase tracking-[0.1em] text-black"
+              >
+                {soundThemes.map((theme) => (
+                  <option key={theme} value={theme}>
+                    {SOUND_THEME_LABELS[theme] || theme}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2">
+              <span className="text-xs uppercase tracking-[0.14em] text-black/55">
+                Volume
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={alertSettings.volume}
+                onChange={(event) => setVolume(event.target.value)}
+                className="h-1.5 w-28 accent-[#2f66ea]"
+              />
+              <span className="w-8 text-right text-xs text-black/55">
+                {alertSettings.volume}
+              </span>
+            </div>
+
+            <button
+              onClick={() => runAudioAction(playTestSound)}
+              disabled={alertSettings.muted}
+              className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-black transition hover:bg-black/5 disabled:opacity-50"
+            >
+              Test
+            </button>
+
+            {isBlocked && (
+              <button
+                onClick={() => runAudioAction(unlockAudio)}
+                className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-100 px-3 py-2 text-sm text-amber-700 transition hover:bg-amber-200"
+              >
+                <Bell className="h-4 w-4" />
+                Enable Sounds
+              </button>
+            )}
+          </div>
+        </div>
+        {audioHint && (
+          <p className="mt-2 text-xs text-amber-600">{audioHint}</p>
+        )}
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -388,8 +777,8 @@ const ChatbotLivePage = () => {
                         <span
                           className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
                             session.control_mode === "human"
-                              ? "bg-amber-300/15 text-amber-300"
-                              : "bg-sky-300/15 text-sky-300"
+                              ? "bg-amber-100 text-amber-500"
+                              : "bg-sky-100 text-sky-500"
                           }`}
                         >
                           {session.control_mode}
@@ -440,8 +829,8 @@ const ChatbotLivePage = () => {
                       <span
                         className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
                           liveSession?.control_mode === "human"
-                            ? "bg-amber-300/15 text-amber-300"
-                            : "bg-sky-300/15 text-sky-300"
+                            ? "bg-amber-100 text-amber-500"
+                            : "bg-sky-100 text-sky-500"
                         }`}
                       >
                         {liveSession?.control_mode || "bot"}
@@ -483,7 +872,7 @@ const ChatbotLivePage = () => {
                           !isAssignedToCurrentUser &&
                           !isAdmin)
                       }
-                      className="inline-flex items-center gap-2 rounded-2xl border border-amber-300/15 bg-amber-300/10 px-4 py-2.5 text-sm font-medium text-amber-400 transition hover:bg-amber-300/20 disabled:opacity-50"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-amber-400 bg-amber-400 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-amber-500 disabled:opacity-50"
                     >
                       <ShieldAlert className="h-4 w-4" />
                       {takeoverMutation.isPending ? "Claiming..." : "Take Over"}
@@ -495,7 +884,7 @@ const ChatbotLivePage = () => {
                         liveSession?.control_mode !== "human" ||
                         liveSession?.status !== "open"
                       }
-                      className="inline-flex items-center gap-2 rounded-2xl border border-sky-300 bg-sky-300 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-300/20 hover:text-sky-500 disabled:opacity-50"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-sky-400 bg-sky-400 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-500 disabled:opacity-50"
                     >
                       <PauseCircle className="h-4 w-4" />
                       {releaseMutation.isPending
@@ -508,7 +897,7 @@ const ChatbotLivePage = () => {
                         closeMutation.isPending ||
                         liveSession?.status !== "open"
                       }
-                      className="inline-flex items-center gap-2 rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-2.5 text-sm font-medium text-rose-400 transition hover:bg-rose-400/20 disabled:opacity-50"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-red-500 bg-red-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-600 disabled:opacity-50"
                     >
                       <XCircle className="h-4 w-4" />
                       {closeMutation.isPending ? "Closing..." : "Close Chat"}
@@ -531,19 +920,23 @@ const ChatbotLivePage = () => {
                         return (
                           <div
                             key={message.id}
-                            className={`max-w-[86%] rounded-[20px] px-4 py-3 text-sm leading-6 ${
+                            className={`max-w-[86%] w-fit rounded-[20px] px-4 py-3 text-sm leading-6 ${
                               isSystem
                                 ? "mx-auto bg-white/8 text-center text-white/74"
                                 : alignmentClass
                             }`}
                           >
                             {!isSystem && (
-                              <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-black/55">
+                              <div
+                                className={`mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${isVisitor ? "text-white/55" : "text-black/55"}`}
+                              >
                                 {message.sender_type}
                               </div>
                             )}
                             <div>{message.content}</div>
-                            <div className="mt-2 text-[11px] text-black/25">
+                            <div
+                              className={`text-[11px] text-black/25 text-end ${isVisitor ? "text-white/55" : "text-black/55"}`}
+                            >
                               {new Date(
                                 message.created_at,
                               ).toLocaleTimeString()}

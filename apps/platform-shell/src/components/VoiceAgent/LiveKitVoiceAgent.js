@@ -1,13 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { voiceAgentAPI } from '../../services/api';
-import { 
-  Phone, 
-  PhoneOff, 
-  Loader2,
-  CheckCircle,
-  XCircle
-} from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { voiceAgentAPI } from "../../services/api";
+import { Phone, PhoneOff, Loader2, CheckCircle, XCircle } from "lucide-react";
 
 // Import LiveKit components
 import "@livekit/components-styles";
@@ -25,11 +19,11 @@ const LiveKitVoiceAgent = ({ tenantId, serviceType, agentId, onCallEnd }) => {
   const [room, setRoom] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [callId, setCallId] = useState('');
-  const [error, setError] = useState('');
-  const [roomToken, setRoomToken] = useState('');
-  const [roomName, setRoomName] = useState('');
-  const [livekitUrl, setLivekitUrl] = useState('');
+  const [callId, setCallId] = useState("");
+  const [error, setError] = useState("");
+  const [roomToken, setRoomToken] = useState("");
+  const [roomName, setRoomName] = useState("");
+  const [livekitUrl, setLivekitUrl] = useState("");
   const roomRef = useRef(null);
 
   useEffect(() => {
@@ -43,12 +37,12 @@ const LiveKitVoiceAgent = ({ tenantId, serviceType, agentId, onCallEnd }) => {
 
   const startCall = async () => {
     if (!tenantId || !serviceType) {
-      setError('Tenant ID and Service Type are required');
+      setError("Tenant ID and Service Type are required");
       return;
     }
 
     setIsConnecting(true);
-    setError('');
+    setError("");
 
     try {
       // Start voice session (test mode - browser testing)
@@ -57,29 +51,39 @@ const LiveKitVoiceAgent = ({ tenantId, serviceType, agentId, onCallEnd }) => {
         serviceType,
         true, // test mode = browser testing
         null, // no phone number for test mode
-        agentId ? { agent_id: agentId } : null  // pass agent_id in metadata
+        agentId ? { agent_id: agentId } : null, // pass agent_id in metadata
       );
-      
-      console.log('Starting session with agent_id:', agentId);
+
+      console.log("Starting session with agent_id:", agentId);
 
       const { session_id, token, room_name, livekit_url } = response.data;
-      
+
       // Validate livekit_url
-      if (!livekit_url || typeof livekit_url !== 'string' || livekit_url.trim() === '') {
-        throw new Error('Invalid LiveKit URL received from server. Please check your LIVEKIT_URL configuration.');
+      if (
+        !livekit_url ||
+        typeof livekit_url !== "string" ||
+        livekit_url.trim() === ""
+      ) {
+        throw new Error(
+          "Invalid LiveKit URL received from server. Please check your LIVEKIT_URL configuration.",
+        );
       }
-      
+
       setCallId(session_id);
       setRoomToken(token);
       setRoomName(room_name);
       setLivekitUrl(livekit_url);
 
-      console.log('Connecting to LiveKit with:', { livekit_url, room_name, hasToken: !!token });
-      console.log('LiveKit URL validation:', {
+      console.log("Connecting to LiveKit with:", {
+        livekit_url,
+        room_name,
+        hasToken: !!token,
+      });
+      console.log("LiveKit URL validation:", {
         url: livekit_url,
         type: typeof livekit_url,
         length: livekit_url?.length,
-        token_length: token?.length
+        token_length: token?.length,
       });
 
       // Create and connect to LiveKit room
@@ -90,13 +94,13 @@ const LiveKitVoiceAgent = ({ tenantId, serviceType, agentId, onCallEnd }) => {
 
       // Set up room event listeners
       newRoom.on(RoomEvent.Connected, () => {
-        console.log('Connected to LiveKit room');
+        console.log("Connected to LiveKit room");
         setIsConnected(true);
         setIsConnecting(false);
       });
 
       newRoom.on(RoomEvent.Disconnected, (reason) => {
-        console.log('Disconnected from LiveKit room:', reason);
+        console.log("Disconnected from LiveKit room:", reason);
         setIsConnected(false);
         setIsConnecting(false);
         if (onCallEnd) {
@@ -104,30 +108,42 @@ const LiveKitVoiceAgent = ({ tenantId, serviceType, agentId, onCallEnd }) => {
         }
       });
 
-      newRoom.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-        console.log('Track subscribed:', track.kind, participant.identity);
-      });
+      newRoom.on(
+        RoomEvent.TrackSubscribed,
+        (track, publication, participant) => {
+          console.log("Track subscribed:", track.kind, participant.identity);
+        },
+      );
 
-      newRoom.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
-        console.log('Track unsubscribed:', track.kind, participant.identity);
-      });
+      newRoom.on(
+        RoomEvent.TrackUnsubscribed,
+        (track, publication, participant) => {
+          console.log("Track unsubscribed:", track.kind, participant.identity);
+        },
+      );
 
       // Connect to the room - USE THE VARIABLE FROM API RESPONSE, NOT STATE
       try {
-        console.log('Attempting to connect to room with URL:', livekit_url);
-        console.log('Token:', token ? `${token.substring(0, 20)}...` : 'MISSING');
+        console.log("Attempting to connect to room with URL:", livekit_url);
+        console.log(
+          "Token:",
+          token ? `${token.substring(0, 20)}...` : "MISSING",
+        );
         await newRoom.connect(livekit_url, token);
         setRoom(newRoom);
         roomRef.current = newRoom;
-        console.log('Successfully connected to room');
+        console.log("Successfully connected to room");
       } catch (connectError) {
-        console.error('LiveKit connection error:', connectError);
-        throw new Error(`Failed to connect to LiveKit: ${connectError.message}. Make sure LIVEKIT_URL is properly configured on the server.`);
+        console.error("LiveKit connection error:", connectError);
+        throw new Error(
+          `Failed to connect to LiveKit: ${connectError.message}. Make sure LIVEKIT_URL is properly configured on the server.`,
+        );
       }
-
     } catch (error) {
-      console.error('Error starting call:', error);
-      setError(error.response?.data?.detail || error.message || 'Failed to start call');
+      console.error("Error starting call:", error);
+      setError(
+        error.response?.data?.detail || error.message || "Failed to start call",
+      );
       setIsConnecting(false);
     }
   };
@@ -144,18 +160,19 @@ const LiveKitVoiceAgent = ({ tenantId, serviceType, agentId, onCallEnd }) => {
 
       setRoom(null);
       setIsConnected(false);
-      setCallId('');
-      setRoomToken('');
-      setRoomName('');
-      setLivekitUrl('');
+      setCallId("");
+      setRoomToken("");
+      setRoomName("");
+      setLivekitUrl("");
 
       if (onCallEnd) {
         onCallEnd();
       }
-
     } catch (error) {
-      console.error('Error ending call:', error);
-      setError(error.response?.data?.detail || error.message || 'Failed to end call');
+      console.error("Error ending call:", error);
+      setError(
+        error.response?.data?.detail || error.message || "Failed to end call",
+      );
     }
   };
 
@@ -166,11 +183,11 @@ const LiveKitVoiceAgent = ({ tenantId, serviceType, agentId, onCallEnd }) => {
           <div className="mb-4">
             <Phone className="h-16 w-16 text-blue-500 mx-auto" />
           </div>
-          
+
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
             Voice Agent Test
           </h3>
-          
+
           <p className="text-gray-600 mb-6">
             Test your voice agent with LiveKit integration
           </p>
@@ -187,7 +204,7 @@ const LiveKitVoiceAgent = ({ tenantId, serviceType, agentId, onCallEnd }) => {
           <button
             onClick={startCall}
             disabled={isConnecting}
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isConnecting ? (
               <>
@@ -213,18 +230,16 @@ const LiveKitVoiceAgent = ({ tenantId, serviceType, agentId, onCallEnd }) => {
           <div className="mb-4">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
           </div>
-          
+
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
             Voice Agent Active
           </h3>
-          
+
           <p className="text-gray-600 mb-2">
             Connected to LiveKit room: {roomName}
           </p>
-          
-          <p className="text-sm text-gray-500">
-            Service Type: {serviceType}
-          </p>
+
+          <p className="text-sm text-gray-500">Service Type: {serviceType}</p>
         </div>
 
         {/* Voice Assistant Visualization */}
@@ -260,14 +275,14 @@ const VoiceAssistantVisualizer = () => {
   return (
     <div className="w-full max-w-md">
       <div className="mb-4">
-        <BarVisualizer 
-          state={state} 
-          barCount={8} 
-          trackRef={audioTrack} 
+        <BarVisualizer
+          state={state}
+          barCount={8}
+          trackRef={audioTrack}
           className="h-32"
         />
       </div>
-      
+
       <div className="text-center">
         <p className="text-sm font-medium text-gray-700">
           Status: <span className="capitalize">{state}</span>

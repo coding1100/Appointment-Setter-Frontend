@@ -298,13 +298,13 @@ const VoiceAgentTest = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-white/68">
+          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-slate-700">
             Voice Testing
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black">
             Voice Agent Testing
           </h1>
-          <p className="mt-2 max-w-3xl text-sm leading-7 text-white/72">
+          <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-700">
             Test active voice agents for{" "}
             {selectedTenantData?.name || "your selected tenant"} with
             browser-based simulation or live Twilio-powered calls.
@@ -314,18 +314,18 @@ const VoiceAgentTest = () => {
           onClick={fetchCallHistory}
           className="inline-flex items-center justify-center rounded-2xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black transition hover:bg-black/10"
         >
-          Refresh history
+          Refresh
         </button>
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-400">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
           {typeof error === "string" ? error : JSON.stringify(error)}
         </div>
       )}
 
       {showLiveKitAgent ? (
-        <div className="rounded-[28px] border border-white/8 bg-white/[0.04] p-5">
+        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
           <LiveKitVoiceAgent
             tenantId={selectedTenant}
             serviceType={serviceType}
@@ -336,12 +336,12 @@ const VoiceAgentTest = () => {
       ) : (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_420px]">
           <div className="space-y-6">
-            <section className="rounded-[28px] border border-white/8 bg-white/[0.04] p-5">
+            <section className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
               <div className="mb-5">
                 <h2 className="text-xl font-semibold text-black">
                   Voice Agent Controls
                 </h2>
-                <p className="mt-2 text-sm leading-7 text-white/62">
+                <p className="mt-2 text-sm leading-7 text-slate-600">
                   Select a tenant, choose an active agent, and decide whether to
                   test in-browser or place a live call.
                 </p>
@@ -349,7 +349,7 @@ const VoiceAgentTest = () => {
 
               <div className="grid gap-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-white/84">
+                  <label className="mb-2 block text-sm font-medium text-slate-800">
                     Tenant
                   </label>
                   <select
@@ -366,7 +366,7 @@ const VoiceAgentTest = () => {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-white/84">
+                  <label className="mb-2 block text-sm font-medium text-slate-800">
                     Select Agent to Test
                   </label>
                   {agents.length > 0 ? (
@@ -382,11 +382,11 @@ const VoiceAgentTest = () => {
                       ))}
                     </select>
                   ) : (
-                    <div className="rounded-2xl border border-white/10 bg-white/6 px-4 py-4 text-sm text-white/60">
+                    <div className="rounded-2xl border border-black/30 bg-black/30 px-4 py-4 text-sm text-white">
                       No active agents found.{" "}
                       <Link
                         to="/app/appointment-setter/voice-agents"
-                        className="text-sky-100 no-underline hover:text-white"
+                        className="text-sky-700 no-underline hover:text-sky-300"
                       >
                         Create or activate an agent first.
                       </Link>
@@ -395,29 +395,29 @@ const VoiceAgentTest = () => {
                 </div>
 
                 {selectedAgentData && (
-                  <div className="rounded-[22px] border border-sky-300/18 bg-sky-300/10 p-4">
+                  <div className="rounded-[22px] border border-sky-200 bg-sky-50 p-4">
                     <div className="flex items-start gap-3">
                       <User className="mt-0.5 h-5 w-5 text-sky-400" />
                       <div className="text-sm">
                         <p className="font-semibold text-sky-400">
                           {selectedAgentData.name}
                         </p>
-                        <p className="mt-1 text-sky-100/82">
+                        <p className="mt-1 text-sky-700">
                           <span className="font-medium">Service:</span>{" "}
                           {selectedAgentData.service_type}
                         </p>
-                        <p className="text-sky-100/82">
+                        <p className="text-sky-700">
                           <span className="font-medium">Language:</span>{" "}
                           {selectedAgentData.language}
                         </p>
                         {agentPhone ? (
-                          <p className="mt-1 flex items-center text-emerald-400">
+                          <p className="mt-1 flex items-center text-emerald-600">
                             <CheckCircle className="mr-1 h-4 w-4" />
                             <span className="font-medium">Phone:</span>&nbsp;
                             {agentPhone.phone_number}
                           </p>
                         ) : (
-                          <p className="mt-1 flex items-center text-amber-100">
+                          <p className="mt-1 flex items-center text-amber-700">
                             <XCircle className="mr-1 h-4 w-4" />
                             No phone assigned yet
                           </p>
@@ -427,15 +427,15 @@ const VoiceAgentTest = () => {
                   </div>
                 )}
 
-                <div className="rounded-[22px] border border-white/8 bg-white/[0.03] px-4 py-4">
+                <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4">
                   <label className="flex items-center">
                     <input
                       type="checkbox"
                       checked={testMode}
                       onChange={(e) => setTestMode(e.target.checked)}
-                      className="h-4 w-4 rounded border-white/20 bg-transparent text-[#2f66ea] focus:ring-[#2f66ea]"
+                      className="h-4 w-4 rounded border-slate-200 bg-transparent text-[#2f66ea] focus:ring-[#2f66ea]"
                     />
-                    <span className="ml-3 text-sm text-white/82">
+                    <span className="ml-3 text-sm text-slate-800">
                       Test Mode (LiveKit in browser)
                     </span>
                   </label>
@@ -443,33 +443,33 @@ const VoiceAgentTest = () => {
 
                 {!testMode && (
                   <>
-                    <div className="rounded-[22px] border border-white/8 bg-white/[0.03] px-4 py-4">
+                    <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           {twilioIntegration ? (
                             <>
-                              <CheckCircle className="h-5 w-5 text-emerald-400" />
-                              <span className="text-sm font-medium text-emerald-100">
+                              <CheckCircle className="h-5 w-5 text-emerald-600" />
+                              <span className="text-sm font-medium text-emerald-700">
                                 Twilio Integration Active
                               </span>
                             </>
                           ) : (
                             <>
-                              <XCircle className="h-5 w-5 text-rose-400" />
-                              <span className="text-sm font-medium text-rose-400">
+                              <XCircle className="h-5 w-5 text-rose-600" />
+                              <span className="text-sm font-medium text-rose-600">
                                 Twilio Integration Required
                               </span>
                             </>
                           )}
                         </div>
                         {twilioIntegration && (
-                          <span className="text-xs text-white/52">
+                          <span className="text-xs text-slate-600">
                             {twilioIntegration.phone_number}
                           </span>
                         )}
                       </div>
                       {!twilioIntegration && (
-                        <p className="mt-3 text-xs leading-6 text-white/58">
+                        <p className="mt-3 text-xs leading-6 text-slate-600">
                           Please configure Twilio integration before placing
                           live calls.
                         </p>
@@ -477,7 +477,7 @@ const VoiceAgentTest = () => {
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-white/84">
+                      <label className="mb-2 block text-sm font-medium text-slate-800">
                         Phone Number
                       </label>
                       <input
@@ -497,7 +497,7 @@ const VoiceAgentTest = () => {
                   <button
                     onClick={startCall}
                     disabled={loading}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-[#0f9f6e] px-5 py-3 text-sm font-semibold text-black transition hover:bg-[#0c8a5f] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Phone className="h-4 w-4" />
                     {loading ? "Starting..." : "Start Call"}
@@ -519,8 +519,8 @@ const VoiceAgentTest = () => {
                       onClick={toggleRecording}
                       className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition ${
                         isRecording
-                          ? "border-rose-300/18 bg-rose-400/10 text-rose-100"
-                          : "border-white/10 bg-white/6 text-white hover:bg-white/10"
+                          ? "border-rose-200 bg-rose-50 text-rose-700"
+                          : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
                       }`}
                     >
                       {isRecording ? (
@@ -535,8 +535,8 @@ const VoiceAgentTest = () => {
                       onClick={toggleMute}
                       className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition ${
                         isMuted
-                          ? "border-amber-300/18 bg-amber-300/10 text-amber-100"
-                          : "border-white/10 bg-white/6 text-white hover:bg-white/10"
+                          ? "border-amber-200 bg-amber-50 text-amber-700"
+                          : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
                       }`}
                     >
                       {isMuted ? (
@@ -551,11 +551,11 @@ const VoiceAgentTest = () => {
               </div>
 
               {callActive && (
-                <div className="mt-6 rounded-[22px] border border-emerald-300/18 bg-emerald-300/10 p-4">
-                  <h3 className="text-sm font-semibold text-emerald-100">
+                <div className="mt-6 rounded-[22px] border border-emerald-200 bg-emerald-50 p-4">
+                  <h3 className="text-sm font-semibold text-emerald-700">
                     Call Active
                   </h3>
-                  <div className="mt-3 grid gap-2 text-sm text-emerald-100/88">
+                  <div className="mt-3 grid gap-2 text-sm text-emerald-700">
                     <p>Call ID: {callId || "Browser session"}</p>
                     <p>Status: {callStatus || "connected"}</p>
                     <p>
@@ -573,13 +573,13 @@ const VoiceAgentTest = () => {
           </div>
 
           <div className="space-y-6">
-            <section className="rounded-[28px] border border-white/8 bg-white/[0.04] p-5">
+            <section className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
               <div className="mb-4 flex items-end justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-semibold text-black">
                     Call History
                   </h2>
-                  <p className="mt-2 text-sm leading-7 text-white/62">
+                  <p className="mt-2 text-sm leading-7 text-slate-600">
                     Recent sessions for the selected tenant.
                   </p>
                 </div>
@@ -596,29 +596,29 @@ const VoiceAgentTest = () => {
                   callHistory.map((call) => (
                     <div
                       key={call.session_id || call.call_id || Math.random()}
-                      className="rounded-[20px] border border-white/8 bg-white/[0.03] p-4"
+                      className="rounded-[20px] border border-slate-200 bg-slate-50 p-4"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-black">
                             {call.service_type || "Unknown Service"}
                           </p>
-                          <p className="mt-1 text-xs text-white/54">
+                          <p className="mt-1 text-xs text-slate-600">
                             {call.started_at
                               ? new Date(call.started_at).toLocaleString()
                               : "Unknown time"}
                           </p>
-                          <p className="mt-1 text-xs text-white/54">
+                          <p className="mt-1 text-xs text-slate-600">
                             Mode: {call.test_mode ? "Test" : "Live"}
                           </p>
                         </div>
                         <span
                           className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
                             call.status === "active"
-                              ? "bg-emerald-400/14 text-emerald-400"
+                              ? "bg-emerald-50 text-emerald-600"
                               : call.status === "ended"
-                                ? "bg-white/10 text-white/60"
-                                : "bg-amber-300/15 text-amber-300"
+                                ? "bg-slate-50 text-slate-600"
+                                : "bg-amber-50 text-amber-700"
                           }`}
                         >
                           {call.status || "unknown"}
@@ -627,18 +627,18 @@ const VoiceAgentTest = () => {
                     </div>
                   ))
                 ) : (
-                  <p className="rounded-[20px] border border-white/8 bg-white/[0.03] px-4 py-8 text-center text-sm text-white/58">
+                  <p className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-600">
                     No call history found.
                   </p>
                 )}
               </div>
             </section>
 
-            <section className="rounded-[28px] border border-sky-300/16 bg-sky-300/10 p-5">
+            <section className="rounded-[28px] border border-sky-200 bg-sky-50 p-5">
               <h2 className="text-lg font-semibold text-sky-400">
                 Integration Information
               </h2>
-              <div className="mt-3 space-y-3 text-sm leading-7 text-sky-100/88">
+              <div className="mt-3 space-y-3 text-sm leading-7 text-sky-700">
                 <p>
                   <strong>Test Mode (LiveKit):</strong> Use this mode to test
                   your voice agent directly in the browser without making actual

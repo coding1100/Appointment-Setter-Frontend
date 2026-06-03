@@ -1,1 +1,1 @@
-export * from '@samai/permissions/ability';
+export * from '@mindrind/permissions/ability';

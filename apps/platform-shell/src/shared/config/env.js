@@ -1,1 +1,1 @@
-export * from '@samai/config/env';
+export * from '@mindrind/config/env';
