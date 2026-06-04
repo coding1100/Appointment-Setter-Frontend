@@ -49,7 +49,7 @@ export const APP_WORKSPACE_NAV = {
     { to: '/app/appointment-setter/dashboard', label: 'Overview', icon: LayoutDashboard },
     { to: '/app/appointment-setter/tenants', label: 'Customers', icon: Users },
     { to: '/app/appointment-setter/voice-agents', label: 'Voice Agents', icon: Mic2 },
-    { to: '/app/appointment-setter/appointments', label: 'Appointments', icon: CalendarRange },
+    // { to: '/app/appointment-setter/appointments', label: 'Appointments', icon: CalendarRange },
     { to: '/app/appointment-setter/voice-testing', label: 'Voice Testing', icon: RadioTower },
     { to: '/app/appointment-setter/twilio', label: 'Twilio', icon: Settings2 },
     // Telephony and Cold Caller are intentionally hidden from the active platform nav for now.
