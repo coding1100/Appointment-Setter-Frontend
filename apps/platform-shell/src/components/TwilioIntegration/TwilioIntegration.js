@@ -7,7 +7,6 @@ import {
   XCircle,
   Settings,
   TestTube,
-  User,
   Users,
   ShoppingCart,
   Search,
@@ -18,11 +17,36 @@ import {
   ChevronUp,
   Globe2,
   Key,
+  Mic2,
 } from "lucide-react";
 import { getAppName } from "../../utils/appName";
+import { NAVY, TEAL, TEAL_DEEP } from "../Platform/WorkspaceShellLayout";
 
 // Get API base URL for direct fetch calls (should NOT include /api/v1)
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8001";
+
+const fieldClass =
+  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20";
+
+const btnSecondary =
+  "inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+
+const btnPrimary =
+  "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50";
+
+const btnDanger =
+  "inline-flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50";
+
+const sectionCardClass = "overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6";
+
+const SectionIcon = ({ icon: Icon }) => (
+  <div
+    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-100"
+    style={{ backgroundColor: NAVY }}
+  >
+    <Icon className="h-4 w-4" style={{ color: TEAL }} strokeWidth={1.75} />
+  </div>
+);
 
 const TwilioIntegration = () => {
   const [tenants, setTenants] = useState([]);
@@ -512,10 +536,8 @@ const TwilioIntegration = () => {
 
   const capabilityBadge = (label, enabled) => (
     <span
-      className={`mr-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-        enabled
-          ? "bg-emerald-50 text-emerald-700"
-          : "bg-slate-100 text-slate-500"
+      className={`mr-1 inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide ${
+        enabled ? "bg-[#68fadd]/25 text-[#006b5c]" : "bg-slate-100 text-slate-500"
       }`}
     >
       {label}
@@ -523,33 +545,39 @@ const TwilioIntegration = () => {
   );
 
   const NumberRow = ({ n, right, showCountry = true }) => (
-    <div className="flex items-center justify-between rounded-[22px] border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100">
-      <div className="flex-1">
-        <div className="flex items-center space-x-2 mb-1">
-          <p className="font-semibold text-slate-800">{n.phone_number}</p>
-          {showCountry && n.iso_country && (
-            <span className="rounded px-2 py-0.5 text-[10px] uppercase tracking-wide bg-sky-50 text-sky-700">
+    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50/80 p-4 transition hover:border-[#68fadd]/30 hover:bg-slate-50">
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 flex items-center gap-2">
+          <p className="font-semibold" style={{ color: NAVY }}>
+            {n.phone_number}
+          </p>
+          {showCountry && n.iso_country ? (
+            <span
+              className="rounded-full px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide"
+              style={{ backgroundColor: `${TEAL}22`, color: TEAL_DEEP }}
+            >
               {n.iso_country}
             </span>
-          )}
+          ) : null}
         </div>
-        {n.friendly_name && (
-          <p className="mb-2 text-xs text-slate-600">{n.friendly_name}</p>
-        )}
+        {n.friendly_name ? (
+          <p className="mb-2 text-xs text-slate-500">{n.friendly_name}</p>
+        ) : null}
         <div className="flex items-center">
           {capabilityBadge("voice", Boolean(n.capabilities?.voice))}
           {capabilityBadge("sms", Boolean(n.capabilities?.sms))}
           {capabilityBadge("mms", Boolean(n.capabilities?.mms))}
         </div>
       </div>
-      <div className="flex items-center space-x-2 ml-4">
+      <div className="ml-4 flex shrink-0 items-center gap-2">
         <button
+          type="button"
           onClick={() => {
             navigator.clipboard.writeText(n.phone_number);
             setCopyToast(n.phone_number);
             setTimeout(() => setCopyToast(""), 1500);
           }}
-          className="inline-flex items-center rounded-xl border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100"
           title="Copy number"
         >
           <Copy className="h-3.5 w-3.5" />
@@ -560,75 +588,72 @@ const TwilioIntegration = () => {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="space-y-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-slate-700">
-            Twilio Workspace
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+            Telephony
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black">
-            Shared Twilio Credentials
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight" style={{ color: NAVY }}>
+            Twilio integration
           </h1>
-          <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-700">
-            One credential set per tenant for voice workflows, with phone
-            purchasing and assignments managed from the same workspace.
+          <p className="mt-0.5 max-w-2xl text-sm text-slate-500">
+            Connect credentials, manage phone numbers, and assign routing per voice agent.
           </p>
         </div>
         <button
+          type="button"
           onClick={fetchIntegration}
           disabled={!selectedTenant || loading}
-          className="inline-flex items-center justify-center rounded-2xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black transition hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-50"
+          className={btnSecondary}
         >
+          <RefreshCw className="h-4 w-4" strokeWidth={2} />
           Refresh
         </button>
       </div>
 
-      {error && (
-        <div className="flex items-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
-          <XCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-          <span>
-            {typeof error === "string" ? error : JSON.stringify(error)}
-          </span>
+      {error ? (
+        <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+          <XCircle className="h-5 w-5 shrink-0" />
+          <span>{typeof error === "string" ? error : JSON.stringify(error)}</span>
         </div>
-      )}
+      ) : null}
 
-      {success && (
-        <div className="flex items-center rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-          <span>
-            {typeof success === "string" ? success : JSON.stringify(success)}
-          </span>
+      {success ? (
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <CheckCircle className="h-5 w-5 shrink-0" />
+          <span>{typeof success === "string" ? success : JSON.stringify(success)}</span>
         </div>
-      )}
+      ) : null}
 
-      <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="flex items-center text-lg font-semibold text-black">
-              <Key className="mr-2 h-5 w-5 text-sky-400" />
-              Step 1: Connect Twilio Account
-            </h3>
-            <p className="mt-1 text-sm text-slate-600">
-              Enter tenant-level Twilio credentials used by both services.
-            </p>
-          </div>
-          {integration && (
-            <div className="flex items-center text-emerald-600">
-              <CheckCircle className="mr-2 h-5 w-5" />
-              <span className="font-medium">Connected</span>
+      <div className={sectionCardClass}>
+        <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <SectionIcon icon={Key} />
+            <div>
+              <h3 className="text-base font-semibold tracking-tight" style={{ color: NAVY }}>
+                Step 1 — Connect Twilio
+              </h3>
+              <p className="mt-0.5 text-sm text-slate-500">
+                Tenant-level credentials for voice workflows.
+              </p>
             </div>
-          )}
+          </div>
+          {integration ? (
+            <span className="inline-flex rounded-full bg-[#68fadd]/25 px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide text-[#006b5c]">
+              Connected
+            </span>
+          ) : null}
         </div>
 
-        {/* Tenant Selection */}
         <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium text-slate-800">
-            Tenant
+          <label className="mb-1.5 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+            Active tenant
           </label>
           <select
             value={selectedTenant}
             onChange={(e) => setSelectedTenant(e.target.value)}
-            className="shell-input"
+            className={fieldClass}
           >
             {tenants.map((tenant) => (
               <option key={tenant.id} value={tenant.id}>
@@ -650,7 +675,7 @@ const TwilioIntegration = () => {
               value={formData.accountSid}
               onChange={handleInputChange}
               placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-              className="shell-input"
+              className={fieldClass}
             />
           </div>
 
@@ -665,7 +690,7 @@ const TwilioIntegration = () => {
               value={formData.authToken}
               onChange={handleInputChange}
               placeholder="Enter your Twilio Auth Token"
-              className="shell-input"
+              className={fieldClass}
             />
           </div>
         </div>
@@ -674,7 +699,7 @@ const TwilioIntegration = () => {
         <div className="mb-4">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center text-sm font-medium text-slate-700 hover:text-black/50"
+            className="flex items-center font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
           >
             {showAdvanced ? (
               <ChevronUp className="h-4 w-4 mr-1" />
@@ -685,7 +710,7 @@ const TwilioIntegration = () => {
           </button>
 
           {showAdvanced && (
-            <div className="mt-3 space-y-4 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+            <div className="mt-3 space-y-4 rounded-lg border border-slate-200 bg-slate-50/80 p-4">
               <div className="mb-3 text-xs text-slate-500">
                 <Info className="h-4 w-4 inline mr-1" />
                 Webhooks are auto-configured from TWILIO_WEBHOOK_BASE_URL. This
@@ -701,7 +726,7 @@ const TwilioIntegration = () => {
                   value={formData.webhookUrl}
                   onChange={handleInputChange}
                   placeholder="https://your-domain.com/api/v1/voice-agent/twilio/webhook"
-                  className="shell-input"
+                  className={fieldClass}
                 />
               </div>
               <div>
@@ -714,57 +739,59 @@ const TwilioIntegration = () => {
                   value={formData.statusCallbackUrl}
                   onChange={handleInputChange}
                   placeholder="https://your-domain.com/api/v1/voice-agent/twilio/status"
-                  className="shell-input"
+                  className={fieldClass}
                 />
               </div>
             </div>
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           <button
+            type="button"
             onClick={testCredentials}
             disabled={loading || !formData.accountSid || !formData.authToken}
-            className="inline-flex items-center rounded-2xl border border-black/10 bg-black/5 px-4 py-2.5 text-sm font-medium text-black transition hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className={btnSecondary}
           >
-            <TestTube className="h-4 w-4 mr-2" />
-            {loading ? "Testing..." : "Test Credentials"}
+            <TestTube className="h-4 w-4" strokeWidth={2} />
+            {loading ? "Testing..." : "Test credentials"}
           </button>
 
           <button
+            type="button"
             onClick={saveIntegration}
             disabled={loading || !formData.accountSid || !formData.authToken}
-            className="inline-flex items-center rounded-2xl bg-[#2f66ea] px-4 py-2.5 text-sm font-semibold text-white transition duration-300 hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
+            className={btnPrimary}
+            style={{ backgroundColor: NAVY }}
           >
-            <Settings className="h-4 w-4 mr-2" />
+            <Settings className="h-4 w-4" strokeWidth={2} />
             {loading
               ? "Saving..."
               : integration
-                ? "Update Integration"
-                : "Save Integration"}
+                ? "Update integration"
+                : "Save integration"}
           </button>
 
-          {integration && (
+          {integration ? (
             <button
+              type="button"
               onClick={deleteIntegration}
               disabled={loading}
-              className="inline-flex items-center rounded-2xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white transition duration-300 hover:bg-red-600 disabled:opacity-50"
+              className={btnDanger}
             >
-              <XCircle className="h-4 w-4 mr-2" />
+              <XCircle className="h-4 w-4" strokeWidth={2} />
               Delete
             </button>
-          )}
+          ) : null}
         </div>
 
-        {/* Test Results */}
-        {testResult && (
-          <div className="mt-4 rounded-[22px] border border-sky-200 bg-sky-50 p-4">
-            <div className="mb-2 flex items-center text-sky-700">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              <span className="font-medium">Credentials Verified</span>
+        {testResult ? (
+          <div className="mt-4 rounded-lg border border-[#68fadd]/40 bg-[#68fadd]/10 p-4">
+            <div className="mb-2 flex items-center gap-2" style={{ color: TEAL_DEEP }}>
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-semibold">Credentials verified</span>
             </div>
-            <div className="text-sm text-sky-700">
+            <div className="text-sm" style={{ color: TEAL_DEEP }}>
               <p>
                 <strong>Account:</strong>{" "}
                 {testResult.account_info?.friendly_name || "Verified"}
@@ -775,22 +802,21 @@ const TwilioIntegration = () => {
               </p>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
 
-      {/* Step 2: Phone Number Management */}
-      {selectedTenant && agents.length > 0 && (
-        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
-          <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      {selectedTenant && agents.length > 0 ? (
+        <div className={sectionCardClass}>
+          <div className="mb-5 flex items-start gap-3">
+            <SectionIcon icon={Phone} />
             <div>
-              <h3 className="flex items-center text-lg font-semibold text-black">
-                <Phone className="mr-2 h-5 w-5 text-sky-400" />
-                Step 2: Manage Phone Numbers
+              <h3 className="text-base font-semibold tracking-tight" style={{ color: NAVY }}>
+                Step 2 — Phone numbers
               </h3>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-0.5 text-sm text-slate-500">
                 {integration
-                  ? "Reuse numbers from your account or search for fresh inventory."
-                  : "Use the system account until a tenant-specific Twilio connection is added."}
+                  ? "Reuse numbers from your account or search for new inventory."
+                  : "Use the system account until tenant Twilio credentials are connected."}
               </p>
             </div>
           </div>
@@ -803,7 +829,7 @@ const TwilioIntegration = () => {
               <select
                 value={selectedAgentId}
                 onChange={(e) => setSelectedAgentId(e.target.value)}
-                className="shell-input"
+                className={fieldClass}
               >
                 <option value="">Choose an agent</option>
                 {agents.map((a) => (
@@ -824,7 +850,7 @@ const TwilioIntegration = () => {
                   setAvailableNumbers([]);
                   setUnassignedNumbers([]);
                 }}
-                className="shell-input"
+                className={fieldClass}
               >
                 {integration ? (
                   <>
@@ -843,10 +869,10 @@ const TwilioIntegration = () => {
                 <button
                   onClick={fetchUnassignedNumbers}
                   disabled={loading}
-                  className="inline-flex w-full items-center justify-center rounded-2xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black transition hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={`${btnSecondary} w-full`}
                 >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Load Numbers
+                  <RefreshCw className="h-4 w-4" strokeWidth={2} />
+                  Load numbers
                 </button>
               )}
             </div>
@@ -855,8 +881,8 @@ const TwilioIntegration = () => {
           {flowMode === "tenant" && (
             <div className="mt-6">
               <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
-                  Your Unassigned Numbers
+                <h4 className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  Your unassigned numbers
                 </h4>
                 {unassignedNumbers.length > 0 && (
                   <span className="text-sm text-slate-500">
@@ -865,14 +891,14 @@ const TwilioIntegration = () => {
                 )}
               </div>
               {!integration ? (
-                <div className="rounded-[22px] border border-amber-300/18 bg-amber-300/10 p-4">
-                  <div className="flex items-start">
-                    <Info className="mr-2 mt-0.5 h-5 w-5 text-amber-100" />
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <div className="flex items-start gap-2">
+                    <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                     <div>
-                      <p className="text-sm font-medium text-amber-50">
+                      <p className="text-sm font-medium text-amber-900">
                         Connect your Twilio account first
                       </p>
-                      <p className="mt-1 text-xs text-amber-100/78">
+                      <p className="mt-1 text-xs text-amber-800">
                         Save tenant credentials in Step 1 if you want to reuse
                         numbers that already exist in your own Twilio project.
                       </p>
@@ -891,18 +917,19 @@ const TwilioIntegration = () => {
                           onClick={() =>
                             handleAssignPhone(selectedAgentId, n.phone_number)
                           }
-                          className="inline-flex items-center rounded-2xl bg-[#2f66ea] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
+                          className={`${btnPrimary} px-3 py-2 text-[10px]`}
+                          style={{ backgroundColor: NAVY }}
                         >
-                          <Phone className="mr-1 h-4 w-4" />
+                          <Phone className="h-3.5 w-3.5" strokeWidth={2} />
                           Assign
                         </button>
                       }
                     />
                   ))}
                   {unassignedNumbers.length === 0 && (
-                    <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
-                      <Phone className="mx-auto mb-3 h-10 w-10 text-sky-400" />
-                      <p className="text-sm font-medium text-slate-800">
+                    <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-6 py-10 text-center">
+                      <Phone className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+                      <p className="text-sm font-medium text-slate-700">
                         No unassigned numbers found.
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
@@ -919,10 +946,10 @@ const TwilioIntegration = () => {
           {(flowMode === "tenant-purchase" || flowMode === "system") && (
             <div className="mt-6">
               <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
+                <h4 className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   {flowMode === "system"
-                    ? "Buy From System Inventory"
-                    : "Buy From Your Twilio Account"}
+                    ? "Buy from system inventory"
+                    : "Buy from your Twilio account"}
                 </h4>
                 {availableNumbers.length > 0 && (
                   <span className="text-sm text-slate-500">
@@ -932,7 +959,7 @@ const TwilioIntegration = () => {
               </div>
 
               {flowMode === "tenant-purchase" && !integration && (
-                <div className="mb-4 rounded-[22px] border border-amber-300/18 bg-amber-300/10 p-4 text-sm text-amber-50">
+                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                   Please connect your Twilio account in Step 1 before purchasing
                   numbers through your own account.
                 </div>
@@ -946,7 +973,7 @@ const TwilioIntegration = () => {
                   onChange={(e) =>
                     setSearchParams((p) => ({ ...p, country: e.target.value }))
                   }
-                  className="shell-input"
+                  className={fieldClass}
                 />
                 <select
                   value={searchParams.numberType}
@@ -956,7 +983,7 @@ const TwilioIntegration = () => {
                       numberType: e.target.value,
                     }))
                   }
-                  className="shell-input"
+                  className={fieldClass}
                 >
                   <option value="local">Local</option>
                   <option value="tollfree">Toll-Free</option>
@@ -968,14 +995,14 @@ const TwilioIntegration = () => {
                   onChange={(e) =>
                     setSearchParams((p) => ({ ...p, areaCode: e.target.value }))
                   }
-                  className="shell-input"
+                  className={fieldClass}
                 />
                 <button
                   onClick={searchAvailable}
                   disabled={loading}
-                  className="inline-flex items-center justify-center rounded-2xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black transition hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={btnSecondary}
                 >
-                  <Search className="mr-2 h-4 w-4" />
+                  <Search className="h-4 w-4" strokeWidth={2} />
                   Search
                 </button>
               </div>
@@ -989,18 +1016,19 @@ const TwilioIntegration = () => {
                       <button
                         onClick={() => purchaseNumber(n.phone_number)}
                         disabled={purchaseLoading || !selectedAgentId}
-                        className="inline-flex items-center rounded-2xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                        className={`${btnPrimary} px-3 py-2 text-[10px]`}
+                        style={{ backgroundColor: TEAL_DEEP }}
                       >
-                        <ShoppingCart className="mr-1 h-4 w-4" />
+                        <ShoppingCart className="h-3.5 w-3.5" strokeWidth={2} />
                         Purchase
                       </button>
                     }
                   />
                 ))}
                 {availableNumbers.length === 0 && (
-                  <div className="rounded-[22px] border border-dashed border-black/15 bg-slate-50 px-6 py-10 text-center">
-                    <Search className="mx-auto mb-3 h-10 w-10 text-black/35" />
-                    <p className="text-sm font-medium text-slate-800">
+                  <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-6 py-10 text-center">
+                    <Search className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+                    <p className="text-sm font-medium text-slate-700">
                       No results yet.
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
@@ -1020,20 +1048,18 @@ const TwilioIntegration = () => {
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
-      {/* Step 3: Current Assignments Overview */}
-      {selectedTenant && agents.length > 0 && (
-        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
-          <div className="mb-5 flex items-center">
-            <Users className="mr-2 h-5 w-5 text-sky-400" />
+      {selectedTenant && agents.length > 0 ? (
+        <div className={sectionCardClass}>
+          <div className="mb-5 flex items-start gap-3">
+            <SectionIcon icon={Users} />
             <div>
-              <h3 className="text-lg font-semibold text-black">
-                Step 3: Phone Number Assignments
+              <h3 className="text-base font-semibold tracking-tight" style={{ color: NAVY }}>
+                Step 3 — Assignments
               </h3>
-              <p className="mt-1 text-sm text-slate-600">
-                Review current assignments and unassign numbers when routing
-                needs to change.
+              <p className="mt-0.5 text-sm text-slate-500">
+                Review phone routing per agent and remove assignments when needed.
               </p>
             </div>
           </div>
@@ -1047,65 +1073,66 @@ const TwilioIntegration = () => {
               return (
                 <div
                   key={agent.id}
-                  className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100"
+                  className="rounded-lg border border-slate-200 bg-slate-50/80 p-4 transition hover:border-[#68fadd]/30"
                 >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex min-w-0 flex-1 items-start gap-3">
-                      <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-black/10">
-                        <User className="h-5 w-5 text-sky-400" />
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    <div
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-100"
+                      style={{ backgroundColor: NAVY }}
+                    >
+                      <Mic2 className="h-4 w-4" style={{ color: TEAL }} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-sm font-semibold" style={{ color: NAVY }}>
+                          {agent.name}
+                        </h4>
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide ${
+                            agent.status === "active"
+                              ? "bg-[#68fadd]/25 text-[#006b5c]"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {agent.status === "active" ? "Deployed" : agent.status}
+                        </span>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <h4 className="text-sm font-semibold text-black">
-                            {agent.name}
-                          </h4>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] ${
-                              agent.status === "active"
-                                ? "bg-emerald-100 text-emerald-500"
-                                : "bg-black/10 text-black/55"
-                            }`}
-                          >
-                            {agent.status}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-sm capitalize text-slate-600">
-                          {agent.service_type}
-                        </p>
-                        <p className="mt-1 text-xs uppercase tracking-[0.22em] text-slate-500">
-                          Language: {agent.language}
-                        </p>
+                      <p className="mt-0.5 text-xs capitalize text-slate-500">
+                        {agent.service_type}
+                      </p>
+                      <p className="mt-0.5 font-mono text-[9px] uppercase tracking-wide text-slate-400">
+                        {agent.language}
+                      </p>
 
-                        {allAssignments.length > 0 ? (
-                          <div className="mt-4 space-y-2">
-                            {allAssignments.map((assignment) => (
-                              <div
-                                key={assignment.id}
-                                className="flex flex-col gap-3 rounded-2xl border border-black/5 bg-black/5 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
-                              >
-                                <div className="flex items-center text-emerald-600">
-                                  <CheckCircle className="mr-2 h-4 w-4" />
-                                  <span className="text-sm font-medium">
-                                    {assignment.phone_number}
-                                  </span>
-                                </div>
-                                <button
-                                  onClick={() => handleUnassignPhone(agent.id)}
-                                  disabled={assignmentLoading}
-                                  className="inline-flex items-center justify-center rounded-2xl border border-red-500 bg-red-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
-                                >
-                                  Remove
-                                </button>
+                      {allAssignments.length > 0 ? (
+                        <div className="mt-3 space-y-2">
+                          {allAssignments.map((assignment) => (
+                            <div
+                              key={assignment.id}
+                              className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                              <div className="flex items-center gap-2" style={{ color: TEAL_DEEP }}>
+                                <CheckCircle className="h-4 w-4" />
+                                <span className="text-sm font-medium">
+                                  {assignment.phone_number}
+                                </span>
                               </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-xs text-slate-500">
-                            No phone number assigned yet. Use Step 2 above to
-                            assign a number.
-                          </div>
-                        )}
-                      </div>
+                              <button
+                                type="button"
+                                onClick={() => handleUnassignPhone(agent.id)}
+                                disabled={assignmentLoading}
+                                className={`${btnDanger} px-3 py-1.5 text-[10px]`}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="mt-3 rounded-lg border border-dashed border-slate-200 bg-white px-3 py-3 text-xs text-slate-500">
+                          No phone number assigned. Use Step 2 to assign a number.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1113,80 +1140,79 @@ const TwilioIntegration = () => {
             })}
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Help Section */}
-      <div className="rounded-[28px] border border-slate-200 bg-sky-50 p-5">
-        <h3 className="mb-4 flex items-center text-lg font-semibold text-black">
-          <Globe2 className="mr-2 h-5 w-5 text-sky-400" />
-          Quick Start Guide
-        </h3>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-              1. Connect
-            </p>
-            <p className="mt-3 text-sm font-medium text-black">
-              Add tenant credentials only when needed.
-            </p>
-            <p className="mt-2 text-xs leading-6 text-slate-600">
-              Account SID and Auth Token live in the{" "}
-              <a
-                href="https://console.twilio.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sky-400 underline underline-offset-4"
-              >
-                Twilio Console
-              </a>
-              . If you skip this step, you can still use system inventory.
-            </p>
-          </div>
-          <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-              2. Acquire
-            </p>
-            <p className="mt-3 text-sm font-medium text-black">
-              Use existing numbers or purchase new ones.
-            </p>
-            <p className="mt-2 text-xs leading-6 text-slate-600">
-              Search by country, number type, and area code to keep provisioning
-              fast for each tenant.
-            </p>
-          </div>
-          <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-              3. Assign
-            </p>
-            <p className="mt-3 text-sm font-medium text-black">
-              Attach numbers to active voice agents.
-            </p>
-            <p className="mt-2 text-xs leading-6 text-slate-600">
-              Each number should route intentionally. Review assignments
-              regularly as agents or campaigns change.
-            </p>
-          </div>
+      <div className={sectionCardClass}>
+        <div className="mb-4 flex items-start gap-3">
+          <SectionIcon icon={Globe2} />
+          <h3 className="text-base font-semibold tracking-tight" style={{ color: NAVY }}>
+            Quick start
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          {[
+            {
+              step: "1. Connect",
+              title: "Add tenant credentials when needed.",
+              body: (
+                <>
+                  Account SID and Auth Token are in the{" "}
+                  <a
+                    href="https://console.twilio.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium underline underline-offset-2"
+                    style={{ color: TEAL_DEEP }}
+                  >
+                    Twilio Console
+                  </a>
+                  . System inventory works without tenant credentials.
+                </>
+              ),
+            },
+            {
+              step: "2. Acquire",
+              title: "Use existing numbers or purchase new ones.",
+              body: "Search by country, number type, and area code to provision quickly per tenant.",
+            },
+            {
+              step: "3. Assign",
+              title: "Attach numbers to voice agents.",
+              body: "Route each number intentionally and review assignments as agents change.",
+            },
+          ].map((item) => (
+            <div
+              key={item.step}
+              className="rounded-lg border border-slate-200 bg-slate-50/80 p-4"
+            >
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                {item.step}
+              </p>
+              <p className="mt-2 text-sm font-medium text-slate-800">{item.title}</p>
+              <p className="mt-2 text-xs leading-6 text-slate-500">{item.body}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {selectedTenant && agents.length === 0 && (
-        <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
-          <User className="mx-auto mb-4 h-12 w-12 text-slate-400" />
-          <h3 className="text-lg font-semibold text-black">
-            Create voice agents before assigning numbers
+      {selectedTenant && agents.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-6 py-10 text-center">
+          <Mic2 className="mb-4 h-12 w-12 text-slate-300" />
+          <h3 className="text-lg font-semibold" style={{ color: NAVY }}>
+            Create voice agents first
           </h3>
-          <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-slate-600">
-            Twilio routing becomes available once this tenant has at least one
-            active voice agent ready to receive calls.
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+            Phone number assignment is available once this tenant has at least one voice agent.
           </p>
           <Link
             to="/app/appointment-setter/voice-agents"
-            className="mt-5 inline-flex items-center rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-white no-underline transition hover:bg-[#295ad0]"
+            className={`${btnPrimary} mt-5 no-underline`}
+            style={{ backgroundColor: NAVY }}
           >
-            Open Voice Agents
+            Open voice agents
           </Link>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

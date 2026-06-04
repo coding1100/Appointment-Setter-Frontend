@@ -1,9 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Building, Mail, Save } from "lucide-react";
+import { ArrowLeft, Building2, Loader2, Mail } from "lucide-react";
 
 import { tenantAPI } from "../../services/api";
+import { NAVY } from "../Platform/WorkspaceShellLayout";
 import { getAppName } from "../../utils/appName";
+
+const fieldClass =
+  "w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-800 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20";
+
+const fieldErrorClass =
+  "border-rose-300 focus:border-rose-400 focus:ring-rose-200/50";
 
 const TenantCreateForm = () => {
   const [formData, setFormData] = useState({
@@ -95,7 +102,11 @@ const TenantCreateForm = () => {
           .join(", ");
         setError(errorMessages);
       } else {
-        setError(errorDetail || "Failed to create tenant. Please try again.");
+        setError(
+          typeof errorDetail === "string"
+            ? errorDetail
+            : "Failed to create tenant. Please try again.",
+        );
       }
     } finally {
       setLoading(false);
@@ -103,47 +114,47 @@ const TenantCreateForm = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start gap-4">
+    <div className="space-y-5">
+      <div className="flex items-start gap-3">
         <button
+          type="button"
           onClick={() => navigate("/app/appointment-setter/tenants")}
-          className="mt-1 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-black bg-black text-white transition duration-300 hover:bg-white hover:text-black"
+          className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+          aria-label="Back to customers"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-4 w-4" />
         </button>
         <div>
-          <p className="text-[0.78rem] uppercase tracking-[0.32em] text-black/60">
-            Tenant Setup
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+            Tenant setup
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black">
-            Create New Tenant
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight" style={{ color: NAVY }}>
+            Create tenant
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-white/72">
-            Set up a new business tenant for {getAppName()} and keep the
-            onboarding flow inside the same workspace system as the rest of the
-            platform.
+          <p className="mt-0.5 max-w-2xl text-sm text-slate-500">
+            Set up a new business tenant for {getAppName()}.
           </p>
         </div>
       </div>
 
-      <div className="rounded-[28px] border border-white/8 bg-white/[0.04] p-6 md:p-7">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-400">
+      <div className="max-w-2xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-6">
+          {error ? (
+            <div className="mb-5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
               {error}
             </div>
-          )}
+          ) : null}
 
-          <div className="grid gap-6">
+          <div className="space-y-5">
             <div>
-              <label
-                htmlFor="name"
-                className="mb-2 block text-sm font-medium text-white/84"
-              >
-                Tenant Name
+              <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-800">
+                Tenant name *
               </label>
               <div className="relative">
-                <Building className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/34" />
+                <Building2
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                  strokeWidth={1.75}
+                />
                 <input
                   type="text"
                   name="name"
@@ -152,26 +163,28 @@ const TenantCreateForm = () => {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Enter tenant name"
-                  className={`shell-input pl-12 ${fieldErrors.name ? "border-rose-300/40 text-rose-100" : ""}`}
+                  className={`${fieldClass} ${fieldErrors.name ? fieldErrorClass : ""}`}
                 />
               </div>
               <p
-                className={`mt-2 text-sm ${fieldErrors.name ? "text-rose-400" : "text-black"}`}
+                className={`mt-1.5 text-xs ${fieldErrors.name ? "text-rose-600" : "text-slate-500"}`}
               >
-                {fieldErrors.name ||
-                  "This will be the display name for your tenant."}
+                {fieldErrors.name || "Display name for this customer tenant."}
               </p>
             </div>
 
             <div>
               <label
                 htmlFor="owner_email"
-                className="mb-2 block text-sm font-medium text-white/84"
+                className="mb-1.5 block text-sm font-medium text-slate-800"
               >
-                Owner Email
+                Owner email *
               </label>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/34" />
+                <Mail
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                  strokeWidth={1.75}
+                />
                 <input
                   type="email"
                   name="owner_email"
@@ -180,41 +193,39 @@ const TenantCreateForm = () => {
                   value={formData.owner_email}
                   onChange={handleChange}
                   placeholder="Enter owner email"
-                  className={`shell-input pl-12 ${fieldErrors.owner_email ? "border-rose-300/40 text-rose-100" : ""}`}
+                  className={`${fieldClass} ${fieldErrors.owner_email ? fieldErrorClass : ""}`}
                 />
               </div>
               <p
-                className={`mt-2 text-sm ${fieldErrors.owner_email ? "text-rose-400" : "text-400"}`}
+                className={`mt-1.5 text-xs ${fieldErrors.owner_email ? "text-rose-600" : "text-slate-500"}`}
               >
                 {fieldErrors.owner_email ||
-                  "This email will receive ownership-related notifications."}
+                  "Receives ownership-related notifications."}
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 border-t border-white/8 pt-6 sm:flex-row sm:justify-end">
+          <div className="mt-6 flex flex-col gap-2 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => navigate("/app/appointment-setter/tenants")}
-              className="inline-flex items-center justify-center rounded-2xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black transition hover:bg-black/10"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-700 transition hover:bg-slate-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ backgroundColor: NAVY }}
             >
               {loading ? (
                 <>
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   Creating...
                 </>
               ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  Create Tenant
-                </>
+                "Create tenant"
               )}
             </button>
           </div>
