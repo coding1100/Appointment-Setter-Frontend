@@ -2,56 +2,73 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
-  Building,
-  Calendar,
+  Building2,
+  CalendarRange,
   Edit,
   Info,
-  Mail,
+  Mic2,
   Phone,
+  RefreshCw,
   Settings,
   Users,
 } from "lucide-react";
 
 import { tenantAPI, agentAPI } from "../../services/api";
 import Loader from "../Loader";
+import { NAVY, TEAL, TEAL_DEEP } from "../Platform/WorkspaceShellLayout";
 
 const formatTimestamp = (value) =>
-  new Date(value).toLocaleString("en-US", {
-    year: "numeric",
+  new Date(value).toLocaleString(undefined, {
     month: "short",
     day: "numeric",
-    hour: "2-digit",
+    year: "numeric",
+    hour: "numeric",
     minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
   });
 
+const getAgentStatusBadge = (status) => {
+  if (status === "active") {
+    return "bg-[#68fadd]/25 text-[#006b5c]";
+  }
+  return "bg-slate-100 text-slate-600";
+};
+
 const Section = ({ title, icon: Icon, children, action }) => (
-  <section className="rounded-[24px] border border-white/8 bg-white/[0.04] p-5">
-    <div className="mb-4 flex items-start justify-between gap-3">
+  <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/8">
-          <Icon className="h-4.5 w-4.5 text-sky-400" />
+        <div
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-100"
+          style={{ backgroundColor: NAVY }}
+        >
+          <Icon className="h-4 w-4" style={{ color: TEAL }} strokeWidth={1.75} />
         </div>
-        <h2 className="text-lg font-semibold text-black">{title}</h2>
+        <h2 className="text-base font-semibold tracking-tight" style={{ color: NAVY }}>
+          {title}
+        </h2>
       </div>
       {action}
     </div>
-    {children}
+    <div className="px-4 py-4 sm:px-5">{children}</div>
   </section>
 );
 
-const DetailField = ({ label, value, muted = false }) => (
+const DetailField = ({ label, value }) => (
   <div>
-    <dt className="text-[11px] uppercase tracking-[0.2em] text-black">
+    <dt className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
       {label}
     </dt>
-    <dd
-      className={`mt-2 text-sm leading-6 ${muted ? "text-white/60" : "text-white/84"}`}
-    >
-      {value || "Not configured"}
-    </dd>
+    <dd className="mt-1.5 text-sm font-medium text-slate-800">{value || "Not configured"}</dd>
   </div>
+);
+
+const QuickActionLink = ({ to, children }) => (
+  <Link
+    to={to}
+    className="block rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-center font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-700 no-underline transition hover:border-[#68fadd]/40 hover:bg-slate-50"
+  >
+    {children}
+  </Link>
 );
 
 const TenantDetail = () => {
@@ -123,20 +140,25 @@ const TenantDetail = () => {
   };
 
   if (loading) {
-    return <Loader message="Loading tenant details..." />;
+    return (
+      <div className="flex min-h-[280px] items-center justify-center">
+        <Loader message="Loading customer profile..." />
+      </div>
+    );
   }
 
   if (error && !tenant) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-5">
         <button
+          type="button"
           onClick={() => navigate("/app/appointment-setter/tenants")}
-          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-700 transition hover:bg-slate-50"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Tenants
+          Back to customers
         </button>
-        <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-400">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
           {error}
         </div>
       </div>
@@ -147,161 +169,175 @@ const TenantDetail = () => {
     return null;
   }
 
+  const voiceTestingCreate = `/app/appointment-setter/voice-testing?mode=create&tenantId=${encodeURIComponent(tenant.id)}`;
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex items-start gap-4">
+    <div className="space-y-5">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex items-start gap-3">
           <button
+            type="button"
             onClick={() => navigate("/app/appointment-setter/tenants")}
-            className="mt-1 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-black/10 bg-black text-white hover:bg-black/10 hover:text-black transition-colors duration-300"
+            className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+            aria-label="Back to customers"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </button>
           <div>
-            <p className="text-[0.78rem] uppercase tracking-[0.32em] text-black">
-              Tenant Profile
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+              Customer profile
             </p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black">
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight" style={{ color: NAVY }}>
               {tenant.name}
             </h1>
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-white/72">
-              View tenant identity, business setup, agent readiness, and
-              integration status from a single workspace page.
+            <p className="mt-0.5 max-w-2xl text-sm text-slate-500">
+              Tenant identity, agents, and integration status in one workspace view.
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 lg:justify-end">
           <button
+            type="button"
             onClick={fetchTenantDetails}
-            className="inline-flex items-center justify-center rounded-2xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black transition hover:bg-black/10"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-700 transition hover:bg-slate-50"
           >
+            <RefreshCw className="h-4 w-4" strokeWidth={2} />
             Refresh
           </button>
           <Link
             to={`/app/appointment-setter/tenants/${tenant.id}/edit`}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2f66ea] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(19,57,150,0.28)] transition hover:bg-[#295ad0] no-underline"
+            className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-white no-underline transition hover:opacity-90"
+            style={{ backgroundColor: NAVY }}
           >
             <Edit className="h-4 w-4" />
-            Edit Tenant
+            Edit tenant
           </Link>
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-400">
-          {error}
+      {error ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={fetchTenantDetails}
+            className="font-mono text-[10px] font-semibold uppercase tracking-wider text-rose-700 underline hover:no-underline"
+          >
+            Retry
+          </button>
         </div>
-      )}
+      ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_340px]">
-        <div className="space-y-6">
-          <Section title="Basic Information" icon={Info}>
-            <dl className="grid gap-5 md:grid-cols-2">
-              <DetailField label="Tenant Name" value={tenant.name} />
-              <DetailField label="Owner Email" value={tenant.owner_email} />
-              <DetailField
-                label="Created"
-                value={formatTimestamp(tenant.created_at)}
-              />
-              <DetailField
-                label="Last Updated"
-                value={formatTimestamp(tenant.updated_at)}
-              />
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_300px]">
+        <div className="space-y-5">
+          <Section title="Basic information" icon={Info}>
+            <dl className="grid gap-5 sm:grid-cols-2">
+              <DetailField label="Tenant name" value={tenant.name} />
+              <DetailField label="Owner email" value={tenant.owner_email} />
+              <DetailField label="Created" value={formatTimestamp(tenant.created_at)} />
+              <DetailField label="Last updated" value={formatTimestamp(tenant.updated_at)} />
             </dl>
           </Section>
 
-          {businessInfo && (
-            <Section title="Business Information" icon={Building}>
-              <dl className="grid gap-5 md:grid-cols-2">
-                <DetailField
-                  label="Business Name"
-                  value={businessInfo.business_name}
-                />
+          {businessInfo ? (
+            <Section title="Business information" icon={Building2}>
+              <dl className="grid gap-5 sm:grid-cols-2">
+                <DetailField label="Business name" value={businessInfo.business_name} />
                 <DetailField label="Phone" value={businessInfo.phone} />
                 <DetailField label="Email" value={businessInfo.email} />
                 <DetailField label="Address" value={businessInfo.address} />
               </dl>
             </Section>
-          )}
+          ) : null}
 
           <Section
-            title={`Agents (${agents.length})`}
+            title={`Voice agents (${agents.length})`}
             icon={Users}
             action={
               <Link
                 to="/app/appointment-setter/voice-agents"
-                className="text-sm font-medium text-sky-400 no-underline transition hover:text-sky-600"
+                className="font-mono text-[10px] font-semibold uppercase tracking-wider no-underline transition hover:underline"
+                style={{ color: TEAL_DEEP }}
               >
                 Manage agents
               </Link>
             }
           >
             {agents.length > 0 ? (
-              <div className="space-y-3">
+              <div className="divide-y divide-slate-100 rounded-lg border border-slate-200">
                 {agents.slice(0, 6).map((agent) => (
                   <div
                     key={agent.id}
-                    className="flex flex-col gap-3 rounded-[20px] border border-white/8 bg-white/[0.03] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-2 px-4 py-3 transition hover:bg-slate-50/80 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div>
-                      <p className="text-sm font-semibold text-black">
-                        {agent.name}
-                      </p>
-                      <p className="mt-1 text-xs text-white/56">
-                        {agent.service_type || "Service type not set"}
-                      </p>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-100"
+                        style={{ backgroundColor: NAVY }}
+                      >
+                        <Mic2 className="h-4 w-4" style={{ color: TEAL }} />
+                      </div>
+                      <div className="min-w-0">
+                        <Link
+                          to={`/app/appointment-setter/voice-testing?mode=edit&tenantId=${encodeURIComponent(tenant.id)}&agentId=${encodeURIComponent(agent.id)}`}
+                          className="truncate text-sm font-semibold no-underline transition hover:underline"
+                          style={{ color: NAVY }}
+                        >
+                          {agent.name}
+                        </Link>
+                        <p className="mt-0.5 truncate text-xs capitalize text-slate-500">
+                          {agent.service_type || "Service type not set"}
+                        </p>
+                      </div>
                     </div>
                     <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
-                        agent.status === "active"
-                          ? "bg-emerald-400/14 text-emerald-400"
-                          : "bg-white/10 text-white/60"
-                      }`}
+                      className={`inline-flex w-fit rounded-full px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide ${getAgentStatusBadge(agent.status)}`}
                     >
-                      {agent.status}
+                      {agent.status === "active" ? "Deployed" : agent.status}
                     </span>
                   </div>
                 ))}
-                {agents.length > 6 && (
-                  <p className="text-sm text-white/52">
-                    +{agents.length - 6} more agents
+                {agents.length > 6 ? (
+                  <p className="px-4 py-2 text-xs text-slate-500">
+                    +{agents.length - 6} more agents in voice workspace
                   </p>
-                )}
+                ) : null}
               </div>
             ) : (
-              <p className="text-sm text-white/58">No agents configured yet.</p>
+              <p className="text-sm text-slate-500">No voice agents configured yet.</p>
             )}
           </Section>
         </div>
 
-        <div className="space-y-6">
-          <Section title="Twilio Integration" icon={Phone}>
+        <div className="space-y-5">
+          <Section title="Twilio integration" icon={Phone}>
             {twilioIntegration ? (
               <div className="space-y-3">
-                <span className="inline-flex rounded-full bg-emerald-400/14 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
+                <span className="inline-flex rounded-full bg-[#68fadd]/25 px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide text-[#006b5c]">
                   Connected
                 </span>
-                {twilioIntegration.account_sid && (
-                  <p className="text-sm text-white/66">
-                    Account SID:{" "}
-                    {twilioIntegration.account_sid.substring(0, 10)}...
+                {twilioIntegration.account_sid ? (
+                  <p className="font-mono text-xs text-slate-600">
+                    Account SID: {twilioIntegration.account_sid.substring(0, 12)}…
                   </p>
-                )}
+                ) : null}
                 <Link
                   to="/app/appointment-setter/twilio"
-                  className="inline-flex text-sm font-medium text-sky-400 no-underline transition hover:text-sky-600"
+                  className="inline-block font-mono text-[10px] font-semibold uppercase tracking-wider no-underline transition hover:underline"
+                  style={{ color: TEAL_DEEP }}
                 >
                   Manage integration
                 </Link>
               </div>
             ) : (
               <div className="space-y-3">
-                <span className="inline-flex rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/65">
+                <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide text-slate-600">
                   Not connected
                 </span>
                 <Link
                   to="/app/appointment-setter/twilio"
-                  className="inline-flex text-sm font-medium text-sky-400 no-underline transition hover:text-sky-600"
+                  className="inline-block font-mono text-[10px] font-semibold uppercase tracking-wider no-underline transition hover:underline"
+                  style={{ color: TEAL_DEEP }}
                 >
                   Set up integration
                 </Link>
@@ -309,35 +345,24 @@ const TenantDetail = () => {
             )}
           </Section>
 
-          {agentSettings && (
-            <Section title="Agent Settings" icon={Settings}>
-              <p className="text-sm leading-7 text-white/66">
-                Custom agent settings are configured for this tenant and are
-                ready to be managed inside the voice agent workspace.
+          {agentSettings ? (
+            <Section title="Agent settings" icon={Settings}>
+              <p className="text-sm leading-6 text-slate-600">
+                Custom agent settings are configured for this tenant. Manage them in the voice
+                agent workspace.
               </p>
             </Section>
-          )}
+          ) : null}
 
-          <Section title="Quick Actions" icon={Calendar}>
+          <Section title="Quick actions" icon={CalendarRange}>
             <div className="space-y-2">
-              <Link
-                to="/app/appointment-setter/voice-agents"
-                className="block rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-white/84 no-underline transition hover:bg-white/[0.06]"
-              >
-                Manage Agents
-              </Link>
-              <Link
-                to="/app/appointment-setter/twilio"
-                className="block rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-white/84 no-underline transition hover:bg-white/[0.06]"
-              >
-                Twilio Integration
-              </Link>
-              <Link
-                to="/app/appointment-setter/voice-testing"
-                className="block rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-white/84 no-underline transition hover:bg-white/[0.06]"
-              >
-                Test Voice Agent
-              </Link>
+              <QuickActionLink to="/app/appointment-setter/voice-agents">
+                Manage agents
+              </QuickActionLink>
+              <QuickActionLink to="/app/appointment-setter/twilio">
+                Twilio integration
+              </QuickActionLink>
+              <QuickActionLink to={voiceTestingCreate}>Test voice agent</QuickActionLink>
             </div>
           </Section>
         </div>
