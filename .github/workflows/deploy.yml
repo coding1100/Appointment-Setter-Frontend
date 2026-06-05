@@ -31,19 +31,22 @@ jobs:
       - name: Build platform shell
         run: pnpm --filter @mindrind/platform-shell build
         env:
-          REACT_APP_API_URL: https://app-setter.digitalmarketingservicesnewyork.com
+          # REACT_APP_API_URL: https://app-setter.digitalmarketingservicesnewyork.com
+          REACT_APP_API_URL: https://api.samairep.com
           DISABLE_ESLINT_PLUGIN: true
 
       - name: Build appointment-setter app
         run: pnpm --filter @mindrind/appointment-setter-app build
         env:
-          REACT_APP_API_URL: https://app-setter.digitalmarketingservicesnewyork.com
+          # REACT_APP_API_URL: https://app-setter.digitalmarketingservicesnewyork.com
+          REACT_APP_API_URL: https://api.samairep.com
           DISABLE_ESLINT_PLUGIN: true
 
       - name: Build chatbot-agents app
         run: pnpm --filter @mindrind/chatbot-agents-app build
         env:
-          REACT_APP_API_URL: https://app-setter.digitalmarketingservicesnewyork.com
+          # REACT_APP_API_URL: https://app-setter.digitalmarketingservicesnewyork.com
+          REACT_APP_API_URL: https://api.samairep.com
           DISABLE_ESLINT_PLUGIN: true
 
       - name: Verify build outputs
