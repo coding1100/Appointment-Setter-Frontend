@@ -75,7 +75,7 @@ const ResetPasswordForm = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
       <div className="px-8 py-6 flex items-center">
-        <h1 className="text-2xl font-semibold tracking-wide text-gray-900">MindRind</h1>
+        <h1 className="text-2xl font-semibold tracking-wide text-gray-900">AiToolsSuite</h1>
       </div>
       <div className="flex flex-1 items-center justify-center px-4">
         <motion.div
