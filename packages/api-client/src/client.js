@@ -341,7 +341,6 @@ export const agentAPI = {
   activateAgent: (agentId) => api.post(`/api/v1/agents/${agentId}/activate`),
   deactivateAgent: (agentId) => api.post(`/api/v1/agents/${agentId}/deactivate`),
   getAvailableVoices: () => api.get('/api/v1/agents/voices/list'),
-  getVoicePreviewUrl: (voiceId) => api.get(`/api/v1/agents/voices/preview/${voiceId}`),
 };
 
 export const chatbotAgentAPI = {

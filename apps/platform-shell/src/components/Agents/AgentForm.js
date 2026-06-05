@@ -138,6 +138,17 @@ const AgentForm = ({
       return;
     }
 
+    const voiceExists = voices.some(
+      (voice) => voice.voice_id === formData.voice_id,
+    );
+    if (!voicesLoading && formData.voice_id && !voiceExists) {
+      setFieldErrors({
+        voice_id: "Please choose a current Gemini Live voice.",
+      });
+      setLoading(false);
+      return;
+    }
+
     // Check for duplicate agent name (only when creating, not when editing)
     if (!agent) {
       const duplicate = checkForDuplicate(formData);
@@ -180,6 +191,11 @@ const AgentForm = ({
   const getVoiceById = (voiceId) => {
     return voices.find((v) => v.voice_id === voiceId);
   };
+
+  const selectedVoice = getVoiceById(formData.voice_id);
+  const hasLegacyVoice = Boolean(
+    !voicesLoading && formData.voice_id && !selectedVoice,
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#04070fcc] px-4 py-8 backdrop-blur-sm">
@@ -253,26 +269,44 @@ const AgentForm = ({
                       {voice.name} - {voice.description} ({voice.category})
                     </option>
                   ))}
+                  {hasLegacyVoice && (
+                    <option value={formData.voice_id} disabled>
+                      {"Legacy voice \u2014 please reselect"}
+                    </option>
+                  )}
                 </select>
+                {fieldErrors.voice_id && (
+                  <p className="text-xs text-rose-700">
+                    {fieldErrors.voice_id}
+                  </p>
+                )}
 
                 {/* Selected Voice Info */}
-                {formData.voice_id && getVoiceById(formData.voice_id) && (
+                {selectedVoice ? (
                   <div className="rounded-2xl border border-sky-200 bg-sky-50 p-3">
                     <p className="text-sm font-medium text-sky-700">
-                      {getVoiceById(formData.voice_id).name}
+                      {selectedVoice.name}
                     </p>
                     <p className="mt-1 text-xs text-sky-700">
-                      {getVoiceById(formData.voice_id).description}
+                      {selectedVoice.description}
                     </p>
                     <p className="mt-1 text-xs text-sky-700">
                       Best for:{" "}
-                      {getVoiceById(formData.voice_id).use_case.replace(
-                        /_/g,
-                        " ",
-                      )}
+                      {(selectedVoice.use_case || "").replace(/_/g, " ")}
                     </p>
                   </div>
-                )}
+                ) : hasLegacyVoice ? (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+                    <p className="text-sm font-medium text-amber-700">
+                      {"Legacy voice \u2014 please reselect"}
+                    </p>
+                    <p className="mt-1 text-xs text-amber-700">
+                      This agent was created with a voice ID that is no longer
+                      available: {formData.voice_id}. Please pick a Gemini Live
+                      voice before saving.
+                    </p>
+                  </div>
+                ) : null}
               </div>
             )}
           </div>

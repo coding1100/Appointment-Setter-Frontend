@@ -445,7 +445,6 @@ The application uses Axios for HTTP requests with the following configuration:
 - `POST /api/v1/agents/{id}/activate` - Activate agent
 - `POST /api/v1/agents/{id}/deactivate` - Deactivate agent
 - `GET /api/v1/agents/voices/list` - Get available voices
-- `GET /api/v1/agents/voices/preview/{voiceId}` - Get voice preview
 
 #### Appointments (`appointmentAPI`)
 - `POST /api/v1/appointments` - Create appointment
