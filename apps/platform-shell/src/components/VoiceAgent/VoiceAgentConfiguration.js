@@ -1,14 +1,17 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useRef, useState } from "react";
 import {
   BarChart3,
+  ChevronDown,
   Clock,
+  FolderOpen,
   Loader2,
   Mic,
-  Network,
-  Phone,
+  Paperclip,
   Play,
   Plug,
+  SlidersHorizontal,
+  Terminal,
+  Upload,
   UserCircle,
 } from "lucide-react";
 
@@ -16,13 +19,41 @@ import AgentFormFields from "../Agents/AgentFormFields";
 import { useAgentForm } from "../Agents/useAgentForm";
 import { NAVY, TEAL, TEAL_DEEP } from "../Platform/WorkspaceShellLayout";
 
-const ConfigCard = ({ icon: Icon, iconBg, title, subtitle, badge, children }) => (
-  <section className="rounded-xl border border-slate-200 bg-[#f9fafb] p-5">
+const SYSTEM_PROMPT_MAX = 4000;
+
+const PROMPT_TEMPLATES = [
+  {
+    id: "custom",
+    label: "Custom prompt",
+    text: "",
+  },
+  {
+    id: "receptionist",
+    label: "Receptionist",
+    text: "You are a professional receptionist for a home services company. Greet callers warmly, collect their name and service need, and offer to schedule an appointment. Stay concise and helpful.",
+  },
+  {
+    id: "support",
+    label: "Customer support",
+    text: "You are a customer support agent. Help callers with account questions, troubleshoot common issues, and escalate to a human when needed. Always confirm understanding before proceeding.",
+  },
+  {
+    id: "scheduler",
+    label: "Appointment scheduler",
+    text: "You are an appointment scheduling assistant. Ask for preferred date and time, confirm service address, and summarize booking details before ending the call.",
+  },
+];
+
+const fieldClass =
+  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20";
+
+const ConfigCard = ({ icon: Icon, iconBg, title, subtitle, badge, headerAction, children, className = "" }) => (
+  <section className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}>
     <div className="mb-4 flex items-start justify-between gap-3">
       <div className="flex items-start gap-3">
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-          style={{ backgroundColor: iconBg }}
+          style={{ backgroundColor: iconBg || NAVY }}
         >
           <Icon className="h-5 w-5 text-white" strokeWidth={1.75} />
         </div>
@@ -35,11 +66,14 @@ const ConfigCard = ({ icon: Icon, iconBg, title, subtitle, badge, children }) =>
           ) : null}
         </div>
       </div>
-      {badge ? (
-        <span className="rounded-full bg-[#68fadd]/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#006b5c]">
-          {badge}
-        </span>
-      ) : null}
+      <div className="flex shrink-0 items-center gap-2">
+        {headerAction}
+        {badge ? (
+          <span className="rounded-full bg-[#68fadd]/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#006b5c]">
+            {badge}
+          </span>
+        ) : null}
+      </div>
     </div>
     {children}
   </section>
@@ -62,6 +96,32 @@ const RangeField = ({ label, value, onChange }) => (
   </div>
 );
 
+const ModelSlider = ({ label, value, onChange, min = 0, max = 1, step = 0.1, hint }) => (
+  <div>
+    <div className="mb-2 flex items-center justify-between gap-3">
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+        {label}
+      </span>
+      <span className="text-sm font-semibold" style={{ color: TEAL_DEEP }}>
+        {value.toFixed(1)}
+      </span>
+    </div>
+    <input
+      type="range"
+      min={min}
+      max={max}
+      step={step}
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-[#006b5c]"
+    />
+    {hint ? <p className="mt-2 text-xs text-slate-500">{hint}</p> : null}
+  </div>
+);
+
+const formatCharCount = (count, max) =>
+  `${count.toLocaleString()} / ${max.toLocaleString()} chars`;
+
 const VoiceAgentConfiguration = ({
   tenantId,
   agent,
@@ -75,13 +135,13 @@ const VoiceAgentConfiguration = ({
 }) => {
   const [stability, setStability] = useState(75);
   const [clarity, setClarity] = useState(45);
-  const [latencyOpt, setLatencyOpt] = useState(true);
-  const [telephony, setTelephony] = useState({
-    inbound: true,
-    outbound: true,
-    recording: false,
-    hipaa: true,
-  });
+  const [systemPrompt, setSystemPrompt] = useState("");
+  const [promptTemplate, setPromptTemplate] = useState("");
+  const [temperature, setTemperature] = useState(0.7);
+  const [topP, setTopP] = useState(0.9);
+  const [knowledgeFiles, setKnowledgeFiles] = useState([]);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef(null);
 
   const form = useAgentForm({
     tenantId,
@@ -96,6 +156,41 @@ const VoiceAgentConfiguration = ({
 
   const handleSave = async (e) => {
     await form.handleSubmit(e);
+  };
+
+  const handlePromptTemplateChange = (e) => {
+    const templateId = e.target.value;
+    setPromptTemplate(templateId);
+    if (!templateId) return;
+    const template = PROMPT_TEMPLATES.find((item) => item.id === templateId);
+    if (template?.text) {
+      setSystemPrompt(template.text.slice(0, SYSTEM_PROMPT_MAX));
+    }
+  };
+
+  const handleSystemPromptChange = (e) => {
+    setSystemPrompt(e.target.value.slice(0, SYSTEM_PROMPT_MAX));
+    setPromptTemplate("");
+  };
+
+  const addKnowledgeFiles = (fileList) => {
+    const allowed = ["application/pdf", "text/plain", "text/csv"];
+    const next = Array.from(fileList || [])
+      .filter((file) => allowed.includes(file.type) || /\.(pdf|txt|csv)$/i.test(file.name))
+      .map((file) => ({
+        id: `${file.name}-${file.size}-${Date.now()}`,
+        name: file.name,
+        status: "Ready",
+      }));
+    if (next.length) {
+      setKnowledgeFiles((prev) => [...prev, ...next]);
+    }
+  };
+
+  const handleFileDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    addKnowledgeFiles(e.dataTransfer.files);
   };
 
   const greetingPreview =
@@ -174,50 +269,51 @@ const VoiceAgentConfiguration = ({
             </div>
           </ConfigCard>
 
-          {/* <ConfigCard icon={Phone} iconBg="#8b5cf6" title="Telephony" subtitle="Powered by Twilio">
-            <div className="rounded-lg border border-slate-200 bg-white px-4 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Phone className="h-4 w-4 shrink-0 text-slate-400" />
-                  <span className="truncate text-sm font-medium text-slate-800">
-                    {agentPhone?.phone_number ||
-                      twilioIntegration?.phone_number ||
-                      "+1 (555) 012-3456"}
-                  </span>
-                </div>
-                <Link
-                  to="/app/appointment-setter/twilio"
-                  className="shrink-0 text-sm font-medium no-underline hover:underline"
-                  style={{ color: TEAL_DEEP }}
+          <ConfigCard
+            icon={Terminal}
+            iconBg={TEAL_DEEP}
+            title="Core Configuration"
+            headerAction={
+              <label className="relative inline-flex items-center">
+                <select
+                  value={promptTemplate}
+                  onChange={handlePromptTemplateChange}
+                  className="appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm font-medium text-slate-700 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20"
                 >
-                  Change
-                </Link>
+                  <option value="">Prompt Templates</option>
+                  {PROMPT_TEMPLATES.filter((t) => t.id !== "custom").map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-slate-400" />
+              </label>
+            }
+          >
+            <div>
+              <label
+                htmlFor="system-prompt"
+                className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400"
+              >
+                System prompt
+              </label>
+              <div className="relative">
+                <textarea
+                  id="system-prompt"
+                  value={systemPrompt}
+                  onChange={handleSystemPromptChange}
+                  placeholder="Enter the foundational instructions for the agent..."
+                  rows={8}
+                  className={`${fieldClass} min-h-[180px] resize-y pb-8`}
+                />
+                <span className="pointer-events-none absolute bottom-3 right-3 font-mono text-[10px] text-slate-400">
+                  {formatCharCount(systemPrompt.length, SYSTEM_PROMPT_MAX)}
+                </span>
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              {[
-                { key: "inbound", label: "Inbound Calls" },
-                { key: "outbound", label: "Outbound Calls" },
-                { key: "recording", label: "Call Recording" },
-                { key: "hipaa", label: "HIPAA Compliance" },
-              ].map(({ key, label }) => (
-                <label
-                  key={key}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700"
-                >
-                  <input
-                    type="checkbox"
-                    checked={telephony[key]}
-                    onChange={(e) =>
-                      setTelephony((prev) => ({ ...prev, [key]: e.target.checked }))
-                    }
-                    className="h-4 w-4 rounded border-slate-300 text-[#006b5c] focus:ring-[#68fadd]/30"
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-          </ConfigCard> */}
+          </ConfigCard>
+
         </div>
 
         <div className="space-y-6">
@@ -282,6 +378,87 @@ const VoiceAgentConfiguration = ({
                 </li>
               ))}
             </ul>
+          </ConfigCard>
+
+          <ConfigCard icon={SlidersHorizontal} iconBg={TEAL_DEEP} title="Model Settings">
+            <div className="grid gap-6">
+              <ModelSlider
+                label="Temperature"
+                value={temperature}
+                onChange={setTemperature}
+                hint="Controls randomness: lower is more deterministic."
+              />
+              <ModelSlider
+                label="Top P"
+                value={topP}
+                onChange={setTopP}
+                hint="Nucleus sampling: 0.9 means top 90% probability mass."
+              />
+            </div>
+          </ConfigCard>
+
+          <ConfigCard icon={FolderOpen} iconBg={TEAL_DEEP} title="Knowledge Base">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.csv,.txt,application/pdf,text/plain,text/csv"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                addKnowledgeFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleFileDrop}
+              className={`flex w-full flex-col items-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition ${
+                dragOver
+                  ? "border-[#68fadd] bg-[#68fadd]/5"
+                  : "border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50"
+              }`}
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                <Upload className="h-5 w-5 text-slate-400" />
+              </div>
+              <p className="mt-4 text-sm font-semibold text-slate-800">Upload custom documents</p>
+              <p className="mt-1 text-xs text-slate-500">PDF, CSV, or TXT files. Max 50MB per file.</p>
+            </button>
+
+            {knowledgeFiles.length > 0 ? (
+              <ul className="mt-4 divide-y divide-slate-100 rounded-lg border border-slate-200">
+                {knowledgeFiles.map((file) => (
+                  <li
+                    key={file.id}
+                    className="flex items-center justify-between gap-3 px-4 py-3"
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Paperclip className="h-4 w-4 shrink-0 text-slate-400" />
+                      <span
+                        className={`truncate text-sm font-medium ${
+                          file.status === "Processed" ? "text-[#006b5c]" : "text-slate-600"
+                        }`}
+                      >
+                        {file.name}
+                      </span>
+                    </div>
+                    <span
+                      className={`shrink-0 font-mono text-[10px] font-bold uppercase tracking-wide ${
+                        file.status === "Processed" ? "text-[#006b5c]" : "text-slate-400"
+                      }`}
+                    >
+                      {file.status}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </ConfigCard>
         </div>
       </form>
