@@ -591,11 +591,9 @@ const TwilioIntegration = () => {
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-            Telephony
-          </p>
+          
           <h1 className="mt-1 text-2xl font-semibold tracking-tight" style={{ color: NAVY }}>
-            Twilio integration
+            Telephony 
           </h1>
           <p className="mt-0.5 max-w-2xl text-sm text-slate-500">
             Connect credentials, manage phone numbers, and assign routing per voice agent.

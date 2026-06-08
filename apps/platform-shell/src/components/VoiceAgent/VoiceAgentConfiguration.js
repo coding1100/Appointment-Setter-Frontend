@@ -1,5 +1,6 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowLeft,
   BarChart3,
   ChevronDown,
   Clock,
@@ -17,6 +18,8 @@ import {
 
 import AgentFormFields from "../Agents/AgentFormFields";
 import { useAgentForm } from "../Agents/useAgentForm";
+import { agentAPI } from "../../services/api";
+import CallHistoryDrawer from "./CallHistoryDrawer";
 import { NAVY, TEAL, TEAL_DEEP } from "../Platform/WorkspaceShellLayout";
 
 const SYSTEM_PROMPT_MAX = 4000;
@@ -47,37 +50,128 @@ const PROMPT_TEMPLATES = [
 const fieldClass =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20";
 
-const ConfigCard = ({ icon: Icon, iconBg, title, subtitle, badge, headerAction, children, className = "" }) => (
-  <section className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}>
-    <div className="mb-4 flex items-start justify-between gap-3">
-      <div className="flex items-start gap-3">
-        <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-          style={{ backgroundColor: iconBg || NAVY }}
-        >
-          <Icon className="h-5 w-5 text-white" strokeWidth={1.75} />
+const CardBadge = ({ children, tone = "active" }) => {
+  const toneClass =
+    tone === "inactive"
+      ? "bg-slate-100 text-slate-600"
+      : tone === "draft"
+        ? "bg-amber-50 text-amber-700 text-xs"
+        : "bg-[#68fadd]/20 text-[#006b5c]";
+
+  return (
+    <span
+      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${toneClass}`}
+    >
+      {children}
+    </span>
+  );
+};
+
+const AgentStatusToggle = ({ status, loading = false, disabled = false, pendingStatus, onChange }) => {
+  const isActive = status === "active";
+
+  const segmentClass = (segment) => {
+    const selected = segment === "active" ? isActive : !isActive;
+    const showSpinner = loading && pendingStatus === segment;
+
+    return {
+      className: `inline-flex min-w-[72px] items-center justify-center gap-1 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${
+        selected
+          ? segment === "active"
+            ? "bg-[#68fadd]/25 text-[#006b5c] shadow-sm"
+            : "bg-white text-slate-700 shadow-sm"
+          : "text-slate-500 hover:text-slate-700"
+      }`,
+      showSpinner,
+    };
+  };
+
+  const offline = segmentClass("inactive");
+  const active = segmentClass("active");
+
+  return (
+    <div
+      className="inline-flex rounded-full border border-slate-200 bg-slate-100 p-0.5"
+      role="group"
+      aria-label="Agent deployment status"
+    >
+      <button
+        type="button"
+        disabled={disabled || loading}
+        aria-pressed={!isActive}
+        onClick={() => onChange("inactive")}
+        className={offline.className}
+      >
+        {offline.showSpinner ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+        Offline
+      </button>
+      <button
+        type="button"
+        disabled={disabled || loading}
+        aria-pressed={isActive}
+        onClick={() => onChange("active")}
+        className={active.className}
+      >
+        {active.showSpinner ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+        Active
+      </button>
+    </div>
+  );
+};
+
+const ConfigCard = ({
+  icon: Icon,
+  iconBg,
+  title,
+  subtitle,
+  badge,
+  badgeTone = "active",
+  topSlot,
+  headerAction,
+  children,
+  className = "",
+}) => {
+  const card = (
+    <section className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+            style={{ backgroundColor: iconBg || NAVY }}
+          >
+            <Icon className="h-5 w-5 text-white" strokeWidth={1.75} />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+            {subtitle ? (
+              <p className="mt-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                {subtitle}
+              </p>
+            ) : null}
+          </div>
         </div>
-        <div>
-          <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-          {subtitle ? (
-            <p className="mt-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-              {subtitle}
-            </p>
-          ) : null}
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        {headerAction}
-        {badge ? (
-          <span className="rounded-full bg-[#68fadd]/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#006b5c]">
-            {badge}
-          </span>
+        {headerAction || badge ? (
+          <div className="flex shrink-0 items-center gap-2">
+            {headerAction}
+            {badge ? <CardBadge tone={badgeTone}>{badge}</CardBadge> : null}
+          </div>
         ) : null}
       </div>
+      {children}
+    </section>
+  );
+
+  if (!topSlot) {
+    return card;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-end h-[42px] items-center">{topSlot}</div>
+      {card}
     </div>
-    {children}
-  </section>
-);
+  );
+};
 
 const RangeField = ({ label, value, onChange }) => (
   <div>
@@ -122,6 +216,16 @@ const ModelSlider = ({ label, value, onChange, min = 0, max = 1, step = 0.1, hin
 const formatCharCount = (count, max) =>
   `${count.toLocaleString()} / ${max.toLocaleString()} chars`;
 
+const isGreetingValid = (message) =>
+  Boolean(message?.trim()) && message.trim().length >= 10;
+
+const isAgentConfigurationComplete = (formData, systemPrompt) =>
+  Boolean(formData.name?.trim()) &&
+  Boolean(formData.voice_id) &&
+  Boolean(formData.language) &&
+  isGreetingValid(formData.greeting_message) &&
+  Boolean(systemPrompt.trim());
+
 const VoiceAgentConfiguration = ({
   tenantId,
   agent,
@@ -130,17 +234,24 @@ const VoiceAgentConfiguration = ({
   twilioIntegration,
   onDiscard,
   onSaved,
+  onStatusChange,
   onPushToTalk,
   pushToTalkLoading = false,
 }) => {
-  const [stability, setStability] = useState(75);
-  const [clarity, setClarity] = useState(45);
+  // const [stability, setStability] = useState(75);
+  // const [clarity, setClarity] = useState(45);
   const [systemPrompt, setSystemPrompt] = useState("");
   const [promptTemplate, setPromptTemplate] = useState("");
-  const [temperature, setTemperature] = useState(0.7);
-  const [topP, setTopP] = useState(0.9);
+  // const [temperature, setTemperature] = useState(0.7);
+  // const [topP, setTopP] = useState(0.9);
   const [knowledgeFiles, setKnowledgeFiles] = useState([]);
   const [dragOver, setDragOver] = useState(false);
+  const [logsOpen, setLogsOpen] = useState(false);
+  const [agentStatus, setAgentStatus] = useState(agent?.status || "inactive");
+  const [statusToggling, setStatusToggling] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState(null);
+  const [statusError, setStatusError] = useState("");
+  const [systemPromptError, setSystemPromptError] = useState("");
   const fileInputRef = useRef(null);
 
   const form = useAgentForm({
@@ -154,7 +265,60 @@ const VoiceAgentConfiguration = ({
   const agentLabel = agent?.name || form.formData.name || "New Agent";
   const agentRef = agent?.id ? `#${String(agent.id).slice(0, 8)}` : "Draft";
 
+  const isConfigurationComplete = useMemo(
+    () => isAgentConfigurationComplete(form.formData, systemPrompt),
+    [form.formData, systemPrompt],
+  );
+
+  const canPushToTalk =
+    isConfigurationComplete &&
+    !isCreating &&
+    agentStatus === "active" &&
+    !pushToTalkLoading;
+
+  useEffect(() => {
+    setAgentStatus(agent?.status || "inactive");
+    setStatusError("");
+  }, [agent?.id, agent?.status]);
+
+  const handleStatusToggle = async (nextStatus) => {
+    if (!agent?.id || isCreating || statusToggling) return;
+    if (nextStatus === agentStatus) return;
+
+    setStatusToggling(true);
+    setStatusError("");
+    setPendingStatus(nextStatus);
+
+    try {
+      if (nextStatus === "active") {
+        await agentAPI.activateAgent(agent.id);
+      } else {
+        await agentAPI.deactivateAgent(agent.id);
+      }
+
+      const response = await agentAPI.getAgent(agent.id);
+      const updatedAgent = response.data || { ...agent, status: nextStatus };
+      setAgentStatus(updatedAgent.status || nextStatus);
+      onStatusChange?.(updatedAgent);
+    } catch (toggleError) {
+      setStatusError(
+        toggleError.response?.data?.detail ||
+          toggleError.response?.data?.message ||
+          "Failed to update agent status",
+      );
+    } finally {
+      setStatusToggling(false);
+      setPendingStatus(null);
+    }
+  };
+
   const handleSave = async (e) => {
+    if (!systemPrompt.trim()) {
+      setSystemPromptError("System prompt is required");
+      return;
+    }
+
+    setSystemPromptError("");
     await form.handleSubmit(e);
   };
 
@@ -171,6 +335,9 @@ const VoiceAgentConfiguration = ({
   const handleSystemPromptChange = (e) => {
     setSystemPrompt(e.target.value.slice(0, SYSTEM_PROMPT_MAX));
     setPromptTemplate("");
+    if (systemPromptError) {
+      setSystemPromptError("");
+    }
   };
 
   const addKnowledgeFiles = (fileList) => {
@@ -200,14 +367,24 @@ const VoiceAgentConfiguration = ({
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h1 className="text-[1.65rem] font-semibold tracking-tight" style={{ color: NAVY }}>
-            Voice Agent Configuration
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Customize synthesis parameters and telephony endpoints for Agent {agentRef}
-            {agentLabel !== "New Agent" ? ` · ${agentLabel}` : ""}
-          </p>
+        <div className="flex items-start gap-3">
+          <button
+            type="button"
+            onClick={onDiscard}
+            className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+            aria-label="Back to voice agents"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div>
+            <h1 className="text-[1.65rem] font-semibold tracking-tight" style={{ color: NAVY }}>
+              Agent Configuration
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Customize synthesis parameters for Agent 
+              {agentLabel !== "New Agent" ? ` - ${agentLabel}` : ""}
+            </p>
+          </div>
         </div>
         <div className="flex shrink-0 gap-3">
           {!isCreating ? (
@@ -222,8 +399,8 @@ const VoiceAgentConfiguration = ({
           <button
             type="button"
             onClick={handleSave}
-            disabled={form.loading}
-            className="rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            disabled={form.loading || !isConfigurationComplete}
+            className="rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             style={{ backgroundColor: TEAL_DEEP }}
           >
             {form.loading ? "Saving..." : isCreating ? "Save" : "Save Changes"}
@@ -237,86 +414,155 @@ const VoiceAgentConfiguration = ({
         </div>
       ) : null}
 
-      <form onSubmit={handleSave} className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-6">
-          <ConfigCard
-            icon={UserCircle}
-            iconBg="#10b981"
-            title="Voice Synthesis"
-            subtitle="Powered by ElevenLabs"
-            badge="Active"
-          >
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_200px]">
-              <div>
-                <AgentFormFields {...form} compact />
-                <button
-                  type="button"
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-3 text-sm font-medium transition hover:bg-slate-50"
-                  style={{ color: TEAL_DEEP }}
-                >
-                  <Play className="h-4 w-4" />
-                  Test Voice
-                </button>
-              </div>
-              <div className="space-y-5">
-                <RangeField label="Stability" value={stability} onChange={setStability} />
-                <RangeField
-                  label="Clarity & Artifact Amplification"
-                  value={clarity}
-                  onChange={setClarity}
-                />
-              </div>
-            </div>
-          </ConfigCard>
-
-          <ConfigCard
-            icon={Terminal}
-            iconBg={TEAL_DEEP}
-            title="Core Configuration"
-            headerAction={
-              <label className="relative inline-flex items-center">
-                <select
-                  value={promptTemplate}
-                  onChange={handlePromptTemplateChange}
-                  className="appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm font-medium text-slate-700 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20"
-                >
-                  <option value="">Prompt Templates</option>
-                  {PROMPT_TEMPLATES.filter((t) => t.id !== "custom").map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-slate-400" />
-              </label>
-            }
-          >
+      <form onSubmit={handleSave} className="space-y-6">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,6fr)_minmax(0,4fr)] xl:items-start">
+          <div className="space-y-6">
             <div>
-              <label
-                htmlFor="system-prompt"
-                className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400"
-              >
-                System prompt
-              </label>
+              {/* <label htmlFor="agent-name" className="mb-1.5 block text-sm font-medium text-slate-800">
+                Agent Name *
+              </label> */}
+              <input
+                id="agent-name"
+                type="text"
+                name="name"
+                value={form.formData.name}
+                onChange={form.handleChange}
+                placeholder=" Agent Name *"
+                required
+                className={fieldClass}
+              />
+              {/* <p className="mt-1 text-xs text-slate-500">Give your agent a friendly name</p> */}
+            </div>
+
+
+            <ConfigCard
+              icon={Terminal}
+              iconBg={TEAL_DEEP}
+              title="Core Configuration"
+              subtitle="System prompt *"
+              headerAction={
+                <label className="relative inline-flex items-center">
+                  <select
+                    value={promptTemplate}
+                    onChange={handlePromptTemplateChange}
+                    className="appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm font-medium text-slate-700 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20"
+                  >
+                    <option value="">Prompt Templates</option>
+                    {PROMPT_TEMPLATES.filter((t) => t.id !== "custom").map((template) => (
+                      <option key={template.id} value={template.id}>
+                        {template.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-slate-400" />
+                </label>
+              }
+            >
               <div className="relative">
                 <textarea
                   id="system-prompt"
                   value={systemPrompt}
                   onChange={handleSystemPromptChange}
                   placeholder="Enter the foundational instructions for the agent..."
-                  rows={8}
-                  className={`${fieldClass} min-h-[180px] resize-y pb-8`}
+                  rows={7}
+                  required
+                  aria-label="System prompt"
+                  aria-invalid={Boolean(systemPromptError)}
+                  className={`${fieldClass} min-h-[191px] resize-y pb-8 ${
+                    systemPromptError ? "border-rose-300 ring-rose-100" : ""
+                  }`}
                 />
                 <span className="pointer-events-none absolute bottom-3 right-3 font-mono text-[10px] text-slate-400">
                   {formatCharCount(systemPrompt.length, SYSTEM_PROMPT_MAX)}
                 </span>
               </div>
+              {systemPromptError ? (
+                <p className="mt-2 text-xs text-rose-600">{systemPromptError}</p>
+              ) : null}
+            </ConfigCard>
+
+            {/* <div className="grid gap-6 md:grid-cols-2">
+              <ConfigCard icon={Plug} iconBg="#64748b" title="API Integrations">
+                <ul className="space-y-3">
+                  {["Twilio"].map((name) => (
+                    <li
+                      key={name}
+                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2.5"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="text-sm font-medium text-slate-800">{name}</span>
+                      </div>
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                        Connected
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </ConfigCard>
+
+              <ConfigCard icon={SlidersHorizontal} iconBg={TEAL_DEEP} title="Model Settings">
+                <div className="grid gap-6">
+                  <ModelSlider
+                    label="Temperature"
+                    value={temperature}
+                    onChange={setTemperature}
+                    hint="Controls randomness: lower is more deterministic."
+                  />
+                  <ModelSlider
+                    label="Top P"
+                    value={topP}
+                    onChange={setTopP}
+                    hint="Nucleus sampling: 0.9 means top 90% probability mass."
+                  />
+                </div>
+              </ConfigCard>
+            </div> */}
+          </div>
+
+          <ConfigCard
+            icon={UserCircle}
+            iconBg={TEAL_DEEP}
+            title="Voice Synthesis"
+            subtitle="Powered by ElevenLabs"
+            topSlot={
+              isCreating ? (
+                <CardBadge tone="draft">Draft</CardBadge>
+              ) : (
+                <AgentStatusToggle
+                  status={agentStatus}
+                  loading={statusToggling}
+                  pendingStatus={pendingStatus}
+                  onChange={handleStatusToggle}
+                />
+              )
+            }
+          >
+            <div className="space-y-5">
+              <AgentFormFields {...form} compact hideAgentName />
+              {/* <div className="space-y-5">
+                <RangeField label="Stability" value={stability} onChange={setStability} />
+                <RangeField
+                  label="Clarity & Artifact Amplification"
+                  value={clarity}
+                  onChange={setClarity}
+                />
+              </div> */}
+              {/* <button
+                type="button"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-3 text-sm font-medium transition hover:bg-slate-50"
+                style={{ color: TEAL_DEEP }}
+              >
+                <Play className="h-4 w-4" />
+                Test Voice
+              </button> */}
             </div>
           </ConfigCard>
-
+          {statusError ? (
+            <p className="text-right text-xs text-rose-600">{statusError}</p>
+          ) : null}
         </div>
 
-        <div className="space-y-6">
           {/* <ConfigCard icon={Network} iconBg="#3b82f6" title="Real-time Transport">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -361,43 +607,7 @@ const VoiceAgentConfiguration = ({
             </div>
           </ConfigCard> */}
 
-          <ConfigCard icon={Plug} iconBg="#64748b" title="API Integrations">
-            <ul className="space-y-3">
-              {["Twilio"].map((name) => (
-                <li
-                  key={name}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2.5"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                    <span className="text-sm font-medium text-slate-800">{name}</span>
-                  </div>
-                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
-                    Connected
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </ConfigCard>
-
-          <ConfigCard icon={SlidersHorizontal} iconBg={TEAL_DEEP} title="Model Settings">
-            <div className="grid gap-6">
-              <ModelSlider
-                label="Temperature"
-                value={temperature}
-                onChange={setTemperature}
-                hint="Controls randomness: lower is more deterministic."
-              />
-              <ModelSlider
-                label="Top P"
-                value={topP}
-                onChange={setTopP}
-                hint="Nucleus sampling: 0.9 means top 90% probability mass."
-              />
-            </div>
-          </ConfigCard>
-
-          <ConfigCard icon={FolderOpen} iconBg={TEAL_DEEP} title="Knowledge Base">
+        {/* <ConfigCard icon={FolderOpen} iconBg={TEAL_DEEP} title="Knowledge Base">
             <input
               ref={fileInputRef}
               type="file"
@@ -459,13 +669,12 @@ const VoiceAgentConfiguration = ({
                 ))}
               </ul>
             ) : null}
-          </ConfigCard>
-        </div>
+        </ConfigCard> */}
       </form>
 
-      <div className="flex flex-col gap-4 border-t border-slate-200 pt-6 xl:flex-row xl:items-stretch">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-stretch w-full bg-white sticky bottom-0">
         <div
-          className="flex min-w-0 flex-1 items-center gap-4 rounded-xl px-5 py-4"
+          className="flex min-w-0 flex-1 items-center gap-4 rounded-xl px-5 py-4 hidden"
           style={{ backgroundColor: NAVY }}
         >
           <div
@@ -498,7 +707,17 @@ const VoiceAgentConfiguration = ({
           <button
             type="button"
             onClick={onPushToTalk}
-            className="inline-flex min-w-[160px] flex-1 items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 xl:flex-none"
+            disabled={!canPushToTalk}
+            title={
+              !isConfigurationComplete
+                ? "Complete all required fields before testing"
+                : isCreating
+                  ? "Save the agent before testing"
+                  : agentStatus !== "active"
+                    ? "Activate the agent before testing"
+                    : "Start a voice test"
+            }
+            className="inline-flex min-w-[160px] flex-1 items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 xl:flex-none"
             style={{ backgroundColor: TEAL_DEEP }}
           >
             {pushToTalkLoading ? (
@@ -512,6 +731,7 @@ const VoiceAgentConfiguration = ({
           </button>
           <button
             type="button"
+            onClick={() => setLogsOpen(true)}
             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             <Clock className="h-4 w-4" />
@@ -526,6 +746,14 @@ const VoiceAgentConfiguration = ({
           </button>
         </div>
       </div>
+
+      <CallHistoryDrawer
+        open={logsOpen}
+        onClose={() => setLogsOpen(false)}
+        tenantId={tenantId}
+        agentId={agent?.id}
+        agentName={agentLabel !== "New Agent" ? agentLabel : undefined}
+      />
     </div>
   );
 };

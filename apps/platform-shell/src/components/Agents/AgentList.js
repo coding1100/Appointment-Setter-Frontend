@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Edit,
@@ -134,28 +135,19 @@ const AgenticAgentList = ({
   selectedTenant = "",
   onTenantChange,
 }) => {
-  const [activeTab, setActiveTab] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState("list");
   const [page, setPage] = useState(1);
   const [hoveredId, setHoveredId] = useState(null);
 
-  const serviceTypes = useMemo(() => {
-    const types = [...new Set(agents.map((a) => a.service_type).filter(Boolean))];
-    return types.sort();
-  }, [agents]);
-
   const filteredAgents = useMemo(() => {
     return agents.filter((agent) => {
-      if (activeTab === "favorites") return false;
-      if (typeFilter !== "all" && agent.service_type !== typeFilter) return false;
       const displayStatus = getAgentDisplayStatus(agent.status);
       if (statusFilter === "deployed" && displayStatus !== "DEPLOYED") return false;
       if (statusFilter === "offline" && displayStatus !== "OFFLINE") return false;
       return true;
     });
-  }, [agents, activeTab, typeFilter, statusFilter]);
+  }, [agents, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredAgents.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -166,7 +158,7 @@ const AgenticAgentList = ({
 
   useEffect(() => {
     setPage(1);
-  }, [activeTab, typeFilter, statusFilter]);
+  }, [statusFilter]);
 
   if (agents.length === 0) {
     return (
@@ -204,21 +196,24 @@ const AgenticAgentList = ({
         </div>
         <div className="flex flex-wrap items-end gap-2.5 sm:justify-end">
           {tenants.length > 1 && onTenantChange ? (
-            <label className="flex min-w-[140px] flex-col gap-1">
+            <label className="flex min-w-[160px] flex-col gap-1">
               <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                 Active tenant
               </span>
-              <select
-                value={selectedTenant}
-                onChange={(e) => onTenantChange(e.target.value)}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20"
-              >
-                {tenants.map((tenant) => (
-                  <option key={tenant.id} value={tenant.id}>
-                    {tenant.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={selectedTenant}
+                  onChange={(e) => onTenantChange(e.target.value)}
+                  className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-9 text-sm text-slate-800 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20"
+                >
+                  {tenants.map((tenant) => (
+                    <option key={tenant.id} value={tenant.id}>
+                      {tenant.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              </div>
             </label>
           ) : null}
           <button
@@ -239,51 +234,7 @@ const AgenticAgentList = ({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100/80 p-0.5">
-          <button
-            type="button"
-            onClick={() => setActiveTab("all")}
-            className={`rounded-md px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] transition ${
-              activeTab === "all"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            All agents
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("favorites")}
-            className={`rounded-md px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] transition ${
-              activeTab === "favorites"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            Favorites
-          </button>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-400">
-              Type:
-            </span>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="border-0 bg-transparent text-sm font-medium text-slate-800 focus:outline-none focus:ring-0"
-            >
-              <option value="all">All Types</option>
-              {serviceTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </label>
-
+      <div className="flex flex-wrap items-center justify-between gap-3">
           <label className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
             <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-400">
               Status:
@@ -317,14 +268,9 @@ const AgenticAgentList = ({
               <List className="h-4 w-4" />
             </button>
           </div>
-        </div>
       </div>
 
-      {activeTab === "favorites" && filteredAgents.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
-          No favorite agents yet. Star agents from the list when favorites are enabled.
-        </div>
-      ) : viewMode === "grid" ? (
+      {viewMode === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {pagedAgents.map((agent, index) => {
             const displayStatus = getAgentDisplayStatus(agent.status);
