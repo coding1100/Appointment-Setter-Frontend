@@ -32,6 +32,7 @@ const mergeAppCatalog = (apps = []) => {
     return {
       ...fallback,
       ...app,
+      label: fallback?.label ?? app.label,
       iconKey: app.icon_key || fallback?.iconKey || app.id,
       defaultRoute: app.default_route || fallback?.defaultRoute || '/apps',
     };

@@ -4,7 +4,13 @@ import { Layers, Menu, X } from "lucide-react";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { usePlatform } from "../../contexts/PlatformContext";
-import { APP_ICON_MAP, APP_WORKSPACE_NAV, PLATFORM_APPS } from "../../platform/appCatalog";
+import {
+  APP_HIDDEN_NAV,
+  APP_ICON_MAP,
+  APP_SIDEBAR_GROUPS,
+  APP_WORKSPACE_NAV,
+  PLATFORM_APPS,
+} from "../../platform/appCatalog";
 import { Can } from "../../platform/ability";
 import WorkspaceUserMenu from "./WorkspaceUserMenu";
 
@@ -13,10 +19,20 @@ export const TEAL = "#68fadd";
 export const TEAL_DEEP = "#006b5c";
 const CONTENT_BG = "#ffffff";
 
-const isNavPathActive = (pathname, to) => {
+const navItemMatchesPath = (pathname, item) => {
+  const to = typeof item === "string" ? item : item.to;
   if (to === "/apps") return /^\/apps\/?$/.test(pathname);
-  if (pathname === to) return true;
-  return pathname.startsWith(`${to}/`);
+
+  const paths = [to, ...(typeof item === "string" ? [] : item.activeFor || [])];
+  return paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+};
+
+const resolveActiveNavPath = (pathname, navItems) => {
+  const match = navItems
+    .filter((item) => navItemMatchesPath(pathname, item))
+    .sort((a, b) => b.to.length - a.to.length)[0];
+
+  return match?.to ?? null;
 };
 
 const SidebarNavItem = ({ label, to, active = false, onNavigate }) => {
@@ -44,7 +60,7 @@ const SidebarNavItem = ({ label, to, active = false, onNavigate }) => {
   );
 };
 
-const SidebarNavGroup = ({ title, icon: Icon, items, isPathActive, onNavigate }) => (
+const SidebarNavGroup = ({ title, icon: Icon, items, activeNavPath, onNavigate }) => (
   <section className="mb-5 last:mb-4">
     <div className="flex items-center gap-2.5 px-4">
       <Icon className="h-[15px] w-[15px] shrink-0 text-white/55" strokeWidth={1.75} />
@@ -59,7 +75,7 @@ const SidebarNavGroup = ({ title, icon: Icon, items, isPathActive, onNavigate })
             <SidebarNavItem
               label={item.label}
               to={item.to}
-              active={isPathActive(item.to)}
+              active={item.to === activeNavPath}
               onNavigate={onNavigate}
             />
           </li>
@@ -71,7 +87,6 @@ const SidebarNavGroup = ({ title, icon: Icon, items, isPathActive, onNavigate })
 
 const SidebarContent = ({ brandName, apps, onNavigate }) => {
   const { pathname } = useLocation();
-  const isPathActive = (to) => isNavPathActive(pathname, to);
 
   return (
     <>
@@ -92,6 +107,33 @@ const SidebarContent = ({ brandName, apps, onNavigate }) => {
 
       <div className="flex-1 overflow-y-auto py-6">
         {apps.map((app) => {
+          const sidebarGroups = APP_SIDEBAR_GROUPS[app.id];
+
+          if (sidebarGroups?.length) {
+            return (
+              <Can key={app.id} I="access" a={app.id}>
+                {sidebarGroups.map((group) => {
+                  const Icon = APP_ICON_MAP[group.iconKey] || Layers;
+                  const navItems = group.items.map((item) => ({
+                    label: item.label,
+                    to: item.to,
+                  }));
+
+                  return (
+                    <SidebarNavGroup
+                      key={`${app.id}-${group.label}`}
+                      title={group.label}
+                      icon={Icon}
+                      items={navItems}
+                      activeNavPath={resolveActiveNavPath(pathname, navItems)}
+                      onNavigate={onNavigate}
+                    />
+                  );
+                })}
+              </Can>
+            );
+          }
+
           const Icon = APP_ICON_MAP[app.iconKey || app.id] || Layers;
           const navItems = (APP_WORKSPACE_NAV[app.id] || []).map((item) => ({
             label: item.label,
@@ -106,7 +148,7 @@ const SidebarContent = ({ brandName, apps, onNavigate }) => {
                 title={app.label}
                 icon={Icon}
                 items={navItems}
-                isPathActive={isPathActive}
+                activeNavPath={resolveActiveNavPath(pathname, navItems)}
                 onNavigate={onNavigate}
               />
             </Can>
@@ -135,17 +177,40 @@ export const getWorkspaceBreadcrumb = (pathname) => {
   for (const app of PLATFORM_APPS) {
     const prefix = `/app/${app.slug}`;
     if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
-      const navItems = APP_WORKSPACE_NAV[app.id] || [];
-      const activeNav = navItems
-        .filter((item) => pathname === item.to || pathname.startsWith(`${item.to}/`))
-        .sort((a, b) => b.to.length - a.to.length)[0];
+      const sidebarGroups = APP_SIDEBAR_GROUPS[app.id];
 
-      if (activeNav) {
-        return [
-          { label: "Workspace", muted: true },
-          { label: app.label, muted: true },
-          { label: activeNav.label, accent: true },
+      if (sidebarGroups?.length) {
+        const groupedNavItems = [
+          ...sidebarGroups.flatMap((group) =>
+            group.items.map((item) => ({
+              ...item,
+              groupLabel: group.label,
+            })),
+          ),
+          ...(APP_HIDDEN_NAV[app.id] || []),
         ];
+        const activeNavPath = resolveActiveNavPath(pathname, groupedNavItems);
+        const activeNav = groupedNavItems.find((item) => item.to === activeNavPath);
+
+        if (activeNav) {
+          return [
+            { label: "Workspace", muted: true },
+            { label: activeNav.groupLabel, muted: true },
+            { label: activeNav.label, accent: true },
+          ];
+        }
+      } else {
+        const navItems = APP_WORKSPACE_NAV[app.id] || [];
+        const activeNavPath = resolveActiveNavPath(pathname, navItems);
+        const activeNav = navItems.find((item) => item.to === activeNavPath);
+
+        if (activeNav) {
+          return [
+            { label: "Workspace", muted: true },
+            { label: app.label, muted: true },
+            { label: activeNav.label, accent: true },
+          ];
+        }
       }
 
       return [
