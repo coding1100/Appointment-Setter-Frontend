@@ -387,6 +387,12 @@ const VoiceAgentTest = () => {
     }
   };
 
+  const handleAgentStatusChange = (updatedAgent) => {
+    setConfigAgent(updatedAgent);
+    fetchAgents();
+    fetchAllAgentsForConfig();
+  };
+
   const handlePushToTalk = async () => {
     if (showLiveKitAgent || pushToTalkLoading) {
       return;
@@ -444,6 +450,7 @@ const VoiceAgentTest = () => {
         twilioIntegration={twilioIntegration}
         onDiscard={handleConfigDiscard}
         onSaved={handleConfigSaved}
+        onStatusChange={handleAgentStatusChange}
         onPushToTalk={handlePushToTalk}
         pushToTalkLoading={pushToTalkLoading}
       />
