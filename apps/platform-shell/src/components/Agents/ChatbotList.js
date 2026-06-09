@@ -217,7 +217,7 @@ const ChatbotList = ({ createRequested = 0 }) => {
                 )}
               </div>
               <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#1e293b">
                   Global Runtime Kill Switch
                 </p>
                 <p className="mt-1 text-sm font-semibold" style={{ color: NAVY }}>

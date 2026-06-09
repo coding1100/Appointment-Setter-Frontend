@@ -342,7 +342,7 @@ const AgenticAgentList = ({
               (col) => (
                 <span
                   key={col}
-                  className={`w-full font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 ${
+                  className={`w-full font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#1e293b] ${
                     col === "Agent name / type"
                       ? "justify-self-start text-left"
                       : "text-center"
@@ -402,8 +402,8 @@ const AgenticAgentList = ({
                         <div className="mt-0.5 flex flex-wrap items-center justify-start gap-1.5 text-xs text-slate-500">
                           <Volume2 className="h-3.5 w-3.5 shrink-0" />
                           {agent.language || "en-US"}
-                          <span className="text-slate-300">·</span>
-                          <span className="capitalize">{agent.service_type}</span>
+                          {/* <span className="text-slate-300">·</span> */}
+                          {/* <span className="capitalize">{agent.service_type}</span> */}
                         </div>
                       </div>
                     </div>

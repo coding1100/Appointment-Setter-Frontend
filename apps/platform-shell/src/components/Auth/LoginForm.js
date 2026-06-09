@@ -156,7 +156,7 @@ const LoginForm = () => {
                       Remember me
                     </label>
                     <Link
-                      to="/forgot-password"
+                      to="/mindrind/admin/forgot-password"
                       className="font-medium text-[#006b5c] transition hover:text-[#005548]"
                     >
                       Forgot password?
@@ -175,7 +175,7 @@ const LoginForm = () => {
                 <p className="mt-8 text-center text-sm text-slate-500">
                   Don&apos;t have an account?{' '}
                   <Link
-                    to="/register"
+                    to="/mindrind/admin/signup"
                     className="font-medium text-[#006b5c] transition hover:text-[#005548]"
                   >
                     Create one

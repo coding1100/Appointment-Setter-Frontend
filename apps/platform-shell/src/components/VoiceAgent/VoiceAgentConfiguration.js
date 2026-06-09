@@ -24,12 +24,7 @@ import { NAVY, TEAL, TEAL_DEEP } from "../Platform/WorkspaceShellLayout";
 
 const SYSTEM_PROMPT_MAX = 4000;
 
-const PROMPT_TEMPLATES = [
-  {
-    id: "custom",
-    label: "Custom prompt",
-    text: "",
-  },
+const FALLBACK_PROMPT_TEMPLATES = [
   {
     id: "receptionist",
     label: "Receptionist",
@@ -242,6 +237,8 @@ const VoiceAgentConfiguration = ({
   // const [clarity, setClarity] = useState(45);
   const [systemPrompt, setSystemPrompt] = useState("");
   const [promptTemplate, setPromptTemplate] = useState("");
+  const [promptTemplates, setPromptTemplates] = useState(FALLBACK_PROMPT_TEMPLATES);
+  const [systemPromptLoading, setSystemPromptLoading] = useState(false);
   // const [temperature, setTemperature] = useState(0.7);
   // const [topP, setTopP] = useState(0.9);
   const [knowledgeFiles, setKnowledgeFiles] = useState([]);
@@ -281,6 +278,75 @@ const VoiceAgentConfiguration = ({
     setStatusError("");
   }, [agent?.id, agent?.status]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPromptTemplates = async () => {
+      try {
+        const response = await agentAPI.getPromptTemplates();
+        const templates = response.data?.templates || [];
+        if (!cancelled && templates.length > 0) {
+          setPromptTemplates(templates);
+        }
+      } catch {
+        if (!cancelled) {
+          setPromptTemplates(FALLBACK_PROMPT_TEMPLATES);
+        }
+      }
+    };
+
+    loadPromptTemplates();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSystemPrompt = async () => {
+      if (!agent) {
+        setSystemPrompt("");
+        setPromptTemplate("");
+        setSystemPromptError("");
+        return;
+      }
+
+      if (agent.system_prompt?.trim()) {
+        setSystemPrompt(agent.system_prompt.slice(0, SYSTEM_PROMPT_MAX));
+        setPromptTemplate("");
+        setSystemPromptError("");
+        return;
+      }
+
+      setSystemPromptLoading(true);
+      try {
+        const response = await agentAPI.getDefaultPromptPreview(
+          agent.service_type || "Home Services",
+          agent.name || "Assistant",
+        );
+        if (!cancelled) {
+          setSystemPrompt((response.data?.prompt || "").slice(0, SYSTEM_PROMPT_MAX));
+          setPromptTemplate("");
+          setSystemPromptError("");
+        }
+      } catch {
+        if (!cancelled) {
+          setSystemPrompt("");
+        }
+      } finally {
+        if (!cancelled) {
+          setSystemPromptLoading(false);
+        }
+      }
+    };
+
+    loadSystemPrompt();
+    return () => {
+      cancelled = true;
+    };
+  }, [agent?.id, agent?.system_prompt, agent?.service_type, agent?.name]);
+
   const handleStatusToggle = async (nextStatus) => {
     if (!agent?.id || isCreating || statusToggling) return;
     if (nextStatus === agentStatus) return;
@@ -319,14 +385,14 @@ const VoiceAgentConfiguration = ({
     }
 
     setSystemPromptError("");
-    await form.handleSubmit(e);
+    await form.handleSubmit(e, { system_prompt: systemPrompt.trim() });
   };
 
   const handlePromptTemplateChange = (e) => {
     const templateId = e.target.value;
     setPromptTemplate(templateId);
     if (!templateId) return;
-    const template = PROMPT_TEMPLATES.find((item) => item.id === templateId);
+    const template = promptTemplates.find((item) => item.id === templateId);
     if (template?.text) {
       setSystemPrompt(template.text.slice(0, SYSTEM_PROMPT_MAX));
     }
@@ -439,7 +505,7 @@ const VoiceAgentConfiguration = ({
               icon={Terminal}
               iconBg={TEAL_DEEP}
               title="Core Configuration"
-              subtitle="System prompt *"
+              subtitle="System prompt"
               headerAction={
                 <label className="relative inline-flex items-center">
                   <select
@@ -448,7 +514,7 @@ const VoiceAgentConfiguration = ({
                     className="appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm font-medium text-slate-700 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20"
                   >
                     <option value="">Prompt Templates</option>
-                    {PROMPT_TEMPLATES.filter((t) => t.id !== "custom").map((template) => (
+                    {promptTemplates.map((template) => (
                       <option key={template.id} value={template.id}>
                         {template.label}
                       </option>
@@ -463,12 +529,13 @@ const VoiceAgentConfiguration = ({
                   id="system-prompt"
                   value={systemPrompt}
                   onChange={handleSystemPromptChange}
-                  placeholder="Enter the foundational instructions for the agent..."
+                  placeholder="Enter the foundational instructions for the agent... *"
                   rows={7}
                   required
+                  disabled={systemPromptLoading}
                   aria-label="System prompt"
                   aria-invalid={Boolean(systemPromptError)}
-                  className={`${fieldClass} min-h-[191px] resize-y pb-8 ${
+                  className={`${fieldClass} min-h-[191px] resize-y pb-8 disabled:cursor-wait disabled:bg-slate-50 ${
                     systemPromptError ? "border-rose-300 ring-rose-100" : ""
                   }`}
                 />
@@ -524,7 +591,7 @@ const VoiceAgentConfiguration = ({
             icon={UserCircle}
             iconBg={TEAL_DEEP}
             title="Voice Synthesis"
-            subtitle="Powered by ElevenLabs"
+            // subtitle="Powered by ElevenLabs"
             topSlot={
               isCreating ? (
                 <CardBadge tone="draft">Draft</CardBadge>
@@ -737,13 +804,13 @@ const VoiceAgentConfiguration = ({
             <Clock className="h-4 w-4" />
             Logs
           </button>
-          <button
+          {/* <button
             type="button"
             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             <BarChart3 className="h-4 w-4" />
             Metrics
-          </button>
+          </button> */}
         </div>
       </div>
 
