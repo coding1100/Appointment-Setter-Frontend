@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshCcw } from "lucide-react";
+import { CheckCircle, RefreshCw, XCircle } from "lucide-react";
 
 import { authAPI, orgAPI, platformAPI } from "../../services/api";
 import Loader from "../Loader";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePlatform } from "../../contexts/PlatformContext";
+import { NAVY } from "../Platform/WorkspaceShellLayout";
 import {
   EMPTY_PARTNER_FORM,
   EMPTY_ROLE_FORM,
@@ -556,8 +557,20 @@ const UsersManagement = ({ section = "platform-users" }) => {
     return mapped;
   }, [users]);
 
-  if (showPlatformUsers && (loadingUsers || (canViewPlatformRoles && loadingRoles))) return <Loader message="Loading users..." />;
-  if (((showPartners && canViewPartners) || (showCustomers && canViewCustomers)) && loadingOrgs) return <Loader message="Loading organizations..." />;
+  if (showPlatformUsers && (loadingUsers || (canViewPlatformRoles && loadingRoles))) {
+    return (
+      <div className="flex min-h-[280px] items-center justify-center">
+        <Loader message="Loading users..." />
+      </div>
+    );
+  }
+  if (((showPartners && canViewPartners) || (showCustomers && canViewCustomers)) && loadingOrgs) {
+    return (
+      <div className="flex min-h-[280px] items-center justify-center">
+        <Loader message="Loading organizations..." />
+      </div>
+    );
+  }
 
   if (showPlatformUsers && !canViewPlatformUsers) return <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800">You do not have permission to view platform users.</div>;
   if (showPartners && !canViewPartners) return <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800">You do not have permission to view partners.</div>;
@@ -566,14 +579,16 @@ const UsersManagement = ({ section = "platform-users" }) => {
   const meta = SECTION_META[section] || SECTION_META["platform-users"];
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+    <div className="space-y-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{meta.eyebrow}</p>
-          <h1 className="text-2xl font-semibold text-slate-900">{meta.title}</h1>
-          <p className="text-sm text-slate-600">{meta.description}</p>
+          <h1 className="text-2xl font-semibold tracking-tight" style={{ color: NAVY }}>
+            {meta.title}
+          </h1>
+          <p className="mt-0.5 max-w-2xl text-sm text-slate-500">{meta.description}</p>
         </div>
         <button
+          type="button"
           onClick={() => {
             setSuccess("");
             if (showPlatformUsers) {
@@ -585,16 +600,31 @@ const UsersManagement = ({ section = "platform-users" }) => {
               fetchOrgs();
             }
           }}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700"
+          className="inline-flex shrink-0 items-center gap-2 self-start rounded-lg border border-slate-200 bg-white px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-700 transition hover:bg-slate-50 sm:self-auto"
         >
-          <RefreshCcw className="h-4 w-4" />
+          <RefreshCw className="h-4 w-4" strokeWidth={2} />
           Refresh
         </button>
       </div>
 
-      {error ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">{error}</div> : null}
-      {orgError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">{orgError}</div> : null}
-      {success ? <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">{success}</div> : null}
+      {error ? (
+        <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+          <XCircle className="h-5 w-5 shrink-0" />
+          <span>{error}</span>
+        </div>
+      ) : null}
+      {orgError ? (
+        <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+          <XCircle className="h-5 w-5 shrink-0" />
+          <span>{orgError}</span>
+        </div>
+      ) : null}
+      {success ? (
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <CheckCircle className="h-5 w-5 shrink-0" />
+          <span>{success}</span>
+        </div>
+      ) : null}
 
       {showPlatformUsers ? (
         <PlatformUsersSection

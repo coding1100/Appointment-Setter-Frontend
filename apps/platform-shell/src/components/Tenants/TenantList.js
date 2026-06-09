@@ -158,7 +158,7 @@ const TenantList = () => {
             {["Customer / tenant", "Created", "Updated", "Actions"].map((col) => (
               <span
                 key={col}
-                className={`w-full font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 ${
+                className={`w-full font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#1e293b] ${
                   col === "Customer / tenant" ? "justify-self-start text-left" : "text-center"
                 }`}
               >
