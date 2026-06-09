@@ -48,7 +48,7 @@ const StatCard = ({ label, value, icon: Icon }) => (
   <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
     <div className="flex items-start justify-between gap-3">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#1e293b]">
           {label}
         </p>
         <p className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: NAVY }}>
@@ -148,7 +148,7 @@ const Dashboard = () => {
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <div className="flex flex-col gap-1 border-b border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#1e293b]">
                 Appointments
               </p>
               <h2 className="mt-0.5 text-lg font-semibold tracking-tight" style={{ color: NAVY }}>
