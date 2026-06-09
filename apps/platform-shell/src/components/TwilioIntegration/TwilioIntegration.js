@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { getAppName } from "../../utils/appName";
 import { NAVY, TEAL, TEAL_DEEP } from "../Platform/WorkspaceShellLayout";
+import StyledSelect from "../../shared/ui/StyledSelect";
 
 // Get API base URL for direct fetch calls (should NOT include /api/v1)
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8001";
@@ -47,6 +48,31 @@ const SectionIcon = ({ icon: Icon }) => (
     <Icon className="h-4 w-4" style={{ color: TEAL }} strokeWidth={1.75} />
   </div>
 );
+
+const formatTwilioCredentialError = (result, fallback) => {
+  const base =
+    (typeof result?.message === "string" && result.message) ||
+    (typeof result?.detail === "string" && result.detail) ||
+    fallback;
+
+  if (typeof base !== "string") {
+    return fallback;
+  }
+
+  const lower = base.toLowerCase();
+  const hint = "Please verify your Twilio credentials again.";
+  const isAuthError =
+    lower.includes("authenticate") ||
+    lower.includes("401") ||
+    lower.includes("authentication failed") ||
+    lower.includes("credential test failed");
+
+  if (isAuthError && !lower.includes(hint.toLowerCase())) {
+    return `${base.replace(/\.$/, "")}. ${hint}`;
+  }
+
+  return base;
+};
 
 const TwilioIntegration = () => {
   const [tenants, setTenants] = useState([]);
@@ -224,7 +250,7 @@ const TwilioIntegration = () => {
         setSuccess("Credentials tested successfully!");
       } else {
         setError(
-          result.detail || result.message || "Failed to test credentials",
+          formatTwilioCredentialError(result, "Failed to test credentials"),
         );
       }
     } catch (error) {
@@ -371,12 +397,12 @@ const TwilioIntegration = () => {
         );
         fetchIntegration();
       } else {
-        // Show detailed error message
-        const errorMsg =
-          result.detail ||
-          result.message ||
-          `Server returned ${response.status}: ${response.statusText}`;
-        setError(errorMsg);
+        setError(
+          formatTwilioCredentialError(
+            result,
+            `Server returned ${response.status}: ${response.statusText}`,
+          ),
+        );
       }
     } catch (error) {
       console.error("Error saving integration:", error);
@@ -645,20 +671,19 @@ const TwilioIntegration = () => {
         </div>
 
         <div className="mb-4">
-          <label className="mb-1.5 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+          <label className="mb-2 block text-sm font-medium text-slate-800">
             Active tenant
           </label>
-          <select
+          <StyledSelect
             value={selectedTenant}
             onChange={(e) => setSelectedTenant(e.target.value)}
-            className={fieldClass}
           >
             {tenants.map((tenant) => (
               <option key={tenant.id} value={tenant.id}>
                 {tenant.name}
               </option>
             ))}
-          </select>
+          </StyledSelect>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -824,10 +849,9 @@ const TwilioIntegration = () => {
               <label className="mb-2 block text-sm font-medium text-slate-800">
                 Select Agent
               </label>
-              <select
+              <StyledSelect
                 value={selectedAgentId}
                 onChange={(e) => setSelectedAgentId(e.target.value)}
-                className={fieldClass}
               >
                 <option value="">Choose an agent</option>
                 {agents.map((a) => (
@@ -835,20 +859,19 @@ const TwilioIntegration = () => {
                     {a.name}
                   </option>
                 ))}
-              </select>
+              </StyledSelect>
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-800">
                 Action
               </label>
-              <select
+              <StyledSelect
                 value={flowMode}
                 onChange={(e) => {
                   setFlowMode(e.target.value);
                   setAvailableNumbers([]);
                   setUnassignedNumbers([]);
                 }}
-                className={fieldClass}
               >
                 {integration ? (
                   <>
@@ -860,7 +883,7 @@ const TwilioIntegration = () => {
                 ) : (
                   <option value="system">Buy from system account</option>
                 )}
-              </select>
+              </StyledSelect>
             </div>
             <div className="flex items-end">
               {(flowMode === "tenant" || flowMode === "system") && (
@@ -973,7 +996,7 @@ const TwilioIntegration = () => {
                   }
                   className={fieldClass}
                 />
-                <select
+                <StyledSelect
                   value={searchParams.numberType}
                   onChange={(e) =>
                     setSearchParams((p) => ({
@@ -981,11 +1004,10 @@ const TwilioIntegration = () => {
                       numberType: e.target.value,
                     }))
                   }
-                  className={fieldClass}
                 >
                   <option value="local">Local</option>
                   <option value="tollfree">Toll-Free</option>
-                </select>
+                </StyledSelect>
                 <input
                   type="text"
                   placeholder="Area code (optional)"

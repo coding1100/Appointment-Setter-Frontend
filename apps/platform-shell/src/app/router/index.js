@@ -139,20 +139,36 @@ export const createAppRouter = () =>
           element: withSuspense(LoginForm, "Preparing sign in..."),
         },
         {
-          path: "/register",
+          path: "/mindrind/admin/signup",
           element: withSuspense(RegisterForm, "Preparing registration..."),
         },
         {
-          path: "/forgot-password",
+          path: "/mindrind/admin/forgot-password",
           element: withSuspense(ForgotPasswordForm, "Preparing password reset..."),
         },
         {
-          path: "/setup-password",
+          path: "/mindrind/admin/setup-password",
           element: withSuspense(SetupPasswordForm, "Preparing account setup..."),
         },
         {
-          path: "/reset-password",
+          path: "/mindrind/admin/reset-password",
           element: withSuspense(ResetPasswordForm, "Preparing password reset..."),
+        },
+        {
+          path: "/register",
+          element: <Navigate to="/mindrind/admin/signup" replace />,
+        },
+        {
+          path: "/forgot-password",
+          element: <Navigate to="/mindrind/admin/forgot-password" replace />,
+        },
+        {
+          path: "/setup-password",
+          element: <Navigate to="/mindrind/admin/setup-password" replace />,
+        },
+        {
+          path: "/reset-password",
+          element: <Navigate to="/mindrind/admin/reset-password" replace />,
         },
       ],
     },

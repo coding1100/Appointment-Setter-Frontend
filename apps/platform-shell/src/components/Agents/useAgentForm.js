@@ -28,6 +28,7 @@ const defaultFormData = {
   language: "en-US",
   greeting_message: "",
   service_type: "Home Services",
+  system_prompt: "",
 };
 
 export const useAgentForm = ({
@@ -68,6 +69,7 @@ export const useAgentForm = ({
         language: agent.language || "en-US",
         greeting_message: agent.greeting_message || "",
         service_type: agent.service_type || "Home Services",
+        system_prompt: agent.system_prompt || "",
       });
     } else {
       setFormData(defaultFormData);
@@ -113,13 +115,21 @@ export const useAgentForm = ({
 
   const getVoiceById = (voiceId) => voices.find((v) => v.voice_id === voiceId);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, overrides = {}) => {
     if (e?.preventDefault) e.preventDefault();
     setLoading(true);
     setError("");
     setFieldErrors({});
 
-    const greetingError = validateGreetingMessage(formData.greeting_message);
+    const payload = { ...formData, ...overrides };
+    const trimmedSystemPrompt = payload.system_prompt?.trim() || "";
+    if (trimmedSystemPrompt) {
+      payload.system_prompt = trimmedSystemPrompt;
+    } else {
+      delete payload.system_prompt;
+    }
+
+    const greetingError = validateGreetingMessage(payload.greeting_message);
     if (greetingError) {
       setFieldErrors({ greeting_message: greetingError });
       setLoading(false);
@@ -127,7 +137,7 @@ export const useAgentForm = ({
     }
 
     if (!agent) {
-      const duplicate = checkForDuplicate(formData);
+      const duplicate = checkForDuplicate(payload);
       if (duplicate) {
         setError(
           "An agent with this name already exists. Please choose a different name.",
@@ -139,10 +149,10 @@ export const useAgentForm = ({
 
     try {
       if (agent) {
-        const response = await agentAPI.updateAgent(agent.id, formData);
-        onSuccess?.(response.data || { ...agent, ...formData });
+        const response = await agentAPI.updateAgent(agent.id, payload);
+        onSuccess?.(response.data || { ...agent, ...payload });
       } else {
-        const response = await agentAPI.createAgent(tenantId, formData);
+        const response = await agentAPI.createAgent(tenantId, payload);
         onSuccess?.(response.data);
       }
       return true;

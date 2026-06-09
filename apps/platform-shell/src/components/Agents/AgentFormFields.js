@@ -2,9 +2,71 @@ import React from "react";
 import { Loader } from "lucide-react";
 
 import { AGENT_LANGUAGES, AGENT_SERVICE_TYPES } from "./useAgentForm";
+import { useVoicePreview } from "../../shared/audio/useVoicePreview";
+import StyledSelect, { selectClass } from "../../shared/ui/StyledSelect";
 
 const fieldClass =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20";
+
+const VoiceSelectField = ({
+  formData,
+  voices,
+  voicesLoading,
+  handleChange,
+  className = fieldClass,
+  styled = false,
+}) => {
+  const { handleVoiceSelect } = useVoicePreview(formData.voice_id);
+
+  const onVoiceChange = (event) => {
+    handleVoiceSelect(event, handleChange);
+  };
+
+  if (voicesLoading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-slate-500">
+        <Loader className="h-4 w-4 animate-spin" />
+        Loading voices...
+      </div>
+    );
+  }
+
+  const options = (
+    <>
+      <option value="">Select a voice</option>
+      {voices.map((voice) => (
+        <option key={voice.voice_id} value={voice.voice_id}>
+          {voice.name} - {voice.description} ({voice.category})
+        </option>
+      ))}
+    </>
+  );
+
+  if (styled) {
+    return (
+      <StyledSelect
+        name="voice_id"
+        value={formData.voice_id}
+        onChange={onVoiceChange}
+        required
+      >
+        {options}
+      </StyledSelect>
+    );
+  }
+
+  return (
+    <select
+      name="voice_id"
+      value={formData.voice_id}
+      onChange={onVoiceChange}
+      required
+      className={className}
+    >
+      {options}
+    </select>
+  );
+};
 
 const AgentFormFields = ({
   formData,
@@ -13,14 +75,12 @@ const AgentFormFields = ({
   fieldErrors,
   handleChange,
   handleBlur,
-  getVoiceById,
   compact = false,
   hideAgentName = false,
 }) => (
   <div className={compact ? "space-y-4" : "space-y-6"}>
     {!hideAgentName ? (
       <div>
-        {/* <label className="mb-1.5 block text-sm font-medium text-slate-800">Agent Name *</label> */}
         <input
           type="text"
           name="name"
@@ -30,86 +90,48 @@ const AgentFormFields = ({
           required
           className={fieldClass}
         />
-        {/* <p className="mt-1 text-xs text-slate-500">Give your agent a friendly name</p> */}
       </div>
     ) : null}
 
     {compact ? (
-      <div className="grid gap-4 grid-cols-2">
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-slate-800">Language *</label>
-          <select
+          <StyledSelect
             name="language"
             value={formData.language}
             onChange={handleChange}
             required
-            className={fieldClass}
           >
             {AGENT_LANGUAGES.map((lang) => (
               <option key={lang.code} value={lang.code}>
                 {lang.name}
               </option>
             ))}
-          </select>
+          </StyledSelect>
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-slate-800">Voice *</label>
-          {voicesLoading ? (
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <Loader className="h-4 w-4 animate-spin" />
-              Loading voices...
-            </div>
-          ) : (
-            <select
-              name="voice_id"
-              value={formData.voice_id}
-              onChange={handleChange}
-              required
-              className={fieldClass}
-            >
-              <option value="">Select a voice</option>
-              {voices.map((voice) => (
-                <option key={voice.voice_id} value={voice.voice_id}>
-                  {voice.name} - {voice.description} ({voice.category})
-                </option>
-              ))}
-            </select>
-          )}
+          <VoiceSelectField
+            formData={formData}
+            voices={voices}
+            voicesLoading={voicesLoading}
+            handleChange={handleChange}
+            styled
+          />
         </div>
       </div>
     ) : (
       <div>
         <label className="mb-1.5 block text-sm font-medium text-slate-800">Voice *</label>
-        {voicesLoading ? (
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <Loader className="h-4 w-4 animate-spin" />
-            Loading voices...
-          </div>
-        ) : (
-          <select
-            name="voice_id"
-            value={formData.voice_id}
-            onChange={handleChange}
-            required
-            className={fieldClass}
-          >
-            <option value="">Select a voice</option>
-            {voices.map((voice) => (
-              <option key={voice.voice_id} value={voice.voice_id}>
-                {voice.name} - {voice.description} ({voice.category})
-              </option>
-            ))}
-          </select>
-        )}
+        <VoiceSelectField
+          formData={formData}
+          voices={voices}
+          voicesLoading={voicesLoading}
+          handleChange={handleChange}
+        />
       </div>
     )}
-
-    {/* {formData.voice_id && getVoiceById(formData.voice_id) ? (
-      <p className="text-xs text-[#006b5c]">
-        {getVoiceById(formData.voice_id).name} · Best for:{" "}
-        {getVoiceById(formData.voice_id).use_case?.replace(/_/g, " ")}
-      </p>
-    ) : null} */}
 
     {!compact ? (
       <div className="grid gap-4 sm:grid-cols-2">
@@ -146,26 +168,7 @@ const AgentFormFields = ({
           </select>
         </div>
       </div>
-    ) : (
-      <>
-        {/* <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-800">Service Type *</label>
-          <select
-            name="service_type"
-            value={formData.service_type}
-            onChange={handleChange}
-            required
-            className={fieldClass}
-          >
-            {AGENT_SERVICE_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div> */}
-      </>
-    )}
+    ) : null}
 
     <div>
       <label className="mb-1.5 block text-sm font-medium text-slate-800">Greeting Message *</label>
