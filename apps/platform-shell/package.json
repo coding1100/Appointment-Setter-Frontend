@@ -4,9 +4,9 @@
   "private": true,
   "description": "Platform shell app for SamAI Rep frontend monorepo",
   "scripts": {
-    "start": "react-scripts start",
-    "dev": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "node init && react-scripts start",
+    "dev": "node init && react-scripts start",
+    "build": "node init && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

@@ -354,6 +354,9 @@ export const agentAPI = {
     api.get('/api/v1/agents/prompt-preview', {
       params: { service_type: serviceType, agent_name: agentName },
     }),
+  getPromptEnhancementInstruction: () =>
+    api.get('/api/v1/agents/prompt/enhancement-instruction'),
+  enhancePrompt: (payload) => api.post('/api/v1/agents/prompt/enhance', payload),
 };
 
 export const chatbotAgentAPI = {

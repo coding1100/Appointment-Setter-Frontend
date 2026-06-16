@@ -4,6 +4,7 @@ import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
 
 import { useAuth } from '../../contexts/AuthContext';
+import { getLandingRouteForUser } from '../../platform/landingRoute';
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({
@@ -37,7 +38,7 @@ const LoginForm = () => {
     const result = await login(formData);
 
     if (result.success) {
-      navigate('/apps');
+      navigate(getLandingRouteForUser(result.user));
     } else {
       setError(result.error);
     }

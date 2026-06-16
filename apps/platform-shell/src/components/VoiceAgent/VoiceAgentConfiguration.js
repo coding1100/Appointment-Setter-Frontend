@@ -6,14 +6,17 @@ import {
   Clock,
   FolderOpen,
   Loader2,
+  Maximize2,
   Mic,
   Paperclip,
   Play,
   Plug,
   SlidersHorizontal,
+  Sparkles,
   Terminal,
   Upload,
   UserCircle,
+  X,
 } from "lucide-react";
 
 import AgentFormFields from "../Agents/AgentFormFields";
@@ -23,6 +26,7 @@ import CallHistoryDrawer from "./CallHistoryDrawer";
 import { NAVY, TEAL, TEAL_DEEP } from "../Platform/WorkspaceShellLayout";
 
 const SYSTEM_PROMPT_MAX = 4000;
+const ENHANCED_PROMPT_MAX = 3899;
 
 const FALLBACK_PROMPT_TEMPLATES = [
   {
@@ -249,6 +253,9 @@ const VoiceAgentConfiguration = ({
   const [pendingStatus, setPendingStatus] = useState(null);
   const [statusError, setStatusError] = useState("");
   const [systemPromptError, setSystemPromptError] = useState("");
+  const [enhancePromptLoading, setEnhancePromptLoading] = useState(false);
+  const [enhancePromptError, setEnhancePromptError] = useState("");
+  const [systemPromptExpanded, setSystemPromptExpanded] = useState(false);
   const fileInputRef = useRef(null);
 
   const form = useAgentForm({
@@ -273,10 +280,32 @@ const VoiceAgentConfiguration = ({
     agentStatus === "active" &&
     !pushToTalkLoading;
 
+  const showEnhancePrompt = Boolean(systemPrompt.trim());
+  const canEnhancePrompt = showEnhancePrompt && !systemPromptLoading && !enhancePromptLoading;
+
   useEffect(() => {
     setAgentStatus(agent?.status || "inactive");
     setStatusError("");
   }, [agent?.id, agent?.status]);
+
+  useEffect(() => {
+    if (!systemPromptExpanded) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setSystemPromptExpanded(false);
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [systemPromptExpanded]);
 
   useEffect(() => {
     let cancelled = false;
@@ -404,6 +433,49 @@ const VoiceAgentConfiguration = ({
     if (systemPromptError) {
       setSystemPromptError("");
     }
+    if (enhancePromptError) {
+      setEnhancePromptError("");
+    }
+  };
+
+  const openSystemPromptExpanded = () => {
+    if (systemPromptLoading || enhancePromptLoading) return;
+    setSystemPromptExpanded(true);
+  };
+
+  const systemPromptTextareaClassName = `${fieldClass} resize-y pb-8 disabled:cursor-wait disabled:bg-slate-50 ${
+    systemPromptError ? "border-rose-300 ring-rose-100" : ""
+  }`;
+
+  const handleEnhancePrompt = async () => {
+    const draft = systemPrompt.trim();
+    if (!draft || enhancePromptLoading || systemPromptLoading) return;
+
+    setEnhancePromptLoading(true);
+    setEnhancePromptError("");
+
+    try {
+      const response = await agentAPI.enhancePrompt({
+        draft_prompt: draft,
+        service_type: form.formData.service_type || undefined,
+      });
+      const enhancedPrompt = response.data?.enhanced_prompt || "";
+      if (!enhancedPrompt.trim()) {
+        setEnhancePromptError("No enhanced prompt was returned. Please try again.");
+        return;
+      }
+      setSystemPrompt(enhancedPrompt.slice(0, ENHANCED_PROMPT_MAX));
+      setPromptTemplate("");
+      setSystemPromptError("");
+    } catch (error) {
+      setEnhancePromptError(
+        error.response?.data?.detail ||
+          error.response?.data?.message ||
+          "Failed to enhance prompt. Please try again.",
+      );
+    } finally {
+      setEnhancePromptLoading(false);
+    }
   };
 
   const addKnowledgeFiles = (fileList) => {
@@ -507,21 +579,39 @@ const VoiceAgentConfiguration = ({
               title="Core Configuration"
               subtitle="System prompt"
               headerAction={
-                <label className="relative inline-flex items-center">
-                  <select
-                    value={promptTemplate}
-                    onChange={handlePromptTemplateChange}
-                    className="appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm font-medium text-slate-700 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20"
-                  >
-                    <option value="">Prompt Templates</option>
-                    {promptTemplates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-slate-400" />
-                </label>
+                <div className="flex items-center gap-2">
+                  {showEnhancePrompt ? (
+                    <button
+                      type="button"
+                      onClick={handleEnhancePrompt}
+                      disabled={!canEnhancePrompt}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#68fadd]/40 bg-[#68fadd]/10 px-3 py-2 text-sm font-medium text-[#006b5c] transition hover:bg-[#68fadd]/20 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {enhancePromptLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                      {enhancePromptLoading ? "Enhancing..." : "Enhance Prompt"}
+                    </button>
+                  ) : null}
+                  <label className="relative inline-flex items-center">
+                    <select
+                      value={promptTemplate}
+                      onChange={handlePromptTemplateChange}
+                      disabled={enhancePromptLoading}
+                      className="appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm font-medium text-slate-700 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20 disabled:cursor-not-allowed disabled:bg-slate-50"
+                    >
+                      <option value="">Prompt Templates</option>
+                      {promptTemplates.map((template) => (
+                        <option key={template.id} value={template.id}>
+                          {template.label}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-slate-400" />
+                  </label>
+                </div>
               }
             >
               <div className="relative">
@@ -529,20 +619,32 @@ const VoiceAgentConfiguration = ({
                   id="system-prompt"
                   value={systemPrompt}
                   onChange={handleSystemPromptChange}
+                  onDoubleClick={openSystemPromptExpanded}
                   placeholder="Enter the foundational instructions for the agent... *"
                   rows={7}
                   required
-                  disabled={systemPromptLoading}
+                  disabled={systemPromptLoading || enhancePromptLoading}
                   aria-label="System prompt"
                   aria-invalid={Boolean(systemPromptError)}
-                  className={`${fieldClass} min-h-[191px] resize-y pb-8 disabled:cursor-wait disabled:bg-slate-50 ${
-                    systemPromptError ? "border-rose-300 ring-rose-100" : ""
-                  }`}
+                  title="Double-click to expand"
+                  className={`${systemPromptTextareaClassName} min-h-[191px]`}
                 />
+                <button
+                  type="button"
+                  onClick={openSystemPromptExpanded}
+                  disabled={systemPromptLoading || enhancePromptLoading}
+                  className="absolute bottom-3 left-3 inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 transition hover:border-[#68fadd]/50 hover:bg-[#68fadd]/10 hover:text-[#006b5c] disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Expand system prompt"
+                >
+                  <Maximize2 className="h-4 w-4" />
+                </button>
                 <span className="pointer-events-none absolute bottom-3 right-3 font-mono text-[10px] text-slate-400">
                   {formatCharCount(systemPrompt.length, SYSTEM_PROMPT_MAX)}
                 </span>
               </div>
+              {enhancePromptError ? (
+                <p className="mt-2 text-xs text-rose-600">{enhancePromptError}</p>
+              ) : null}
               {systemPromptError ? (
                 <p className="mt-2 text-xs text-rose-600">{systemPromptError}</p>
               ) : null}
@@ -796,14 +898,16 @@ const VoiceAgentConfiguration = ({
               "Push to Talk"
             )}
           </button>
-          <button
-            type="button"
-            onClick={() => setLogsOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
-            <Clock className="h-4 w-4" />
-            Logs
-          </button>
+          {!isCreating && (
+            <button
+              type="button"
+              onClick={() => setLogsOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <Clock className="h-4 w-4" />
+              Logs
+            </button>
+          )}
           {/* <button
             type="button"
             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
@@ -821,6 +925,74 @@ const VoiceAgentConfiguration = ({
         agentId={agent?.id}
         agentName={agentLabel !== "New Agent" ? agentLabel : undefined}
       />
+
+      {systemPromptExpanded ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          <button
+            type="button"
+            className="absolute inset-0 bg-[#1a1a2e]/60 backdrop-blur-[2px]"
+            aria-label="Close expanded system prompt"
+            onClick={() => setSystemPromptExpanded(false)}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="system-prompt-expanded-title"
+            className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl"
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 sm:px-5">
+              <div>
+                <h2
+                  id="system-prompt-expanded-title"
+                  className="text-base font-semibold"
+                  style={{ color: NAVY }}
+                >
+                  System prompt
+                </h2>
+                <p className="mt-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  Expanded view
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSystemPromptExpanded(false)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+                aria-label="Close expanded view"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="relative min-h-0 flex-1 p-4 sm:p-5">
+              <textarea
+                value={systemPrompt}
+                onChange={handleSystemPromptChange}
+                placeholder="Enter the foundational instructions for the agent... *"
+                disabled={systemPromptLoading || enhancePromptLoading}
+                aria-label="System prompt expanded editor"
+                aria-invalid={Boolean(systemPromptError)}
+                autoFocus
+                className={`${systemPromptTextareaClassName} h-[min(68vh,720px)] min-h-[320px] w-full font-mono text-[13px] leading-6`}
+              />
+              <span className="pointer-events-none absolute bottom-7 right-7 font-mono text-[10px] text-slate-400">
+                {formatCharCount(systemPrompt.length, SYSTEM_PROMPT_MAX)}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 sm:px-5">
+              <p className="text-xs text-slate-500">Press Esc to close</p>
+              <button
+                type="button"
+                onClick={() => setSystemPromptExpanded(false)}
+                className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                style={{ backgroundColor: TEAL_DEEP }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
