@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
       setToken(access_token || 'cookie-session');
       setUser(userData);
       
-      return { success: true };
+      return { success: true, user: userData };
     } catch (error) {
       return { 
         success: false, 

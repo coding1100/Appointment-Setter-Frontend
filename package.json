@@ -3,16 +3,16 @@
   "private": true,
   "packageManager": "pnpm@9.15.2",
   "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
+    "dev": "node init && turbo dev",
+    "build": "node init && turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
-    "dev:platform-shell": "pnpm --filter @mindrind/platform-shell dev",
-    "dev:appointment-setter": "pnpm --filter @mindrind/appointment-setter-app dev",
-    "dev:chatbot-agents": "pnpm --filter @mindrind/chatbot-agents-app dev",
-    "build:platform-shell": "pnpm --filter @mindrind/platform-shell build",
-    "build:appointment-setter": "pnpm --filter @mindrind/appointment-setter-app build",
-    "build:chatbot-agents": "pnpm --filter @mindrind/chatbot-agents-app build"
+    "dev:platform-shell": "node init && pnpm --filter @mindrind/platform-shell dev",
+    "dev:appointment-setter": "node init && pnpm --filter @mindrind/appointment-setter-app dev",
+    "dev:chatbot-agents": "node init && pnpm --filter @mindrind/chatbot-agents-app dev",
+    "build:platform-shell": "node init && pnpm --filter @mindrind/platform-shell build",
+    "build:appointment-setter": "node init && pnpm --filter @mindrind/appointment-setter-app build",
+    "build:chatbot-agents": "node init && pnpm --filter @mindrind/chatbot-agents-app build"
   },
   "devDependencies": {
     "turbo": "^2.5.8"
