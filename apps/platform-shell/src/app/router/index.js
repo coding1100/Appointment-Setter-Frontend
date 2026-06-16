@@ -21,6 +21,11 @@ import {
 import { getAppointmentSetterRoutes } from "../../domains/appointment-setter/routes";
 import { getChatbotAgentRoutes } from "../../domains/chatbot-agents/routes";
 import { getUsersRoutes } from "../../domains/users/routes";
+import {
+  APPOINTMENT_SETTER_DASHBOARD_ROUTE,
+  getLandingRouteForUser,
+  isBasicUserRole,
+} from "../../platform/landingRoute";
 
 const LoginForm = lazy(() => import("../../components/Auth/LoginForm"));
 const RegisterForm = lazy(() => import("../../components/Auth/RegisterForm"));
@@ -32,18 +37,20 @@ const LauncherPage = lazy(
 );
 
 const RootRedirect = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const { loading: platformLoading } = usePlatform();
 
   if (loading || (isAuthenticated && platformLoading)) {
     return <Loader message="Preparing workspace..." fullScreen />;
   }
 
-  return <Navigate to={isAuthenticated ? "/apps" : "/login"} replace />;
+  return (
+    <Navigate to={isAuthenticated ? getLandingRouteForUser(user) : "/login"} replace />
+  );
 };
 
 const PublicOnlyRoute = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const { loading: platformLoading } = usePlatform();
 
   if (loading || (isAuthenticated && platformLoading)) {
@@ -51,10 +58,26 @@ const PublicOnlyRoute = () => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/apps" replace />;
+    return <Navigate to={getLandingRouteForUser(user)} replace />;
   }
 
   return <Outlet />;
+};
+
+const LauncherRoute = () => {
+  const { user } = useAuth();
+
+  if (isBasicUserRole(user)) {
+    return <Navigate to={APPOINTMENT_SETTER_DASHBOARD_ROUTE} replace />;
+  }
+
+  return withSuspense(LauncherPage, "Loading launcher...");
+};
+
+const AppRootRedirect = () => {
+  const { user } = useAuth();
+
+  return <Navigate to={getLandingRouteForUser(user)} replace />;
 };
 
 const ProtectedRoute = () => {
@@ -177,7 +200,11 @@ export const createAppRouter = () =>
       children: [
         {
           path: "/apps",
-          element: withSuspense(LauncherPage, "Loading launcher..."),
+          element: <LauncherRoute />,
+        },
+        {
+          path: "/app",
+          element: <AppRootRedirect />,
         },
         {
           path: "/app/appointment-setter",

@@ -35,7 +35,7 @@ const formatError = (err, defaultMsg) => {
 
 const getAgentDisplayStatus = (status) => {
   if (status === "active") return "DEPLOYED";
-  return "OFFLINE";
+  return "DEACTIVE";
 };
 
 const getStatusBadgeClass = (displayStatus) => {
@@ -61,11 +61,29 @@ const getPerformanceMetrics = (agent, index) => {
       perfLabel: "LATENCY",
       perfValue: "—",
       effLabel: "SUCCESS RATE",
-      effValue: "Offline",
+      effValue: "Deactive",
       effTone: "muted",
     };
   }
   return seed;
+};
+
+const formatCallDuration = (seconds) => {
+  if (seconds == null || Number.isNaN(Number(seconds)) || seconds < 0) {
+    return "—";
+  }
+  const totalSeconds = Math.floor(Number(seconds));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const remainingSeconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${remainingSeconds}s`;
+  }
+  return `${remainingSeconds}s`;
 };
 
 const agentIconBtnBase =
@@ -144,7 +162,7 @@ const AgenticAgentList = ({
     return agents.filter((agent) => {
       const displayStatus = getAgentDisplayStatus(agent.status);
       if (statusFilter === "deployed" && displayStatus !== "DEPLOYED") return false;
-      if (statusFilter === "offline" && displayStatus !== "OFFLINE") return false;
+      if (statusFilter === "offline" && displayStatus !== "DEACTIVE") return false;
       return true;
     });
   }, [agents, statusFilter]);
@@ -246,7 +264,7 @@ const AgenticAgentList = ({
             >
               <option value="all">All Status</option>
               <option value="deployed">Deployed</option>
-              <option value="offline">Offline</option>
+              <option value="offline">Deactive</option>
             </select>
           </label>
 
@@ -321,6 +339,14 @@ const AgenticAgentList = ({
                       {metrics.effValue}
                     </p>
                   </div>
+                  <div className="col-span-2">
+                    <p className="font-mono text-[9px] uppercase tracking-wide text-slate-400">
+                      Timestamp
+                    </p>
+                    <p className="font-semibold text-slate-800">
+                      {formatCallDuration(agent.last_call_duration_seconds)}
+                    </p>
+                  </div>
                 </div>
                 <div className="mt-4">
                   <AgentRowActions
@@ -337,8 +363,8 @@ const AgenticAgentList = ({
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <div className="hidden border-b border-slate-200 bg-slate-50/90 px-4 py-2 md:grid md:grid-cols-[minmax(0,1.4fr)_minmax(120px,140px)_minmax(0,1fr)_minmax(0,1fr)_minmax(112px,120px)] md:items-center md:justify-items-center md:gap-4">
-            {["Agent name / type", "Status", "Key performance", "Efficiency", "Actions"].map(
+          <div className="hidden border-b border-slate-200 bg-slate-50/90 px-4 py-2 md:grid md:grid-cols-[minmax(0,1.3fr)_minmax(110px,130px)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(90px,110px)_minmax(112px,120px)] md:items-center md:justify-items-center md:gap-4">
+            {["Agent name / type", "Status", "Key performance", "Efficiency", "Timestamp", "Actions"].map(
               (col) => (
                 <span
                   key={col}
@@ -371,7 +397,7 @@ const AgenticAgentList = ({
                   onMouseEnter={() => setHoveredId(agent.id)}
                   onMouseLeave={() => setHoveredId(null)}
                 >
-                  <div className="grid gap-4 md:grid-cols-[minmax(0,1.4fr)_minmax(120px,140px)_minmax(0,1fr)_minmax(0,1fr)_minmax(112px,120px)] md:items-center md:justify-items-center md:gap-4">
+                  <div className="grid gap-4 md:grid-cols-[minmax(0,1.3fr)_minmax(110px,130px)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(90px,110px)_minmax(112px,120px)] md:items-center md:justify-items-center md:gap-4">
                     <div className="flex w-full min-w-0 items-center justify-start gap-3 text-left md:justify-self-start">
                       <div
                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-100"
@@ -399,12 +425,12 @@ const AgenticAgentList = ({
                             {agent.status}
                           </span>
                         </div>
-                        <div className="mt-0.5 flex flex-wrap items-center justify-start gap-1.5 text-xs text-slate-500">
+                        {/* <div className="mt-0.5 flex flex-wrap items-center justify-start gap-1.5 text-xs text-slate-500">
                           <Volume2 className="h-3.5 w-3.5 shrink-0" />
                           {agent.language || "en-US"}
-                          {/* <span className="text-slate-300">·</span> */}
-                          {/* <span className="capitalize">{agent.service_type}</span> */}
-                        </div>
+                          <span className="text-slate-300">·</span>
+                          <span className="capitalize">{agent.service_type}</span>
+                        </div> */}
                       </div>
                     </div>
 
@@ -434,6 +460,15 @@ const AgenticAgentList = ({
                       </p>
                     </div>
 
+                    <div className="w-full text-center">
+                      <p className="font-mono text-[9px] uppercase tracking-wide text-slate-400">
+                        Duration
+                      </p>
+                      <p className="text-base font-semibold text-slate-900">
+                        {formatCallDuration(agent.last_call_duration_seconds)}
+                      </p>
+                    </div>
+
                     <div className="flex w-full justify-center">
                       <AgentRowActions
                         agent={agent}
@@ -457,7 +492,7 @@ const AgenticAgentList = ({
                 <Plus className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-slate-700">New Template</p>
+                <p className="font-semibold text-slate-700">New Agent</p>
                 <p className="text-sm text-slate-400">
                   Start from a pre-built agent architecture
                 </p>
@@ -469,7 +504,7 @@ const AgenticAgentList = ({
       )}
 
       <div className="flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+        {/* <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
               Total active capacity
@@ -492,7 +527,7 @@ const AgenticAgentList = ({
             </p>
             <p className="mt-1 text-xl font-semibold text-emerald-600">Optimal</p>
           </div>
-        </div>
+        </div> */}
 
         <div className="flex items-center gap-3">
           <span className="text-sm text-slate-500">
