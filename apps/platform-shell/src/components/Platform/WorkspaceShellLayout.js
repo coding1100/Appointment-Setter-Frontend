@@ -12,6 +12,7 @@ import {
   PLATFORM_APPS,
 } from "../../platform/appCatalog";
 import { Can } from "../../platform/ability";
+import { getLandingRouteForUser } from "../../platform/landingRoute";
 import WorkspaceUserMenu from "./WorkspaceUserMenu";
 
 export const NAVY = "#1a1a2e";
@@ -85,8 +86,18 @@ const SidebarNavGroup = ({ title, icon: Icon, items, activeNavPath, onNavigate }
   </section>
 );
 
+const CUSTOMERS_NAV_PATH = "/app/appointment-setter/tenants";
+
+const filterSidebarItems = (items, isPlatformAdmin) => {
+  if (isPlatformAdmin) return items;
+  return items.filter((item) => item.to !== CUSTOMERS_NAV_PATH);
+};
+
 const SidebarContent = ({ brandName, apps, onNavigate }) => {
   const { pathname } = useLocation();
+  const { user } = useAuth();
+  const { isPlatformAdmin } = usePlatform();
+  const homeRoute = getLandingRouteForUser(user);
 
   return (
     <>
@@ -98,7 +109,7 @@ const SidebarContent = ({ brandName, apps, onNavigate }) => {
           <Layers className="h-4 w-4" style={{ color: NAVY }} strokeWidth={2} />
         </div>
         <Link
-          to="/apps"
+          to={homeRoute}
           className="font-mono text-sm font-bold uppercase tracking-wide text-white hover:underline focus:outline-none"
         >
           {brandName}
@@ -114,10 +125,16 @@ const SidebarContent = ({ brandName, apps, onNavigate }) => {
               <Can key={app.id} I="access" a={app.id}>
                 {sidebarGroups.map((group) => {
                   const Icon = APP_ICON_MAP[group.iconKey] || Layers;
-                  const navItems = group.items.map((item) => ({
-                    label: item.label,
-                    to: item.to,
-                  }));
+                  const navItems = filterSidebarItems(
+                    group.items.map((item) => ({
+                      label: item.label,
+                      to: item.to,
+                      activeFor: item.activeFor,
+                    })),
+                    isPlatformAdmin,
+                  );
+
+                  if (!navItems.length) return null;
 
                   return (
                     <SidebarNavGroup
@@ -138,6 +155,7 @@ const SidebarContent = ({ brandName, apps, onNavigate }) => {
           const navItems = (APP_WORKSPACE_NAV[app.id] || []).map((item) => ({
             label: item.label,
             to: item.to,
+            activeFor: item.activeFor,
           }));
 
           if (!navItems.length) return null;

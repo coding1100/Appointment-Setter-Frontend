@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "../../contexts/AuthContext";
+import { usePlatform } from "../../contexts/PlatformContext";
 import { useDashboardData } from "../../domains/appointment-setter/hooks/useDashboardData";
 import { NAVY, TEAL, TEAL_DEEP } from "../Platform/WorkspaceShellLayout";
 import Loader from "../Loader";
@@ -67,6 +68,7 @@ const StatCard = ({ label, value, icon: Icon }) => (
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { isPlatformAdmin } = usePlatform();
   const { stats, recentAppointments, loading, error, refetch } = useDashboardData();
 
   const displayName =
@@ -82,7 +84,9 @@ const Dashboard = () => {
     });
 
   const statCards = [
-    { label: "Total tenants", value: stats.totalTenants, icon: Building2 },
+    ...(isPlatformAdmin
+      ? [{ label: "Total tenants", value: stats.totalTenants, icon: Building2 }]
+      : []),
     { label: "Total appointments", value: stats.totalAppointments, icon: Calendar },
     { label: "Upcoming", value: stats.upcomingAppointments, icon: TrendingUp },
     { label: "Today's appointments", value: stats.todayAppointments, icon: Clock },

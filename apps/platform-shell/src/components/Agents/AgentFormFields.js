@@ -188,7 +188,7 @@ const AgentFormFields = ({
         <p className="mt-1 text-xs text-rose-600">{fieldErrors.greeting_message}</p>
       ) : (
         <p className="mt-1 text-xs text-slate-500">
-          This message will be spoken when a call is received (minimum 10 characters)
+          This message will be spoken when a call is received.
         </p>
       )}
     </div>
