@@ -135,7 +135,7 @@ const PartnersSection = ({
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <FormField id="partner_name" label="Partner organization name" className="md:col-span-2">
+            <FormField id="partner_name" label="Partner organization name">
               <input
                 id="partner_name"
                 value={newPartner.name}
@@ -211,7 +211,7 @@ const PartnersSection = ({
               />
             </FormField>
 
-            <FormField id="approval_notes" label="Approval note (optional)" className="md:col-span-2">
+            <FormField id="approval_notes" label="Approval note (optional)">
               <input
                 id="approval_notes"
                 value={newPartner.approval_notes}
@@ -224,7 +224,7 @@ const PartnersSection = ({
               />
             </FormField>
 
-            <FormField id="partner_seat_limit" label="Seat limit" className="md:col-span-2">
+            <FormField id="partner_seat_limit" label="Seat limit">
               <input
                 id="partner_seat_limit"
                 type="number"
