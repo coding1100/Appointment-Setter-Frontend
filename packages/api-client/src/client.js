@@ -420,9 +420,18 @@ export const phoneNumberAPI = {
 };
 
 export const smsAPI = {
-  // Numbers
-  bindSmsNumber: (tenantId, phoneNumber) =>
-    api.post(`/api/v1/sms/${tenantId}/numbers/${encodeURIComponent(phoneNumber)}/bind-sms`),
+  // Twilio integration (dedicated SMS credentials)
+  testCredentials: (tenantId, creds) => api.post(`/api/v1/sms/${tenantId}/integration/test-credentials`, creds),
+  attachIntegration: (tenantId, creds) => api.post(`/api/v1/sms/${tenantId}/integration`, creds),
+  updateIntegration: (tenantId, creds) => api.put(`/api/v1/sms/${tenantId}/integration`, creds),
+  getIntegration: (tenantId) => api.get(`/api/v1/sms/${tenantId}/integration`),
+  deleteIntegration: (tenantId) => api.delete(`/api/v1/sms/${tenantId}/integration`),
+  // Numbers (SMS-capable, sourced live from Twilio) + webhook config
+  listSmsNumbers: (tenantId) => api.get(`/api/v1/sms/${tenantId}/numbers`),
+  configureNumberWebhook: (tenantId, phoneNumber) =>
+    api.post(`/api/v1/sms/${tenantId}/numbers/${encodeURIComponent(phoneNumber)}/configure-webhook`),
+  // Test send
+  sendTest: (tenantId, payload) => api.post(`/api/v1/sms/${tenantId}/test`, payload),
   // Leads
   createLead: (tenantId, lead) => api.post(`/api/v1/sms/${tenantId}/leads`, lead),
   bulkImportLeads: (tenantId, leads) => api.post(`/api/v1/sms/${tenantId}/leads/bulk`, { leads }),

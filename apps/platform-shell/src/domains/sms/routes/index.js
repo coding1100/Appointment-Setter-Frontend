@@ -8,6 +8,8 @@ const SmsLeadsPage = lazy(() => import('../pages/SmsLeadsPage'));
 const SmsCampaignsPage = lazy(() => import('../pages/SmsCampaignsPage'));
 const SmsInboxPage = lazy(() => import('../pages/SmsInboxPage'));
 const SmsSuppressionsPage = lazy(() => import('../pages/SmsSuppressionsPage'));
+const SmsSettingsPage = lazy(() => import('../pages/SmsSettingsPage'));
+const SmsTestPage = lazy(() => import('../pages/SmsTestPage'));
 
 const withSuspense = (Component, message) => (
   <RouteSuspense message={message}>
@@ -22,5 +24,7 @@ export const getSmsRoutes = () => [
   { path: 'campaigns', element: withSuspense(SmsCampaignsPage, 'Loading campaigns...') },
   { path: 'inbox', element: withSuspense(SmsInboxPage, 'Loading inbox...') },
   { path: 'suppressions', element: withSuspense(SmsSuppressionsPage, 'Loading suppressions...') },
+  { path: 'settings', element: withSuspense(SmsSettingsPage, 'Loading settings...') },
+  { path: 'test', element: withSuspense(SmsTestPage, 'Loading test...') },
   { path: '*', element: <Navigate to="/app/sms/dashboard" replace /> },
 ];

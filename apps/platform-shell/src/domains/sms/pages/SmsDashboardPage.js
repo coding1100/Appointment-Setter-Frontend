@@ -63,9 +63,9 @@ const SmsDashboardPage = () => {
       <SectionPanel className="p-6">
         <h2 className="text-lg font-semibold text-slate-900">Getting started</h2>
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-600">
-          <li>Attach your Twilio credentials and bind an SMS-capable number (Appointment Setter &rarr; Twilio).</li>
-          <li>Import your cold leads under <Link to="/app/sms/leads" className="text-green-700">Leads</Link>.</li>
-          <li>Create a drip <Link to="/app/sms/campaigns" className="text-green-700">Campaign</Link> with a personalized template, then start it.</li>
+          <li>Attach your Twilio credentials in <Link to="/app/sms/settings" className="text-green-700">Settings</Link> (separate from Appointment Setter).</li>
+          <li>Send a <Link to="/app/sms/test" className="text-green-700">Test</Link> message to one number to verify the setup.</li>
+          <li>Create a drip <Link to="/app/sms/campaigns" className="text-green-700">Campaign</Link>: pick a Twilio from-number, paste recipients (or use <Link to="/app/sms/leads" className="text-green-700">Leads</Link>), then start it.</li>
           <li>Watch the <Link to="/app/sms/inbox" className="text-green-700">Inbox</Link> — replies pause the sequence so you can take over.</li>
         </ol>
       </SectionPanel>
