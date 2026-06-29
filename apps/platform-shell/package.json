@@ -55,5 +55,14 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^@mindrind/api-client/client$": "<rootDir>/../../packages/api-client/src/client.js",
+      "^@mindrind/auth/session$": "<rootDir>/../../packages/auth/src/session.js",
+      "^@mindrind/config/env$": "<rootDir>/../../packages/config/src/env.js",
+      "^@mindrind/permissions/ability$": "<rootDir>/../../packages/permissions/src/ability.js",
+      "^@mindrind/utils/(dates|errors)$": "<rootDir>/../../packages/utils/src/$1.js"
+    }
   }
 }

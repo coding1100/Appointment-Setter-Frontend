@@ -20,6 +20,7 @@ import {
 } from "../../components/Platform/PlatformShell";
 import { getAppointmentSetterRoutes } from "../../domains/appointment-setter/routes";
 import { getChatbotAgentRoutes } from "../../domains/chatbot-agents/routes";
+import { getSmsRoutes } from "../../domains/sms/routes";
 import { getUsersRoutes } from "../../domains/users/routes";
 
 const LoginForm = lazy(() => import("../../components/Auth/LoginForm"));
@@ -172,6 +173,11 @@ export const createAppRouter = () =>
           path: "/app/chatbot-agents",
           element: <AppGate appId="chatbot_agents" />,
           children: getChatbotAgentRoutes(),
+        },
+        {
+          path: "/app/sms",
+          element: <AppGate appId="sms" />,
+          children: getSmsRoutes(),
         },
         {
           path: "/app/users",
