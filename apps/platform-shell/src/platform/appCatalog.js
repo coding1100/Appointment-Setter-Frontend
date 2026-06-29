@@ -3,10 +3,14 @@ import {
   Bot,
   CalendarRange,
   CircleEllipsis,
+  Inbox,
   LayoutDashboard,
+  MessageSquare,
   Mic2,
   RadioTower,
+  Send,
   Settings2,
+  ShieldOff,
   Users,
 } from 'lucide-react';
 import { getAppName } from '../utils/appName';
@@ -29,6 +33,14 @@ export const PLATFORM_APPS = [
     accent: 'from-sky-400/30 via-sky-300/10 to-transparent',
   },
   {
+    id: 'sms',
+    slug: 'sms',
+    label: 'SMS Outreach',
+    iconKey: 'sms',
+    defaultRoute: '/app/sms/dashboard',
+    accent: 'from-green-400/30 via-green-300/10 to-transparent',
+  },
+  {
     id: 'users',
     slug: 'users',
     label: 'Users',
@@ -41,6 +53,7 @@ export const PLATFORM_APPS = [
 export const APP_ICON_MAP = {
   appointment_setter: CalendarRange,
   chatbot_agents: Bot,
+  sms: MessageSquare,
   users: Users,
 };
 
@@ -59,6 +72,13 @@ export const APP_WORKSPACE_NAV = {
   chatbot_agents: [
     { to: '/app/chatbot-agents', label: 'Workspace', icon: Bot },
     { to: '/app/chatbot-agents/live', label: 'Live Chats', icon: CircleEllipsis },
+  ],
+  sms: [
+    { to: '/app/sms/dashboard', label: 'Overview', icon: LayoutDashboard },
+    { to: '/app/sms/campaigns', label: 'Campaigns', icon: Send },
+    { to: '/app/sms/leads', label: 'Leads', icon: Users },
+    { to: '/app/sms/inbox', label: 'Inbox', icon: Inbox },
+    { to: '/app/sms/suppressions', label: 'Suppressions', icon: ShieldOff },
   ],
   users: [
     { to: '/app/users/platform-users', label: 'Platform Users', icon: Users },

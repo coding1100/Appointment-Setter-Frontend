@@ -419,6 +419,38 @@ export const phoneNumberAPI = {
   unassignPhoneFromAgent: (agentId) => api.delete(`/api/v1/phone-numbers/agent/${agentId}/unassign`),
 };
 
+export const smsAPI = {
+  // Numbers
+  bindSmsNumber: (tenantId, phoneNumber) =>
+    api.post(`/api/v1/sms/${tenantId}/numbers/${encodeURIComponent(phoneNumber)}/bind-sms`),
+  // Leads
+  createLead: (tenantId, lead) => api.post(`/api/v1/sms/${tenantId}/leads`, lead),
+  bulkImportLeads: (tenantId, leads) => api.post(`/api/v1/sms/${tenantId}/leads/bulk`, { leads }),
+  listLeads: (tenantId, limit = 200, offset = 0) =>
+    api.get(`/api/v1/sms/${tenantId}/leads?limit=${limit}&offset=${offset}`),
+  // Campaigns
+  createCampaign: (tenantId, payload) => api.post(`/api/v1/sms/${tenantId}/campaigns`, payload),
+  getCampaign: (tenantId, campaignId) => api.get(`/api/v1/sms/${tenantId}/campaigns/${campaignId}`),
+  updateCampaign: (tenantId, campaignId, payload) =>
+    api.put(`/api/v1/sms/${tenantId}/campaigns/${campaignId}`, payload),
+  startCampaign: (tenantId, campaignId) => api.post(`/api/v1/sms/${tenantId}/campaigns/${campaignId}/start`),
+  pauseCampaign: (tenantId, campaignId) => api.post(`/api/v1/sms/${tenantId}/campaigns/${campaignId}/pause`),
+  // Inbox
+  listConversations: (tenantId, limit = 100, offset = 0) =>
+    api.get(`/api/v1/sms/${tenantId}/conversations?limit=${limit}&offset=${offset}`),
+  getConversation: (tenantId, conversationId) =>
+    api.get(`/api/v1/sms/${tenantId}/conversations/${conversationId}`),
+  replyToConversation: (tenantId, conversationId, body) =>
+    api.post(`/api/v1/sms/${tenantId}/conversations/${conversationId}/reply`, { body }),
+  // Suppressions
+  listSuppressions: (tenantId, limit = 500, offset = 0) =>
+    api.get(`/api/v1/sms/${tenantId}/suppressions?limit=${limit}&offset=${offset}`),
+  addSuppression: (tenantId, payload) => api.post(`/api/v1/sms/${tenantId}/suppressions`, payload),
+  // Real-time inbox stream
+  getInboxStreamUrl: (tenantId, accessToken) =>
+    `${WS_BASE_URL}/api/v1/sms/${tenantId}/inbox/ws?token=${encodeURIComponent(accessToken || '')}`,
+};
+
 export const healthAPI = {
   check: () => api.get('/api/v1/health'.replace(/\/+$/, '')),
   detailed: () => api.get('/api/v1/health/detailed'.replace(/\/+$/, '')),
