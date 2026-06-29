@@ -3,6 +3,7 @@ import {
   Bot,
   CalendarRange,
   CircleEllipsis,
+  FlaskConical,
   Inbox,
   LayoutDashboard,
   MessageSquare,
@@ -78,7 +79,9 @@ export const APP_WORKSPACE_NAV = {
     { to: '/app/sms/campaigns', label: 'Campaigns', icon: Send },
     { to: '/app/sms/leads', label: 'Leads', icon: Users },
     { to: '/app/sms/inbox', label: 'Inbox', icon: Inbox },
+    { to: '/app/sms/test', label: 'Test', icon: FlaskConical },
     { to: '/app/sms/suppressions', label: 'Suppressions', icon: ShieldOff },
+    { to: '/app/sms/settings', label: 'Settings', icon: Settings2 },
   ],
   users: [
     { to: '/app/users/platform-users', label: 'Platform Users', icon: Users },
