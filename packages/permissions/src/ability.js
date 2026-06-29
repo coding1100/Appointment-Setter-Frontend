@@ -2,7 +2,7 @@ import React from 'react';
 import { Ability, AbilityBuilder } from '@casl/ability';
 import { createContextualCan } from '@casl/react';
 
-const PLATFORM_APP_IDS = ['appointment_setter', 'chatbot_agents', 'users'];
+const PLATFORM_APP_IDS = ['appointment_setter', 'chatbot_agents', 'sms', 'users'];
 
 export const AbilityContext = React.createContext(null);
 export const Can = createContextualCan(AbilityContext.Consumer);
@@ -79,6 +79,13 @@ export const defineAbilityForBootstrap = (bootstrap) => {
   } else if (userRole === 'tenant_user' || userRole === 'user' || userRole === 'partner_staff' || userRole === 'customer_staff' || hasPlatformMembership) {
     can('view', 'appointment_setter');
     can('view', 'chatbot_agents');
+    can('view', 'sms');
+  }
+
+  if (permissionSet.has('sms:write')) {
+    can('manage', 'sms');
+  } else if (permissionSet.has('sms:read')) {
+    can('view', 'sms');
   }
 
   return build();

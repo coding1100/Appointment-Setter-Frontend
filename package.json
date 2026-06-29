@@ -10,9 +10,11 @@
     "dev:platform-shell": "pnpm --filter @mindrind/platform-shell dev",
     "dev:appointment-setter": "pnpm --filter @mindrind/appointment-setter-app dev",
     "dev:chatbot-agents": "pnpm --filter @mindrind/chatbot-agents-app dev",
+    "dev:sms": "pnpm --filter @mindrind/sms-app dev",
     "build:platform-shell": "pnpm --filter @mindrind/platform-shell build",
     "build:appointment-setter": "pnpm --filter @mindrind/appointment-setter-app build",
-    "build:chatbot-agents": "pnpm --filter @mindrind/chatbot-agents-app build"
+    "build:chatbot-agents": "pnpm --filter @mindrind/chatbot-agents-app build",
+    "build:sms": "pnpm --filter @mindrind/sms-app build"
   },
   "devDependencies": {
     "turbo": "^2.5.8"
