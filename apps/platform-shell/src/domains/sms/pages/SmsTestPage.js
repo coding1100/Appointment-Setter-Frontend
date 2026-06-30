@@ -3,7 +3,9 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { smsAPI } from '@mindrind/api-client';
 import { PageHeader, SectionPanel, InlineAlert } from '@mindrind/shared-ui';
 
+import StyledSelect from '../../../shared/ui/StyledSelect';
 import { useSmsTenant } from '../useSmsTenant';
+import { SMS_INPUT, SMS_BTN_PRIMARY } from '../theme';
 
 /**
  * Extract a human-readable message from an axios error, regardless of the
@@ -83,27 +85,27 @@ const SmsTestPage = () => {
         <form className="flex flex-col gap-4" onSubmit={submit}>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-slate-700">To number (E.164)</span>
-            <input className="rounded-xl border border-slate-200 px-4 py-2.5" value={to} onChange={(e) => setTo(e.target.value)} placeholder="+14155550123" />
+            <input className={SMS_INPUT} value={to} onChange={(e) => setTo(e.target.value)} placeholder="+14155550123" />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-slate-700">From number</span>
-            <select className="rounded-xl border border-slate-200 px-4 py-2.5" value={fromNumber} onChange={(e) => setFromNumber(e.target.value)}>
+            <StyledSelect value={fromNumber} onChange={(e) => setFromNumber(e.target.value)}>
               <option value="">First SMS-capable number (default)</option>
               {smsNumbers.map((n) => (
                 <option key={n.phone_number} value={n.phone_number}>
                   {n.phone_number}
                 </option>
               ))}
-            </select>
+            </StyledSelect>
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-slate-700">Message</span>
-            <textarea className="min-h-[100px] rounded-xl border border-slate-200 px-4 py-2.5" value={body} onChange={(e) => setBody(e.target.value)} />
+            <textarea className={`${SMS_INPUT} min-h-[100px]`} value={body} onChange={(e) => setBody(e.target.value)} />
           </label>
           <button
             type="submit"
             disabled={send.isPending || !to.trim() || !body.trim()}
-            className="w-fit rounded-full bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className={`w-fit ${SMS_BTN_PRIMARY}`}
           >
             {send.isPending ? 'Sending…' : 'Send test'}
           </button>
