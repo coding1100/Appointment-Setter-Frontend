@@ -60,7 +60,11 @@ const BottomDock = () => {
   const location = useLocation();
   const pathname = location?.pathname || "";
 
-  if (pathname === PATHS.apps || pathname === `${PATHS.apps}/`) {
+  if (
+    pathname === PATHS.apps ||
+    pathname === `${PATHS.apps}/` ||
+    pathname.startsWith("/app/")
+  ) {
     return null;
   }
 

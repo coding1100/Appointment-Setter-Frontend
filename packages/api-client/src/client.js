@@ -30,7 +30,14 @@ const isAuthPath = (url = '') =>
     url.includes('/api/v1/auth/reset-password') ||
     url.includes('/api/v1/auth/setup-password'));
 
-const AUTH_PUBLIC_PATH_PREFIXES = ['/login', '/register', '/forgot-password', '/reset-password', '/setup-password'];
+const AUTH_PUBLIC_PATH_PREFIXES = [
+  '/login',
+  '/mindrind/admin',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/setup-password',
+];
 const REFRESH_FAILURE_COOLDOWN_MS = 10000;
 
 let refreshPromise = null;
@@ -341,6 +348,15 @@ export const agentAPI = {
   activateAgent: (agentId) => api.post(`/api/v1/agents/${agentId}/activate`),
   deactivateAgent: (agentId) => api.post(`/api/v1/agents/${agentId}/deactivate`),
   getAvailableVoices: () => api.get('/api/v1/agents/voices/list'),
+  getVoicePreviewUrl: (voiceId) => api.get(`/api/v1/agents/voices/preview/${voiceId}`),
+  getPromptTemplates: () => api.get('/api/v1/agents/prompt-templates'),
+  getDefaultPromptPreview: (serviceType, agentName = 'Assistant') =>
+    api.get('/api/v1/agents/prompt-preview', {
+      params: { service_type: serviceType, agent_name: agentName },
+    }),
+  getPromptEnhancementInstruction: () =>
+    api.get('/api/v1/agents/prompt/enhancement-instruction'),
+  enhancePrompt: (payload) => api.post('/api/v1/agents/prompt/enhance', payload),
 };
 
 export const chatbotAgentAPI = {
