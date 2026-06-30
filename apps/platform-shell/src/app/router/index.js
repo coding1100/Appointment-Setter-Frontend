@@ -22,6 +22,11 @@ import { getAppointmentSetterRoutes } from "../../domains/appointment-setter/rou
 import { getChatbotAgentRoutes } from "../../domains/chatbot-agents/routes";
 import { getSmsRoutes } from "../../domains/sms/routes";
 import { getUsersRoutes } from "../../domains/users/routes";
+import {
+  APPOINTMENT_SETTER_DASHBOARD_ROUTE,
+  getLandingRouteForUser,
+  isBasicUserRole,
+} from "../../platform/landingRoute";
 
 const LoginForm = lazy(() => import("../../components/Auth/LoginForm"));
 const RegisterForm = lazy(() => import("../../components/Auth/RegisterForm"));
@@ -33,18 +38,20 @@ const LauncherPage = lazy(
 );
 
 const RootRedirect = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const { loading: platformLoading } = usePlatform();
 
   if (loading || (isAuthenticated && platformLoading)) {
     return <Loader message="Preparing workspace..." fullScreen />;
   }
 
-  return <Navigate to={isAuthenticated ? "/apps" : "/login"} replace />;
+  return (
+    <Navigate to={isAuthenticated ? getLandingRouteForUser(user) : "/login"} replace />
+  );
 };
 
 const PublicOnlyRoute = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const { loading: platformLoading } = usePlatform();
 
   if (loading || (isAuthenticated && platformLoading)) {
@@ -52,10 +59,26 @@ const PublicOnlyRoute = () => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/apps" replace />;
+    return <Navigate to={getLandingRouteForUser(user)} replace />;
   }
 
   return <Outlet />;
+};
+
+const LauncherRoute = () => {
+  const { user } = useAuth();
+
+  if (isBasicUserRole(user)) {
+    return <Navigate to={APPOINTMENT_SETTER_DASHBOARD_ROUTE} replace />;
+  }
+
+  return withSuspense(LauncherPage, "Loading launcher...");
+};
+
+const AppRootRedirect = () => {
+  const { user } = useAuth();
+
+  return <Navigate to={getLandingRouteForUser(user)} replace />;
 };
 
 const ProtectedRoute = () => {
@@ -140,20 +163,36 @@ export const createAppRouter = () =>
           element: withSuspense(LoginForm, "Preparing sign in..."),
         },
         {
-          path: "/register",
+          path: "/mindrind/admin/signup",
           element: withSuspense(RegisterForm, "Preparing registration..."),
         },
         {
-          path: "/forgot-password",
+          path: "/mindrind/admin/forgot-password",
           element: withSuspense(ForgotPasswordForm, "Preparing password reset..."),
         },
         {
-          path: "/setup-password",
+          path: "/mindrind/admin/setup-password",
           element: withSuspense(SetupPasswordForm, "Preparing account setup..."),
         },
         {
-          path: "/reset-password",
+          path: "/mindrind/admin/reset-password",
           element: withSuspense(ResetPasswordForm, "Preparing password reset..."),
+        },
+        {
+          path: "/register",
+          element: <Navigate to="/mindrind/admin/signup" replace />,
+        },
+        {
+          path: "/forgot-password",
+          element: <Navigate to="/mindrind/admin/forgot-password" replace />,
+        },
+        {
+          path: "/setup-password",
+          element: <Navigate to="/mindrind/admin/setup-password" replace />,
+        },
+        {
+          path: "/reset-password",
+          element: <Navigate to="/mindrind/admin/reset-password" replace />,
         },
       ],
     },
@@ -162,7 +201,11 @@ export const createAppRouter = () =>
       children: [
         {
           path: "/apps",
-          element: withSuspense(LauncherPage, "Loading launcher..."),
+          element: <LauncherRoute />,
+        },
+        {
+          path: "/app",
+          element: <AppRootRedirect />,
         },
         {
           path: "/app/appointment-setter",

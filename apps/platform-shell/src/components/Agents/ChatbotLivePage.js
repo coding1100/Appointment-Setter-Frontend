@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Bell,
   Bot,
+  CheckCircle,
   CircleEllipsis,
   Globe,
   MessageSquare,
@@ -26,6 +27,52 @@ import { formatApiError } from "../../shared/utils/errors";
 import { getAccessToken } from "../../shared/auth/session";
 import { useLiveChatAudioAlerts } from "../../domains/chatbot-agents/hooks/useLiveChatAudioAlerts";
 import Loader from "../Loader";
+import { NAVY, TEAL, TEAL_DEEP } from "../Platform/WorkspaceShellLayout";
+import StyledSelect from "../../shared/ui/StyledSelect";
+
+const fieldClass =
+  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 focus:border-[#68fadd]/50 focus:outline-none focus:ring-2 focus:ring-[#68fadd]/20";
+
+const btnSecondary =
+  "inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+
+const btnPrimary =
+  "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50";
+
+const btnDanger =
+  "inline-flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50";
+
+const sectionCardClass =
+  "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm";
+
+const controlBadgeClass = (mode) =>
+  mode === "human"
+    ? "bg-amber-50 text-amber-700"
+    : "bg-[#68fadd]/20 text-[#006b5c]";
+
+const StatCard = ({ label, value, description, icon: Icon }) => (
+  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#1e293b]">
+          {label}
+        </p>
+        <p className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: NAVY }}>
+          {value}
+        </p>
+        <p className="mt-1 text-sm text-slate-500">{description}</p>
+      </div>
+      {Icon ? (
+        <div
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-100"
+          style={{ backgroundColor: NAVY }}
+        >
+          <Icon className="h-5 w-5" style={{ color: TEAL }} strokeWidth={1.75} />
+        </div>
+      ) : null}
+    </div>
+  </div>
+);
 
 const hostFromOrigin = (value) => {
   try {
@@ -544,83 +591,92 @@ const ChatbotLivePage = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="space-y-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-[0.78rem] uppercase tracking-[0.28em] text-white/46">
-            Live Monitoring
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black">
+          <h1 className="text-2xl font-semibold tracking-tight" style={{ color: NAVY }}>
             Live Chats
-          </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-7 text-white/64">
-            Watch active website chats, see which page the visitor is on, and
-            take over the conversation when the bot needs a human hand.
+          </h1>
+          <p className="mt-0.5 max-w-2xl text-sm text-slate-500">
+            Watch active website chats, see which page the visitor is on, and take over the
+            conversation when the bot needs a human hand.
           </p>
         </div>
 
         <Link
           to="/app/chatbot-agents"
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black no-underline transition hover:bg-black/10"
+          className={`${btnSecondary} shrink-0 no-underline`}
         >
-          <Bot className="h-4 w-4" />
+          <Bot className="h-4 w-4" strokeWidth={2} />
           Back to Chatbots
         </Link>
       </div>
 
-      <div className="rounded-[20px] border border-black/10 bg-black/[0.03] px-4 py-3">
+      <div className={`${sectionCardClass} px-4 py-4 sm:px-5`}>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-2">
-            <Bell className="h-4 w-4 text-black/70" />
-            <p className="text-sm font-medium text-black">
-              Alerts
-            </p>
-            <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] uppercase tracking-[0.16em] text-black/70">
-              {alertSettings.muted ? "Muted" : "Active"}
-            </span>
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-100"
+              style={{ backgroundColor: NAVY }}
+            >
+              <Bell className="h-4 w-4" style={{ color: TEAL }} strokeWidth={1.75} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: NAVY }}>
+                Alerts
+              </p>
+              <span
+                className={`mt-0.5 inline-flex rounded-full px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide ${
+                  alertSettings.muted ? "bg-slate-100 text-slate-600" : "bg-[#68fadd]/25 text-[#006b5c]"
+                }`}
+              >
+                {alertSettings.muted ? "Muted" : "Active"}
+              </span>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <button
+              type="button"
               onClick={() =>
                 runAudioAction(async () => {
                   setMuted(!alertSettings.muted);
                 })
               }
-              className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-black transition hover:bg-black/5"
+              className={btnSecondary}
             >
               {alertSettings.muted ? (
                 <>
-                  <Volume2 className="h-4 w-4" />
+                  <Volume2 className="h-4 w-4" strokeWidth={2} />
                   Unmute
                 </>
               ) : (
                 <>
-                  <VolumeX className="h-4 w-4" />
+                  <VolumeX className="h-4 w-4" strokeWidth={2} />
                   Mute
                 </>
               )}
             </button>
 
-            <div className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2">
-              <span className="text-xs uppercase tracking-[0.14em] text-black/55">
+            <div className="inline-flex min-w-[200px] items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5">
+              <span className="shrink-0 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                 Theme
               </span>
-              <select
+              <StyledSelect
                 value={alertSettings.soundTheme}
                 onChange={(event) => setSoundTheme(event.target.value)}
-                className="rounded-lg border border-black/10 bg-white px-2.5 py-1.5 text-xs uppercase tracking-[0.1em] text-black"
+                className="min-w-[130px] appearance-none rounded-lg border-0 bg-transparent py-1.5 pl-0 pr-10 text-xs font-medium text-slate-700 focus:outline-none focus:ring-0"
               >
                 {soundThemes.map((theme) => (
                   <option key={theme} value={theme}>
                     {SOUND_THEME_LABELS[theme] || theme}
                   </option>
                 ))}
-              </select>
+              </StyledSelect>
             </div>
 
-            <div className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2">
-              <span className="text-xs uppercase tracking-[0.14em] text-black/55">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2">
+              <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                 Volume
               </span>
               <input
@@ -629,171 +685,154 @@ const ChatbotLivePage = () => {
                 max={100}
                 value={alertSettings.volume}
                 onChange={(event) => setVolume(event.target.value)}
-                className="h-1.5 w-28 accent-[#2f66ea]"
+                className="h-1.5 w-28 cursor-pointer appearance-none rounded-full bg-slate-200 accent-[#006b5c]"
               />
-              <span className="w-8 text-right text-xs text-black/55">
+              <span className="w-8 text-right font-mono text-[10px] font-semibold text-slate-500">
                 {alertSettings.volume}
               </span>
             </div>
 
             <button
+              type="button"
               onClick={() => runAudioAction(playTestSound)}
               disabled={alertSettings.muted}
-              className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-black transition hover:bg-black/5 disabled:opacity-50"
+              className={btnSecondary}
             >
               Test
             </button>
 
             {isBlocked && (
               <button
+                type="button"
                 onClick={() => runAudioAction(unlockAudio)}
-                className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-100 px-3 py-2 text-sm text-amber-700 transition hover:bg-amber-200"
+                className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100"
               >
-                <Bell className="h-4 w-4" />
+                <Bell className="h-4 w-4" strokeWidth={2} />
                 Enable Sounds
               </button>
             )}
           </div>
         </div>
-        {audioHint && (
-          <p className="mt-2 text-xs text-amber-600">{audioHint}</p>
-        )}
+        {audioHint ? (
+          <p className="mt-3 text-xs text-amber-700">{audioHint}</p>
+        ) : null}
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-[22px] border border-white/8 bg-white/[0.05] px-4 py-4">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-black">
-            Open Chats
-          </p>
-          <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-black">
-            {liveMetrics.openChats}
-          </p>
-          <p className="mt-1 text-sm text-white/56">
-            Sessions currently visible in the operator queue.
-          </p>
-        </div>
-        <div className="rounded-[22px] border border-white/8 bg-white/[0.05] px-4 py-4">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-black">
-            Human Controlled
-          </p>
-          <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-black">
-            {liveMetrics.humanControlled}
-          </p>
-          <p className="mt-1 text-sm text-white/56">
-            Chats already claimed away from the bot.
-          </p>
-        </div>
-        <div className="rounded-[22px] border border-white/8 bg-white/[0.05] px-4 py-4">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-black">
-            Bot Controlled
-          </p>
-          <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-black">
-            {liveMetrics.botControlled}
-          </p>
-          <p className="mt-1 text-sm text-white/56">
-            Sessions still running on the chatbot runtime.
-          </p>
-        </div>
-        <div className="rounded-[22px] border border-white/8 bg-white/[0.05] px-4 py-4">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-black">
-            Active Sites
-          </p>
-          <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-black">
-            {liveMetrics.uniqueSites}
-          </p>
-          <p className="mt-1 text-sm text-white/56">
-            Unique website origins with current conversation traffic.
-          </p>
-        </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Open chats"
+          value={liveMetrics.openChats}
+          description="Sessions currently visible in the operator queue."
+          icon={CircleEllipsis}
+        />
+        <StatCard
+          label="Human controlled"
+          value={liveMetrics.humanControlled}
+          description="Chats already claimed away from the bot."
+          icon={User}
+        />
+        <StatCard
+          label="Bot controlled"
+          value={liveMetrics.botControlled}
+          description="Sessions still running on the chatbot runtime."
+          icon={Bot}
+        />
+        <StatCard
+          label="Active sites"
+          value={liveMetrics.uniqueSites}
+          description="Unique website origins with current conversation traffic."
+          icon={Globe}
+        />
       </div>
 
-      {notice && (
-        <div className="rounded-2xl border border-emerald-300/18 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
-          {notice}
+      {notice ? (
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <CheckCircle className="h-5 w-5 shrink-0" />
+          <span>{notice}</span>
         </div>
-      )}
+      ) : null}
 
       {(actionError || liveChatsQuery.error || detailQuery.error) && (
-        <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-400">
-          {actionError ||
-            formatApiError(liveChatsQuery.error, "Failed to load live chats") ||
-            formatApiError(detailQuery.error, "Failed to load selected chat")}
+        <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+          <XCircle className="h-5 w-5 shrink-0" />
+          <span>
+            {actionError ||
+              formatApiError(liveChatsQuery.error, "Failed to load live chats") ||
+              formatApiError(detailQuery.error, "Failed to load selected chat")}
+          </span>
         </div>
       )}
 
       <div className="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
-        <section className="flex min-h-[70vh] flex-col overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.04]">
-          <div className="border-b border-white/8 px-5 py-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/44">
-              Open Sessions
+        <section className={`${sectionCardClass} flex min-h-[70vh] flex-col`}>
+          <div className="border-b border-slate-200 px-5 py-4">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#1e293b]">
+              Open sessions
             </p>
-            <p className="mt-2 text-sm text-white/62">
+            <p className="mt-1 text-sm text-slate-500">
               {liveChatsQuery.data?.length || 0} active{" "}
               {liveChatsQuery.data?.length === 1 ? "chat" : "chats"}
             </p>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {!liveChatsQuery.data?.length ? (
               <div className="flex min-h-[320px] flex-col items-center justify-center px-6 text-center">
-                <CircleEllipsis className="h-14 w-14 text-white/28" />
-                <h3 className="mt-5 text-xl font-semibold text-black">
+                <CircleEllipsis className="h-12 w-12 text-slate-300" strokeWidth={1.25} />
+                <h3 className="mt-4 text-lg font-semibold" style={{ color: NAVY }}>
                   No live chats right now
                 </h3>
-                <p className="mt-3 text-sm leading-7 text-white/62">
-                  Once website visitors start chatting with your embedded bot,
-                  the live session inbox will appear here.
+                <p className="mt-2 max-w-xs text-sm text-slate-500">
+                  Once website visitors start chatting with your embedded bot, the live session
+                  inbox will appear here.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-white/8">
+              <div className="divide-y divide-slate-100">
                 {liveChatsQuery.data.map((entry) => {
                   const session = entry.session;
                   const active = session.id === sessionId;
                   return (
                     <button
                       key={session.id}
+                      type="button"
                       onClick={() =>
                         navigate(`/app/chatbot-agents/live/${session.id}`)
                       }
                       className={`w-full px-5 py-4 text-left transition ${
-                        active ? "bg-white/[0.08]" : "hover:bg-white/[0.05]"
+                        active
+                          ? "bg-[#68fadd]/10 ring-1 ring-inset ring-[#68fadd]/30"
+                          : "hover:bg-slate-50"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-black">
+                          <p className="truncate text-sm font-semibold" style={{ color: NAVY }}>
                             {session.visitor_label}
                           </p>
-                          <p className="mt-1 truncate text-xs uppercase tracking-[0.16em] text-white/44">
+                          <p className="mt-1 truncate font-mono text-[9px] uppercase tracking-wide text-slate-400">
                             {hostFromOrigin(session.origin)}
                           </p>
-                          {session.page_title && (
-                            <p className="mt-2 truncate text-sm text-white/58">
+                          {session.page_title ? (
+                            <p className="mt-2 truncate text-sm text-slate-500">
                               {session.page_title}
                             </p>
-                          )}
+                          ) : null}
                         </div>
                         <span
-                          className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
-                            session.control_mode === "human"
-                              ? "bg-amber-100 text-amber-500"
-                              : "bg-sky-100 text-sky-500"
-                          }`}
+                          className={`shrink-0 rounded-full px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide ${controlBadgeClass(session.control_mode)}`}
                         >
                           {session.control_mode}
                         </span>
                       </div>
-                      <p className="mt-3 line-clamp-2 text-sm leading-6 text-white/68">
+                      <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">
                         {session.last_message_preview || "No messages yet"}
                       </p>
-                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/44">
-                        <span>
-                          {formatRelativeTime(session.last_activity_at)}
-                        </span>
-                        {session.assigned_operator_name && (
+                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+                        <span>{formatRelativeTime(session.last_activity_at)}</span>
+                        {session.assigned_operator_name ? (
                           <span>{session.assigned_operator_name}</span>
-                        )}
+                        ) : null}
                       </div>
                     </button>
                   );
@@ -803,67 +842,62 @@ const ChatbotLivePage = () => {
           </div>
         </section>
 
-        <section className="flex min-h-[70vh] flex-col overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.04]">
+        <section className={`${sectionCardClass} flex min-h-[70vh] flex-col`}>
           {!selectedChat ? (
             <div className="flex min-h-[520px] flex-col items-center justify-center px-8 text-center">
-              <MessageSquare className="h-16 w-16 text-white/28" />
-              <h3 className="mt-6 text-2xl font-semibold text-white">
+              <MessageSquare className="h-12 w-12 text-slate-300" strokeWidth={1.25} />
+              <h3 className="mt-4 text-lg font-semibold" style={{ color: NAVY }}>
                 Select a live chat
               </h3>
-              <p className="mt-3 max-w-xl text-sm leading-7 text-white/62">
-                Choose a session from the left to inspect the transcript, claim
-                the conversation, or hand the chat back to the bot.
+              <p className="mt-2 max-w-md text-sm text-slate-500">
+                Choose a session from the left to inspect the transcript, claim the conversation,
+                or hand the chat back to the bot.
               </p>
             </div>
           ) : detailQuery.isLoading && !liveSession ? (
             <Loader message="Loading live chat..." />
           ) : (
             <>
-              <div className="border-b border-white/8 px-5 py-5">
+              <div className="border-b border-slate-200 px-5 py-5">
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-2xl font-semibold tracking-[-0.02em] text-black">
+                      <h3 className="text-xl font-semibold tracking-tight" style={{ color: NAVY }}>
                         {selectedChat.visitor_label}
                       </h3>
                       <span
-                        className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
-                          liveSession?.control_mode === "human"
-                            ? "bg-amber-100 text-amber-500"
-                            : "bg-sky-100 text-sky-500"
-                        }`}
+                        className={`rounded-full px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide ${controlBadgeClass(liveSession?.control_mode)}`}
                       >
                         {liveSession?.control_mode || "bot"}
                       </span>
                     </div>
 
-                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/62">
+                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-500">
                       <span className="inline-flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-black" />
+                        <Globe className="h-4 w-4 text-slate-400" />
                         {hostFromOrigin(selectedChat.origin)}
                       </span>
                       <span className="inline-flex items-center gap-2">
-                        <User className="h-4 w-4 text-black" />
+                        <User className="h-4 w-4 text-slate-400" />
                         {liveSession?.assigned_operator_name || "Bot handling"}
                       </span>
                       <span className="inline-flex items-center gap-2">
-                        <CircleEllipsis className="h-4 w-4 text-black" />
+                        <CircleEllipsis className="h-4 w-4 text-slate-400" />
                         {formatRelativeTime(selectedChat.last_activity_at)}
                       </span>
                     </div>
 
-                    {selectedChat.page_title && (
-                      <p className="mt-3 text-base font-medium text-white/84">
+                    {selectedChat.page_title ? (
+                      <p className="mt-3 text-base font-medium text-slate-800">
                         {selectedChat.page_title}
                       </p>
-                    )}
-                    <p className="mt-2 text-sm leading-6 text-white/52">
-                      {selectedChat.page_url}
-                    </p>
+                    ) : null}
+                    <p className="mt-1 break-all text-sm text-slate-500">{selectedChat.page_url}</p>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
                     <button
+                      type="button"
                       onClick={() => takeoverMutation.mutate()}
                       disabled={
                         takeoverMutation.isPending ||
@@ -872,74 +906,78 @@ const ChatbotLivePage = () => {
                           !isAssignedToCurrentUser &&
                           !isAdmin)
                       }
-                      className="inline-flex items-center gap-2 rounded-2xl border border-amber-400 bg-amber-400 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-amber-500 disabled:opacity-50"
+                      className={`${btnPrimary} border border-amber-200 bg-amber-500 hover:opacity-100 hover:bg-amber-600`}
                     >
-                      <ShieldAlert className="h-4 w-4" />
+                      <ShieldAlert className="h-4 w-4" strokeWidth={2} />
                       {takeoverMutation.isPending ? "Claiming..." : "Take Over"}
                     </button>
                     <button
+                      type="button"
                       onClick={() => releaseMutation.mutate()}
                       disabled={
                         releaseMutation.isPending ||
                         liveSession?.control_mode !== "human" ||
                         liveSession?.status !== "open"
                       }
-                      className="inline-flex items-center gap-2 rounded-2xl border border-sky-400 bg-sky-400 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-500 disabled:opacity-50"
+                      className={btnSecondary}
                     >
-                      <PauseCircle className="h-4 w-4" />
-                      {releaseMutation.isPending
-                        ? "Releasing..."
-                        : "Release to Bot"}
+                      <PauseCircle className="h-4 w-4" strokeWidth={2} />
+                      {releaseMutation.isPending ? "Releasing..." : "Release to Bot"}
                     </button>
                     <button
+                      type="button"
                       onClick={() => closeMutation.mutate()}
-                      disabled={
-                        closeMutation.isPending ||
-                        liveSession?.status !== "open"
-                      }
-                      className="inline-flex items-center gap-2 rounded-2xl border border-red-500 bg-red-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-600 disabled:opacity-50"
+                      disabled={closeMutation.isPending || liveSession?.status !== "open"}
+                      className={btnDanger}
                     >
-                      <XCircle className="h-4 w-4" />
+                      <XCircle className="h-4 w-4" strokeWidth={2} />
                       {closeMutation.isPending ? "Closing..." : "Close Chat"}
                     </button>
                   </div>
                 </div>
               </div>
 
-              <div className="grid flex-1 min-h-0 gap-0 lg:grid-cols-[minmax(0,1fr)_280px]">
-                <div className="min-w-0 border-b border-white/8 lg:border-b-0 lg:border-r lg:border-white/8">
+              <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[minmax(0,1fr)_280px]">
+                <div className="min-w-0 border-b border-slate-200 lg:border-b-0 lg:border-r lg:border-slate-200">
                   <div className="flex h-full min-h-0 flex-col">
-                    <div className="flex-1 min-h-0 space-y-3 overflow-y-auto px-5 py-5">
+                    <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50/50 px-5 py-5">
                       {liveMessages.map((message) => {
                         const isVisitor = message.sender_type === "visitor";
                         const isSystem = message.sender_type === "system";
                         const alignmentClass = isVisitor
-                          ? "ml-auto bg-[#2f66ea] text-white"
-                          : "mr-auto bg-black/10 text-black";
+                          ? "ml-auto text-white"
+                          : "mr-auto border border-slate-200 bg-white text-slate-800";
 
                         return (
                           <div
                             key={message.id}
-                            className={`max-w-[86%] w-fit rounded-[20px] px-4 py-3 text-sm leading-6 ${
+                            className={`max-w-[86%] w-fit rounded-xl px-4 py-3 text-sm leading-6 shadow-sm ${
                               isSystem
-                                ? "mx-auto bg-white/8 text-center text-white/74"
+                                ? "mx-auto border border-slate-200 bg-white text-center text-slate-500"
                                 : alignmentClass
                             }`}
+                            style={
+                              isVisitor && !isSystem
+                                ? { backgroundColor: NAVY }
+                                : undefined
+                            }
                           >
-                            {!isSystem && (
+                            {!isSystem ? (
                               <div
-                                className={`mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${isVisitor ? "text-white/55" : "text-black/55"}`}
+                                className={`mb-1 font-mono text-[9px] font-bold uppercase tracking-wide ${
+                                  isVisitor ? "text-white/60" : "text-slate-400"
+                                }`}
                               >
                                 {message.sender_type}
                               </div>
-                            )}
+                            ) : null}
                             <div>{message.content}</div>
                             <div
-                              className={`text-[11px] text-black/25 text-end ${isVisitor ? "text-white/55" : "text-black/55"}`}
+                              className={`mt-1 text-end font-mono text-[9px] ${
+                                isVisitor ? "text-white/50" : "text-slate-400"
+                              }`}
                             >
-                              {new Date(
-                                message.created_at,
-                              ).toLocaleTimeString()}
+                              {new Date(message.created_at).toLocaleTimeString()}
                             </div>
                           </div>
                         );
@@ -947,35 +985,33 @@ const ChatbotLivePage = () => {
                       <div ref={endOfMessagesRef} />
                     </div>
 
-                    <div className="border-t border-white/8 px-5 py-4">
+                    <div className="border-t border-slate-200 px-5 py-4">
                       <div className="flex gap-3">
                         <textarea
                           value={composer}
                           onChange={(event) => setComposer(event.target.value)}
                           rows={3}
-                          minRows={1}
-                          maxRows={5}
                           placeholder={
                             canSendHumanMessage
                               ? "Reply as the human operator..."
                               : "Take over this chat to send human messages."
                           }
-                          disabled={
-                            !canSendHumanMessage || sendMutation.isPending
-                          }
-                          className="min-h-[52px] flex-1 rounded-[18px] border border-white/10 bg-white/6 px-4 py-3 text-sm text-black outline-none"
+                          disabled={!canSendHumanMessage || sendMutation.isPending}
+                          className={`${fieldClass} min-h-[52px] flex-1 resize-none disabled:cursor-not-allowed disabled:bg-slate-50`}
                         />
 
                         <button
+                          type="button"
                           onClick={handleSend}
                           disabled={
                             !canSendHumanMessage ||
                             sendMutation.isPending ||
                             !composer.trim()
                           }
-                          className="inline-flex items-center gap-2 self-end rounded-2xl bg-[#2f66ea] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#295ad0] disabled:opacity-50"
+                          className={btnPrimary}
+                          style={{ backgroundColor: TEAL_DEEP }}
                         >
-                          <Send className="h-4 w-4" />
+                          <Send className="h-4 w-4" strokeWidth={2} />
                           {sendMutation.isPending ? "Sending..." : "Send"}
                         </button>
                       </div>
@@ -984,65 +1020,59 @@ const ChatbotLivePage = () => {
                 </div>
 
                 <aside className="space-y-4 px-5 py-5">
-                  <div className="rounded-[22px] border border-white/8 bg-white/[0.05] p-4">
-                    <p className="text-xs uppercase tracking-[0.22em] text-black">
-                      Session Status
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-4">
+                    <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                      Session status
                     </p>
-                    <p className="mt-3 text-lg font-semibold text-black">
+                    <p className="mt-2 text-lg font-semibold capitalize" style={{ color: NAVY }}>
                       {liveSession?.status || "open"}
                     </p>
-                    <p className="mt-2 text-sm text-white/62">
+                    <p className="mt-2 text-sm text-slate-500">
                       {liveSession?.control_mode === "human"
                         ? "The bot is paused and a human operator owns the thread."
                         : "The bot is currently handling replies for this visitor."}
                     </p>
                   </div>
 
-                  <div className="rounded-[22px] border border-white/8 bg-white/[0.05] p-4">
-                    <p className="text-xs uppercase tracking-[0.22em] text-black">
-                      Session Details
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-4">
+                    <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                      Session details
                     </p>
-                    <div className="mt-3 space-y-3 text-sm text-white/68">
+                    <div className="mt-3 space-y-3 text-sm text-slate-600">
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-black">
+                        <div className="font-mono text-[9px] font-semibold uppercase tracking-wide text-slate-400">
                           Origin
                         </div>
-                        <div className="mt-1 break-all">
-                          {selectedChat.origin}
-                        </div>
+                        <div className="mt-1 break-all">{selectedChat.origin}</div>
                       </div>
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-black">
+                        <div className="font-mono text-[9px] font-semibold uppercase tracking-wide text-slate-400">
                           Page
                         </div>
-                        <div className="mt-1 break-all">
-                          {selectedChat.page_url}
-                        </div>
+                        <div className="mt-1 break-all">{selectedChat.page_url}</div>
                       </div>
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-black">
-                          Last Activity
+                        <div className="font-mono text-[9px] font-semibold uppercase tracking-wide text-slate-400">
+                          Last activity
                         </div>
                         <div className="mt-1">
                           {formatAbsoluteTime(selectedChat.last_activity_at)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-black">
+                        <div className="font-mono text-[9px] font-semibold uppercase tracking-wide text-slate-400">
                           Started
                         </div>
-                        <div className="mt-1">
-                          {formatAbsoluteTime(selectedChat.started_at)}
-                        </div>
+                        <div className="mt-1">{formatAbsoluteTime(selectedChat.started_at)}</div>
                       </div>
-                      {selectedChat.page_title && (
+                      {selectedChat.page_title ? (
                         <div>
-                          <div className="text-[11px] uppercase tracking-[0.16em] text-black">
-                            Page Title
+                          <div className="font-mono text-[9px] font-semibold uppercase tracking-wide text-slate-400">
+                            Page title
                           </div>
                           <div className="mt-1">{selectedChat.page_title}</div>
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 </aside>

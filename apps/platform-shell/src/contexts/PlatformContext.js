@@ -9,7 +9,7 @@ import { PLATFORM_APPS, getAppDefinition } from '../platform/appCatalog';
 const PlatformContext = createContext(null);
 
 const DEFAULT_BRANDING = {
-  brand_name: 'MindRind',
+  brand_name: 'AiToolsSuite',
   logo_url: null,
   primary_color: '#0f172a',
   secondary_color: '#ffffff',
@@ -32,6 +32,7 @@ const mergeAppCatalog = (apps = []) => {
     return {
       ...fallback,
       ...app,
+      label: fallback?.label ?? app.label,
       iconKey: app.icon_key || fallback?.iconKey || app.id,
       defaultRoute: app.default_route || fallback?.defaultRoute || '/apps',
     };
