@@ -91,8 +91,31 @@ const APPOINTMENT_SETTER_HIDDEN_NAV = [
   },
 ];
 
+const SMS_SIDEBAR_GROUPS = [
+  {
+    label: 'Messaging',
+    iconKey: 'sms',
+    items: [
+      { to: '/app/sms/dashboard', label: 'Overview', icon: LayoutDashboard },
+      { to: '/app/sms/campaigns', label: 'Campaigns', icon: Send },
+      { to: '/app/sms/leads', label: 'Leads', icon: Users },
+      { to: '/app/sms/inbox', label: 'Inbox', icon: Inbox },
+    ],
+  },
+  {
+    label: 'Configuration',
+    iconKey: 'agent',
+    items: [
+      { to: '/app/sms/test', label: 'Test', icon: FlaskConical },
+      { to: '/app/sms/suppressions', label: 'Suppressions', icon: ShieldOff },
+      { to: '/app/sms/settings', label: 'Settings', icon: Settings2 },
+    ],
+  },
+];
+
 export const APP_SIDEBAR_GROUPS = {
   appointment_setter: APPOINTMENT_SETTER_SIDEBAR_GROUPS,
+  sms: SMS_SIDEBAR_GROUPS,
 };
 
 export const APP_HIDDEN_NAV = {
@@ -108,15 +131,7 @@ export const APP_WORKSPACE_NAV = {
     { to: '/app/chatbot-agents', label: 'Workspace', icon: Bot },
     { to: '/app/chatbot-agents/live', label: 'Live Chats', icon: CircleEllipsis },
   ],
-  sms: [
-    { to: '/app/sms/dashboard', label: 'Overview', icon: LayoutDashboard },
-    { to: '/app/sms/campaigns', label: 'Campaigns', icon: Send },
-    { to: '/app/sms/leads', label: 'Leads', icon: Users },
-    { to: '/app/sms/inbox', label: 'Inbox', icon: Inbox },
-    { to: '/app/sms/test', label: 'Test', icon: FlaskConical },
-    { to: '/app/sms/suppressions', label: 'Suppressions', icon: ShieldOff },
-    { to: '/app/sms/settings', label: 'Settings', icon: Settings2 },
-  ],
+  sms: SMS_SIDEBAR_GROUPS.flatMap((group) => group.items),
   users: [
     { to: '/app/users/platform-users', label: 'Platform Users', icon: Users },
     { to: '/app/users/partners', label: 'Partners', icon: Building2 },
