@@ -5,6 +5,7 @@ import { PageHeader, SectionPanel, InlineAlert, EmptyState } from '@mindrind/sha
 import { MessageSquare } from 'lucide-react';
 
 import { useSmsTenant } from '../useSmsTenant';
+import { SMS_INPUT, SMS_BTN_PRIMARY, SMS_BTN_SECONDARY } from '../theme';
 
 const SmsSettingsPage = () => {
   const { tenantId } = useSmsTenant();
@@ -97,25 +98,25 @@ const SmsSettingsPage = () => {
         >
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-slate-700">Account SID</span>
-            <input className="rounded-xl border border-slate-200 px-4 py-2.5" value={accountSid} onChange={(e) => setAccountSid(e.target.value)} placeholder="ACxxxxxxxx..." />
+            <input className={SMS_INPUT} value={accountSid} onChange={(e) => setAccountSid(e.target.value)} placeholder="ACxxxxxxxx..." />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-slate-700">Auth Token</span>
-            <input type="password" className="rounded-xl border border-slate-200 px-4 py-2.5" value={authToken} onChange={(e) => setAuthToken(e.target.value)} placeholder="••••••••" />
+            <input type="password" className={SMS_INPUT} value={authToken} onChange={(e) => setAuthToken(e.target.value)} placeholder="••••••••" />
           </label>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => accountSid && authToken && test.mutate()}
               disabled={test.isPending || !accountSid || !authToken}
-              className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 disabled:opacity-50"
+              className={SMS_BTN_SECONDARY}
             >
               {test.isPending ? 'Testing…' : 'Test'}
             </button>
             <button
               type="submit"
               disabled={attach.isPending || !accountSid || !authToken}
-              className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+              className={SMS_BTN_PRIMARY}
             >
               {attach.isPending ? 'Saving…' : connected ? 'Replace credentials' : 'Save credentials'}
             </button>
