@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { smsAPI } from '@mindrind/api-client';
 import { PageHeader, SectionPanel, InlineAlert } from '@mindrind/shared-ui';
 
+import StyledSelect from '../../../shared/ui/StyledSelect';
 import { useSmsTenant } from '../useSmsTenant';
+import { SMS_INPUT, SMS_BTN_PRIMARY } from '../theme';
 
 const SmsCampaignsPage = () => {
   const { tenantId } = useSmsTenant();
@@ -92,24 +94,24 @@ const SmsCampaignsPage = () => {
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium text-slate-700">Campaign name</span>
-              <input className="rounded-xl border border-slate-200 px-4 py-2.5" value={form.name} onChange={update('name')} placeholder="June cold outreach" />
+              <input className={SMS_INPUT} value={form.name} onChange={update('name')} placeholder="June cold outreach" />
             </label>
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium text-slate-700">From number (from Twilio)</span>
-              <select className="rounded-xl border border-slate-200 px-4 py-2.5" value={form.from_phone_number} onChange={update('from_phone_number')}>
+              <StyledSelect value={form.from_phone_number} onChange={update('from_phone_number')}>
                 <option value="">First SMS-capable number (default)</option>
                 {numbers.map((n) => (
                   <option key={n.phone_number} value={n.phone_number}>
                     {n.phone_number}
                   </option>
                 ))}
-              </select>
+              </StyledSelect>
             </label>
           </div>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-slate-700">Message template</span>
             <textarea
-              className="min-h-[120px] rounded-xl border border-slate-200 px-4 py-2.5"
+              className={`${SMS_INPUT} min-h-[120px]`}
               value={form.body}
               onChange={update('body')}
               placeholder="Hi {{name}}, quick question about your business — got 2 minutes?"
@@ -121,7 +123,7 @@ const SmsCampaignsPage = () => {
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-slate-700">To numbers (one per line)</span>
             <textarea
-              className="min-h-[90px] rounded-xl border border-slate-200 px-4 py-2.5"
+              className={`${SMS_INPUT} min-h-[90px]`}
               value={form.to_numbers}
               onChange={update('to_numbers')}
               placeholder={'+14155550123\n+14155550124'}
@@ -134,13 +136,13 @@ const SmsCampaignsPage = () => {
           </label>
           <label className="flex max-w-[220px] flex-col gap-1 text-sm">
             <span className="font-medium text-slate-700">Throttle (msgs/min)</span>
-            <input type="number" min="1" max="600" className="rounded-xl border border-slate-200 px-4 py-2.5" value={form.throttle_per_min} onChange={update('throttle_per_min')} />
+            <input type="number" min="1" max="600" className={SMS_INPUT} value={form.throttle_per_min} onChange={update('throttle_per_min')} />
           </label>
           <div className="flex items-center gap-3">
             <button
               type="submit"
               disabled={createCampaign.isPending || !canSubmit}
-              className="rounded-full bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+              className={SMS_BTN_PRIMARY}
             >
               {createCampaign.isPending ? 'Starting…' : 'Create & start'}
             </button>

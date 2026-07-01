@@ -12,7 +12,7 @@ const StatCard = ({ icon: Icon, label, value, to }) => (
     to={to}
     className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 no-underline shadow-sm transition hover:border-slate-300"
   >
-    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-600">
+    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#68fadd]/15 text-[#0f766e]">
       <Icon className="h-6 w-6" />
     </span>
     <span>
@@ -63,10 +63,10 @@ const SmsDashboardPage = () => {
       <SectionPanel className="p-6">
         <h2 className="text-lg font-semibold text-slate-900">Getting started</h2>
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-600">
-          <li>Attach your Twilio credentials in <Link to="/app/sms/settings" className="text-green-700">Settings</Link> (separate from Appointment Setter).</li>
-          <li>Send a <Link to="/app/sms/test" className="text-green-700">Test</Link> message to one number to verify the setup.</li>
-          <li>Create a drip <Link to="/app/sms/campaigns" className="text-green-700">Campaign</Link>: pick a Twilio from-number, paste recipients (or use <Link to="/app/sms/leads" className="text-green-700">Leads</Link>), then start it.</li>
-          <li>Watch the <Link to="/app/sms/inbox" className="text-green-700">Inbox</Link> — replies pause the sequence so you can take over.</li>
+          <li>Attach your Twilio credentials in <Link to="/app/sms/settings" className="text-[#0f766e]">Settings</Link> (separate from Appointment Setter).</li>
+          <li>Send a <Link to="/app/sms/test" className="text-[#0f766e]">Test</Link> message to one number to verify the setup.</li>
+          <li>Create a drip <Link to="/app/sms/campaigns" className="text-[#0f766e]">Campaign</Link>: pick a Twilio from-number, paste recipients (or use <Link to="/app/sms/leads" className="text-[#0f766e]">Leads</Link>), then start it.</li>
+          <li>Watch the <Link to="/app/sms/inbox" className="text-[#0f766e]">Inbox</Link> — replies pause the sequence so you can take over.</li>
         </ol>
       </SectionPanel>
     </div>

@@ -20,15 +20,18 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       const storedToken = getAccessToken();
+      if (!storedToken) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const response = await authAPI.getCurrentUser();
         setUser(response.data);
-        setToken(storedToken || 'cookie-session');
+        setToken(storedToken);
       } catch (error) {
-        if (storedToken) {
-          console.error('Failed to get current user:', error);
-          clearSessionTokens();
-        }
+        console.error('Failed to get current user:', error);
+        clearSessionTokens();
       }
       setLoading(false);
     };
@@ -49,7 +52,7 @@ export const AuthProvider = ({ children }) => {
       setToken(access_token || 'cookie-session');
       setUser(userData);
       
-      return { success: true };
+      return { success: true, user: userData };
     } catch (error) {
       return { 
         success: false, 

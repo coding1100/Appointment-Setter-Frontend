@@ -22,7 +22,7 @@ const SetupPasswordForm = () => {
   const [success, setSuccess] = useState('');
 
   const inputClass =
-    'h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-11 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60';
+    'h-12 w-full rounded-xl border border-slate-200 bg-slate-50/80 pl-11 pr-11 text-sm text-[#1a1a2e] outline-none transition placeholder:text-slate-400 focus:border-[#006b5c] focus:bg-white focus:ring-4 focus:ring-[#006b5c]/10';
 
   useEffect(() => {
     const validateToken = async () => {
@@ -73,96 +73,155 @@ const SetupPasswordForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-      <div className="px-8 py-6 flex items-center">
-        <h1 className="text-2xl font-semibold tracking-wide text-gray-900">MindRind</h1>
+    <div className="flex min-h-screen">
+      {/* Brand panel — mirrors dashboard sidebar */}
+      <div className="relative hidden w-[42%] flex-col justify-between overflow-hidden bg-[#1a1a2e] p-12 lg:flex">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-24 top-1/3 h-72 w-72 rounded-full bg-[#68fadd]/10 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 bottom-24 h-56 w-56 rounded-full bg-[#006b5c]/20 blur-3xl"
+        />
+
+        <div className="relative">
+          <h1 className="text-2xl font-semibold tracking-wide text-[#68fadd]">AiToolsSuite</h1>
+          <div className="mt-3 h-0.5 w-10 rounded-full bg-[#68fadd]/60" />
+        </div>
+
+        <div className="relative space-y-4">
+          <p className="max-w-xs text-3xl font-semibold leading-snug text-white">
+            Complete your account setup
+          </p>
+          <p className="max-w-sm text-sm leading-relaxed text-white/50">
+            Choose a secure password to activate your account and access the admin console.
+          </p>
+        </div>
+
+        <p className="relative text-xs tracking-widest text-white/30 uppercase">
+          Agentic Admin
+        </p>
       </div>
-      <div className="flex flex-1 items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-          className="w-full max-w-md"
-        >
-          <div className="rounded-3xl border border-gray-100 bg-white shadow-2xl p-10">
-            <h2 className="text-center text-3xl font-semibold text-gray-900">Set your password</h2>
-            <p className="mt-2 text-center text-sm text-gray-500">Complete account setup to continue.</p>
 
-            {loadingValidation ? (
-              <p className="mt-6 text-sm text-slate-600">Validating token...</p>
-            ) : null}
+      {/* Form panel — mirrors dashboard main content area */}
+      <div className="flex flex-1 flex-col bg-[#eef0f4]">
+        <div className="bg-[#1a1a2e] px-8 py-5 lg:hidden">
+          <h1 className="text-xl font-semibold tracking-wide text-[#68fadd]">AiToolsSuite</h1>
+        </div>
 
-            {!loadingValidation && !isValidToken ? (
-              <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                Setup link is invalid or expired ({tokenReason}).
+        <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+            className="w-full max-w-md"
+          >
+            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(26,26,46,0.08)]">
+              <div className="h-1 bg-gradient-to-r from-[#006b5c] via-[#68fadd] to-[#006b5c]" />
+
+              <div className="p-8 sm:p-10">
+                <h2 className="text-center text-2xl font-semibold text-[#1a1a2e]">Set your password</h2>
+                <p className="mt-2 text-center text-sm text-slate-500">
+                  Complete account setup to continue
+                </p>
+
+                {loadingValidation ? (
+                  <p className="mt-6 text-center text-sm text-slate-500">Validating token...</p>
+                ) : null}
+
+                {!loadingValidation && !isValidToken ? (
+                  <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    Setup link is invalid or expired ({tokenReason}).
+                  </div>
+                ) : null}
+
+                {!loadingValidation && isValidToken ? (
+                  <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+                    {error ? (
+                      <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                        {error}
+                      </div>
+                    ) : null}
+                    {success ? (
+                      <div className="rounded-xl border border-[#006b5c]/20 bg-[#006b5c]/5 px-4 py-3 text-sm text-[#006b5c]">
+                        {success}
+                      </div>
+                    ) : null}
+
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+                      <input
+                        id="password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        className={inputClass}
+                        placeholder="New password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-[#006b5c]"
+                        onClick={() => setShowPassword((value) => !value)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-[18px] w-[18px]" />
+                        ) : (
+                          <Eye className="h-[18px] w-[18px]" />
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+                      <input
+                        id="confirm_password"
+                        name="confirm_password"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        required
+                        className={inputClass}
+                        placeholder="Confirm new password"
+                        value={confirmPassword}
+                        onChange={(event) => setConfirmPassword(event.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-[#006b5c]"
+                        onClick={() => setShowConfirmPassword((value) => !value)}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-[18px] w-[18px]" />
+                        ) : (
+                          <Eye className="h-[18px] w-[18px]" />
+                        )}
+                      </button>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="h-12 w-full rounded-xl bg-[#006b5c] text-base font-medium text-white transition hover:bg-[#005548] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68fadd] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {submitting ? 'Saving...' : 'Set password'}
+                    </button>
+                  </form>
+                ) : null}
+
+                <p className="mt-8 text-center text-sm text-slate-500">
+                  Back to{' '}
+                  <Link
+                    to="/login"
+                    className="font-medium text-[#006b5c] transition hover:text-[#005548]"
+                  >
+                    sign in
+                  </Link>
+                </p>
               </div>
-            ) : null}
-
-            {!loadingValidation && isValidToken ? (
-              <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
-                {error ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-                {success ? <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
-
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400" />
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    className={inputClass}
-                    placeholder="New password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-gray-700"
-                    onClick={() => setShowPassword((value) => !value)}
-                  >
-                    {showPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400" />
-                  <input
-                    id="confirm_password"
-                    name="confirm_password"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    className={inputClass}
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-gray-700"
-                    onClick={() => setShowConfirmPassword((value) => !value)}
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
-                  </button>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="h-12 w-full rounded-xl bg-gray-900 text-base font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {submitting ? 'Saving...' : 'Set password'}
-                </button>
-              </form>
-            ) : null}
-
-            <p className="mt-8 text-center text-sm text-gray-500">
-              Back to{' '}
-              <Link to="/login" className="font-medium text-indigo-600 hover:underline">
-                sign in
-              </Link>
-            </p>
-          </div>
-        </motion.div>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );
