@@ -106,9 +106,9 @@ a {
   }
 
   .launcher-panel {
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(26, 26, 46, 0.12);
+    background: #ffffff;
+    box-shadow: 0 28px 70px rgba(26, 26, 46, 0.14);
   }
 
   .launcher-search-chip {
@@ -152,6 +152,59 @@ a {
     @apply rounded-[22px] border p-4;
     border-color: rgba(226, 232, 240, 0.9);
     background: rgba(248, 250, 252, 0.96);
+  }
+
+  .voice-test-visualizer .lk-audio-bar-visualizer,
+  .voice-test-visualizer [class*="bar-visualizer"] {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+    min-height: 7rem !important;
+  }
+
+  .voice-test-visualizer .lk-audio-bar,
+  .voice-test-visualizer [class*="audio-bar"]:not([class*="visualizer"]) {
+    width: 0.65rem !important;
+    min-width: 0.65rem !important;
+    border-radius: 0.25rem;
+    background-color: #68fadd !important;
+  }
+
+  .voice-test-controls {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .voice-test-controls .lk-agent-control-bar,
+  .voice-test-controls .lk-button-group,
+  .voice-test-controls .lk-bar-visualizer,
+  .voice-test-controls .lk-audio-bar-visualizer,
+  .voice-test-controls [class*="control-bar"],
+  .voice-test-controls [class*="button-group"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    gap: 0.625rem !important;
+  }
+
+  .voice-test-controls .lk-audio-bar-visualizer,
+  .voice-test-controls [class*="bar-visualizer"] {
+    min-height: 1.75rem !important;
+    justify-content: center !important;
+  }
+
+  .voice-test-controls .lk-audio-bar,
+  .voice-test-controls [class*="audio-bar"]:not([class*="visualizer"]) {
+    width: 0.45rem !important;
+    min-width: 0.45rem !important;
+    min-height: 0.45rem !important;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.85) !important;
   }
 }
 
